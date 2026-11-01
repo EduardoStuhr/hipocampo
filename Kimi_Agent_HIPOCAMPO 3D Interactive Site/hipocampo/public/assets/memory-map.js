@@ -241,12 +241,9 @@ async function mountMemoryMap(container) {
   const start = () => {
     if (!destroyed && visible && heroPinFinished() && !tickerActive) {
       tickerActive = true
-      const rect = container.getBoundingClientRect()
-      if (rect.width && rect.height) {
-        containerWidth = rect.width
-        containerHeight = rect.height
-        resizeCanvas(containerWidth, containerHeight)
-      }
+      // ResizeObserver supplies layout dimensions, shared with the percentage-positioned
+      // pieces. getBoundingClientRect() includes the entrance scale (0.92 -> 1)
+      // and would leave the canvas smaller until the next visibility change.
       gsap.ticker.add(tickerRender)
     }
   }
