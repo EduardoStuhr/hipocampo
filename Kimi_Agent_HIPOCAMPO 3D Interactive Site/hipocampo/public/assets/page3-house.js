@@ -195,9 +195,9 @@ async function mount(section) {
 
     // fases do scroll
     const focus = smooth(0.08, 0.62, p) // aproxima da casa
-    const enter = smooth(0.82, 0.94, p) // atravessa a porta após a aproximação
+    const enter = smooth(0.58, 0.82, p) // atravessa a porta
     const explode = smooth(0.12, 0.7, p) // fragmentos se espalham em profundidade
-    const out = smooth(0.96, 0.995, p) // revela a próxima página
+    const out = smooth(0.86, 0.99, p) // revela a próxima página
 
     // peças: movimento de respiração original (mantido) + dispersão 3D
     others.forEach((pc) => {
@@ -249,7 +249,7 @@ async function mount(section) {
     // The interior must not show through the facade's transparent windows.
     // Reveal it only once the camera has crossed the room's front plane.
     const roomFrontZ = room.position.z + roomDepth / 2
-    const insideRoom = p >= 0.82 && camPos.z < roomFrontZ - camera.near
+    const insideRoom = camPos.z < roomFrontZ - camera.near
     room.visible = insideRoom
     housePiece.mat.opacity = insideRoom ? 0 : 1
     housePiece.mat.depthWrite = !insideRoom
@@ -273,7 +273,7 @@ async function mount(section) {
     renderer.setClearColor(0xffffff, smooth(0.0, 0.18, p))
 
     capA.style.opacity = String(smooth(0.02, 0.12, p) * (1 - smooth(0.22, 0.32, p)))
-    capB.style.opacity = String(smooth(0.36, 0.46, p) * (1 - smooth(0.78, 0.84, p)))
+    capB.style.opacity = String(smooth(0.36, 0.46, p) * (1 - smooth(0.56, 0.64, p)))
     fade.style.opacity = String(out)
     renderer.render(scene, camera)
   }
