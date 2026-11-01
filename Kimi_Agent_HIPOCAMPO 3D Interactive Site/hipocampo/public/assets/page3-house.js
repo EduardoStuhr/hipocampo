@@ -227,7 +227,6 @@ async function mount(section) {
     lineGeo.attributes.position.needsUpdate = true
     lineMat.opacity = 1 - enter
 
-    room.visible = enter > 0.02
     scene.fog.near = lerp(14, 6, focus); scene.fog.far = lerp(30, 18, focus)
 
     // trajetória da câmera
@@ -249,6 +248,10 @@ async function mount(section) {
       lerp(lerp(z0, 1.6, focus), -roomDepth + 2.2, enter),
     )
     lookAt.set(camPos.x, camPos.y, camPos.z - 5)
+    // The interior must not show through the facade's transparent windows.
+    // Reveal it only once the camera has crossed the room's front plane.
+    const roomFrontZ = room.position.z + roomDepth / 2
+    room.visible = camPos.z < roomFrontZ - camera.near
     camera.position.copy(camPos)
     camera.lookAt(lookAt)
     // balanço com o mouse dentro da casa
