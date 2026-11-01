@@ -216,8 +216,6 @@ async function mount(section) {
     })
     // casa: leve respiração própria
     housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * 0.01 * reduced, 0)
-    housePiece.mat.opacity = 1 - smooth(0.72, 0.8, p)
-    housePiece.mat.depthWrite = housePiece.mat.opacity > 0.99
 
     // fios: da casa até a âncora de cada peça (acompanham o movimento)
     others.forEach((pc, i) => {
@@ -251,7 +249,10 @@ async function mount(section) {
     // The interior must not show through the facade's transparent windows.
     // Reveal it only once the camera has crossed the room's front plane.
     const roomFrontZ = room.position.z + roomDepth / 2
-    room.visible = camPos.z < roomFrontZ - camera.near
+    const insideRoom = p >= 0.82 && camPos.z < roomFrontZ - camera.near
+    room.visible = insideRoom
+    housePiece.mat.opacity = insideRoom ? 0 : 1
+    housePiece.mat.depthWrite = !insideRoom
     camera.position.copy(camPos)
     camera.lookAt(lookAt)
     // balanço com o mouse dentro da casa
