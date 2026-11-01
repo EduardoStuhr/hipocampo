@@ -34,7 +34,8 @@
   position: absolute;
   margin: 0;
 }
-.page4-photo--envelope { cursor: pointer; pointer-events: auto; z-index: 4; }
+.page4-photo--envelope { cursor: pointer; pointer-events: auto; z-index: 4;
+  clip-path: polygon(6% 22%, 19% 20%, 21% 16%, 80% 18%, 81% 21%, 94% 23%, 94% 84%, 6% 84%); }
 .page4-photo--envelope > img { pointer-events: none; }
 .page4-photo img { display: block; width: 100% !important; height: 100% !important; max-width: none !important; object-fit: cover; }
 .page4-photo img.page4-frame { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
