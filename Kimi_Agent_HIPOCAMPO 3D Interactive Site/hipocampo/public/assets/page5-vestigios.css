@@ -25,7 +25,10 @@
   letter-spacing: .03em;
   text-align: justify;
   text-align-last: center;
-  hyphens: auto;
+  -webkit-hyphens: none;
+  hyphens: none;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 .page5-camera { width: 21vw; max-width: none; margin-top: .4vw; display: block; }
 .page5-right { position: relative; min-height: 46vw; transform: translateX(7vw) scale(.85); transform-origin: top left; }
@@ -53,4 +56,10 @@
   .page5-colagem { right: 0; top: 4vw; width: 40vw; }
   .page5-filme { left: 0; top: 34vw; width: 72vw; }
   .page5-brand { left: 4vw; top: 68vw; font-size: 22vw; }
+}
+
+/* A seção antiga "02 — Como funciona" foi retirada da navegação e do layout. */
+#oficina,
+a[href="#oficina"] {
+  display: none !important;
 }
