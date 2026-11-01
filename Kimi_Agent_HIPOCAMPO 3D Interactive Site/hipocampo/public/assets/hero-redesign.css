@@ -169,7 +169,7 @@ body > #root > header button:focus-visible {
   inset: 0;
   z-index: 1;
   --hipocampo-circle-size: clamp(11rem, 14vw, 13.75rem);
-  background: var(--hip-yellow-circle);
+  background: #fff;
   clip-path: circle(calc(var(--hipocampo-circle-size) * 0.5) at 50% 100%);
   contain: strict;
   will-change: clip-path;
