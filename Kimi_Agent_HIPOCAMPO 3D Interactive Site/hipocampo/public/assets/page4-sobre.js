@@ -32,41 +32,58 @@ function buildSection() {
     if (!fig.classList.contains('page4-photo--envelope')) return
     const frame = fig.querySelector('.page4-envelope-photo')
     let pendingFrame = 0
-    let x = 0.5, y = 0.5, index = -1
+    let timer = 0
+    let index = 0
+    let hovering = false, focused = false
+    let x = 0.5, y = 0
+    const showPhoto = () => { frame.src = FRAMES[index] }
     const render = () => {
       pendingFrame = 0
-      const next = Math.min(FRAMES.length - 1, Math.floor(x * FRAMES.length))
-      if (next !== index) {
-        index = next
-        frame.src = FRAMES[index]
-      }
       fig.style.setProperty('--envelope-photo-x', `${(x - 0.5) * 5}%`)
       fig.style.setProperty('--envelope-photo-y', `${-y * 6}%`)
     }
     const schedule = () => {
       if (!pendingFrame) pendingFrame = requestAnimationFrame(render)
     }
-    const reset = () => {
+    const stop = () => {
+      clearInterval(timer)
+      timer = 0
       x = 0.5
       y = 0
       schedule()
     }
+    const updatePlayback = () => {
+      if (hovering || focused) {
+        if (timer) return
+        index = (index + 1) % FRAMES.length
+        showPhoto()
+        timer = setInterval(() => {
+          index = (index + 1) % FRAMES.length
+          showPhoto()
+        }, 100)
+      } else stop()
+    }
+    // Listen on the entire figure, including the paper below the opening.
+    fig.addEventListener('pointerenter', () => { hovering = true; updatePlayback() })
+    fig.addEventListener('pointerleave', () => { hovering = false; updatePlayback() })
+    fig.addEventListener('focus', () => { focused = true; updatePlayback() })
+    fig.addEventListener('blur', () => { focused = false; updatePlayback() })
     fig.addEventListener('pointermove', (event) => {
       const rect = fig.getBoundingClientRect()
       x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
       y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
       schedule()
     }, { passive: true })
-    fig.addEventListener('pointerleave', reset)
-    fig.addEventListener('blur', reset)
     fig.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
       event.preventDefault()
       index = (index + (event.key === 'ArrowRight' ? 1 : -1) + FRAMES.length) % FRAMES.length
-      x = (index + 0.5) / FRAMES.length
-      y = 0.5
-      render()
+      showPhoto()
     })
+    const pause = () => { hovering = false; focused = false; stop() }
+    window.addEventListener('blur', pause)
+    window.addEventListener('pagehide', pause)
+    document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
   })
   return s
 }
