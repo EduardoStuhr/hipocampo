@@ -34,7 +34,8 @@
   position: absolute;
   margin: 0;
 }
-.page4-photo--envelope { cursor: pointer; }
+.page4-photo--envelope { cursor: pointer; pointer-events: auto; z-index: 4; }
+.page4-photo--envelope > img { pointer-events: none; }
 .page4-photo img { display: block; width: 100% !important; height: 100% !important; max-width: none !important; object-fit: cover; }
 .page4-photo img.page4-frame { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
 .page4-photo .page4-frame {
@@ -66,7 +67,7 @@
   height: 31% !important;
   object-fit: cover;
   transform: translate(var(--envelope-photo-x, 0%), var(--envelope-photo-y, 0%));
-  transition: transform 180ms ease-out;
+  transition: transform 70ms ease-out;
   filter: grayscale(1) sepia(.15);
 }
 .page4-photo--envelope:focus-visible {
@@ -77,7 +78,7 @@
   .page4-photo img.page4-envelope-photo { transition: none; transform: none; }
 }
 .page4-photo--montanha img.page4-frame { left: 28%; top: 15%; width: 43% !important; height: 72% !important; }
-.page4-photo--envelope:hover { z-index: 2; }
+.page4-photo--envelope:hover { z-index: 4; }
 @media (max-width: 760px) {
   .page4-photos { height: 70vw; }
   .page4-photo--envelope { right: 44vw; width: 34vw; }
