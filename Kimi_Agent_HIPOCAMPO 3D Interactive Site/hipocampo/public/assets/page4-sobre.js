@@ -21,25 +21,52 @@ function buildSection() {
     </div>
     <div class="page4-photos">
       ${PHOTOS.map(([n, alt]) => `
-        <figure class="page4-photo page4-photo--${n}">
+        <figure class="page4-photo page4-photo--${n}" ${n === 'envelope' ? 'tabindex="0" aria-label="Envelope com fotografias: mova o mouse ou use as setas para explorar"' : ''}>
           <img src="/images/sobre/${n}.webp" alt="${alt}" loading="lazy" />
-          <img class="page4-frame" src="${FRAMES[0]}" alt="" aria-hidden="true" />
+          ${n === 'envelope' ? `<span class="page4-envelope-window" aria-hidden="true"><img class="page4-envelope-photo" src="${FRAMES[0]}" alt="" /></span>` : ''}
         </figure>`).join('')}
     </div>`
   FRAMES.forEach((f) => { const i = new Image(); i.src = f })
   s.querySelectorAll('.page4-photo').forEach((fig) => {
     // o efeito de gif com o mouse fica apenas na carta (envelope)
     if (!fig.classList.contains('page4-photo--envelope')) return
-    const frame = fig.querySelector('.page4-frame')
-    let t = 0, i = 0
-    const start = () => {
-      fig.classList.add('is-playing')
-      frame.src = FRAMES[i % FRAMES.length]
-      t = setInterval(() => { i++; frame.src = FRAMES[i % FRAMES.length] }, 220)
+    const frame = fig.querySelector('.page4-envelope-photo')
+    let pendingFrame = 0
+    let x = 0.5, y = 0.5, index = -1
+    const render = () => {
+      pendingFrame = 0
+      const next = Math.min(FRAMES.length - 1, Math.floor(x * FRAMES.length))
+      if (next !== index) {
+        index = next
+        frame.src = FRAMES[index]
+      }
+      fig.style.setProperty('--envelope-photo-x', `${(x - 0.5) * 5}%`)
+      fig.style.setProperty('--envelope-photo-y', `${-y * 6}%`)
     }
-    const stop = () => { clearInterval(t); fig.classList.remove('is-playing') }
-    fig.addEventListener('pointerenter', start)
-    fig.addEventListener('pointerleave', stop)
+    const schedule = () => {
+      if (!pendingFrame) pendingFrame = requestAnimationFrame(render)
+    }
+    const reset = () => {
+      x = 0.5
+      y = 0
+      schedule()
+    }
+    fig.addEventListener('pointermove', (event) => {
+      const rect = fig.getBoundingClientRect()
+      x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+      y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+      schedule()
+    }, { passive: true })
+    fig.addEventListener('pointerleave', reset)
+    fig.addEventListener('blur', reset)
+    fig.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
+      event.preventDefault()
+      index = (index + (event.key === 'ArrowRight' ? 1 : -1) + FRAMES.length) % FRAMES.length
+      x = (index + 0.5) / FRAMES.length
+      y = 0.5
+      render()
+    })
   })
   return s
 }
