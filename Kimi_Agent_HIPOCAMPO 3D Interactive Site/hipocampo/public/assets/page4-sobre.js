@@ -31,59 +31,38 @@ function buildSection() {
     // o efeito de gif com o mouse fica apenas na carta (envelope)
     if (!fig.classList.contains('page4-photo--envelope')) return
     const frame = fig.querySelector('.page4-envelope-photo')
-    let pendingFrame = 0
-    let timer = 0
-    let index = 0
-    let hovering = false, focused = false
-    let x = 0.5, y = 0
-    const showPhoto = () => { frame.src = FRAMES[index] }
-    const render = () => {
-      pendingFrame = 0
+    let index = 0, lastX = null, lastY = null, distance = 0, lastChange = -Infinity
+    const reset = () => {
+      lastX = lastY = null
+      distance = 0
+      fig.style.setProperty('--envelope-photo-x', '0%')
+      fig.style.setProperty('--envelope-photo-y', '0%')
+    }
+    fig.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch') return
+      const rect = fig.getBoundingClientRect()
+      const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+      const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+      if (lastX !== null) distance += Math.hypot(event.clientX - lastX, event.clientY - lastY)
+      lastX = event.clientX
+      lastY = event.clientY
+      if (distance >= 8 && event.timeStamp - lastChange >= 70) {
+        index = (index + 1) % FRAMES.length
+        frame.src = FRAMES[index]
+        distance = 0
+        lastChange = event.timeStamp
+      }
       fig.style.setProperty('--envelope-photo-x', `${(x - 0.5) * 5}%`)
       fig.style.setProperty('--envelope-photo-y', `${-y * 6}%`)
-    }
-    const schedule = () => {
-      if (!pendingFrame) pendingFrame = requestAnimationFrame(render)
-    }
-    const stop = () => {
-      clearInterval(timer)
-      timer = 0
-      x = 0.5
-      y = 0
-      schedule()
-    }
-    const updatePlayback = () => {
-      if (hovering || focused) {
-        if (timer) return
-        index = (index + 1) % FRAMES.length
-        showPhoto()
-        timer = setInterval(() => {
-          index = (index + 1) % FRAMES.length
-          showPhoto()
-        }, 100)
-      } else stop()
-    }
-    // Listen on the entire figure, including the paper below the opening.
-    fig.addEventListener('pointerenter', () => { hovering = true; updatePlayback() })
-    fig.addEventListener('pointerleave', () => { hovering = false; updatePlayback() })
-    fig.addEventListener('focus', () => { focused = true; updatePlayback() })
-    fig.addEventListener('blur', () => { focused = false; updatePlayback() })
-    fig.addEventListener('pointermove', (event) => {
-      const rect = fig.getBoundingClientRect()
-      x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
-      y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
-      schedule()
     }, { passive: true })
+    fig.addEventListener('pointerleave', reset)
+    fig.addEventListener('blur', reset)
     fig.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
       event.preventDefault()
       index = (index + (event.key === 'ArrowRight' ? 1 : -1) + FRAMES.length) % FRAMES.length
-      showPhoto()
+      frame.src = FRAMES[index]
     })
-    const pause = () => { hovering = false; focused = false; stop() }
-    window.addEventListener('blur', pause)
-    window.addEventListener('pagehide', pause)
-    document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
   })
   return s
 }
