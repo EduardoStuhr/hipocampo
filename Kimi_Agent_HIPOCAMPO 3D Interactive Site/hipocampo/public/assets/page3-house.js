@@ -128,6 +128,46 @@ async function mount(section) {
   room.visible = false
   scene.add(room)
 
+  // Portas com pivô na dobradiça; o progresso do scroll controla ida e volta.
+  const doorW = 0.24, doorH = 0.65
+  const doorTexture = housePiece.mat.map.clone()
+  const hd = housePiece.d
+  doorTexture.repeat.set(doorW * UNIT / hd.w, doorH * UNIT / hd.h)
+  doorTexture.offset.set((DOOR_PX.x - doorW * UNIT / 2 - hd.x) / hd.w,
+    1 - (DOOR_PX.y + doorH * UNIT / 2 - hd.y) / hd.h)
+  doorTexture.needsUpdate = true
+  const makeDoor = (width, height, texture) => {
+    const group = new THREE.Group()
+    const opening = new THREE.Mesh(new THREE.PlaneGeometry(width, height),
+      new THREE.MeshBasicMaterial({ color: 0x18140f, side: THREE.DoubleSide, fog: false }))
+    opening.position.z = -0.006
+    group.add(opening)
+    const hinge = new THREE.Group()
+    hinge.position.x = -width / 2
+    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(width, height),
+      new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, fog: false }))
+    leaf.position.x = width / 2
+    hinge.add(leaf)
+    group.add(hinge)
+    const frameMat = new THREE.MeshBasicMaterial({ color: 0x95876c, fog: false })
+    for (const side of [-1, 1]) {
+      const jamb = new THREE.Mesh(new THREE.BoxGeometry(width * 0.07, height * 1.07, 0.06), frameMat)
+      jamb.position.x = side * width * 0.535
+      group.add(jamb)
+    }
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(width * 1.14, height * 0.045, 0.06), frameMat)
+    lintel.position.y = height * 0.535
+    group.add(lintel)
+    return { group, hinge, opening }
+  }
+  const entrance = makeDoor(doorW, doorH, doorTexture)
+  entrance.group.position.set(door.x, door.y, 0.025)
+  scene.add(entrance.group)
+  const exit = makeDoor(1.25, 2.5, doorTexture)
+  exit.group.position.set(door.x, door.y + 0.05, -roomDepth + 0.03)
+  exit.opening.material.color.set(fade.style.background || '#ffffff')
+  scene.add(exit.group)
+
   // ---------- câmera ----------
   const mapH = manifest.height / UNIT
   const fitZ = () => {
@@ -188,16 +228,17 @@ async function mount(section) {
   const frame = (now) => {
     raf = visible ? requestAnimationFrame(frame) : 0
     const t = now
-    progress += (target - progress) * 0.09
+    progress += (target - progress) * (reduced < 1 ? 1 : 0.09)
     const p = progress
     pointer.sx += (pointer.x - pointer.sx) * 0.05
     pointer.sy += (pointer.y - pointer.sy) * 0.05
 
     // fases do scroll
     const focus = smooth(0.08, 0.62, p) // aproxima da casa
-    const enter = smooth(0.58, 0.82, p) // atravessa a porta
+    const enter = smooth(0.67, 0.84, p) // atravessa a porta
     const explode = smooth(0.12, 0.7, p) // fragmentos se espalham em profundidade
-    const out = smooth(0.86, 0.99, p) // revela a próxima página
+    const leave = smooth(0.91, 0.99, p)
+    const out = smooth(0.975, 1, p) // revela a próxima página
 
     // peças: movimento de respiração original (mantido) + dispersão 3D
     others.forEach((pc) => {
@@ -245,6 +286,12 @@ async function mount(section) {
       lerp(lerp(sy0, housePos.y, focus), door.y + 0.05, toDoor) - pointer.sy * parallax,
       lerp(lerp(z0, 1.6, focus), -roomDepth + 2.2, enter),
     )
+    camPos.z = lerp(camPos.z, -roomDepth - 0.3, leave)
+    entrance.hinge.rotation.y = -smooth(0.55, 0.67, p) * Math.PI * 0.48
+    entrance.group.visible = camPos.z > 0.02
+    entrance.group.position.y = door.y + Math.sin(t * 0.0003) * 0.01 * reduced
+    exit.hinge.rotation.y = -smooth(0.85, 0.93, p) * Math.PI * 0.48
+    exit.group.visible = p > 0.7 && camPos.z > exit.group.position.z
     lookAt.set(camPos.x, camPos.y, camPos.z - 5)
     // The interior must not show through the facade's transparent windows.
     // Reveal it only once the camera has crossed the room's front plane.
@@ -256,8 +303,8 @@ async function mount(section) {
     camera.position.copy(camPos)
     camera.lookAt(lookAt)
     // balanço com o mouse dentro da casa
-    camera.rotation.y += -pointer.sx * 0.22 * enter
-    camera.rotation.x += -pointer.sy * 0.12 * enter
+    camera.rotation.y += -pointer.sx * 0.22 * enter * (1 - leave)
+    camera.rotation.x += -pointer.sy * 0.12 * enter * (1 - leave)
     camera.rotation.z = Math.sin(enter * Math.PI) * 0.04 + pointer.sx * 0.03 * enter + Math.sin(t * 0.0006) * 0.008 * enter
 
     // pêndulos: as memórias penduradas balançam com o movimento do mouse
