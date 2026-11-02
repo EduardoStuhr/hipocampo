@@ -89,6 +89,17 @@ async function mount(section) {
   const housePiece = pieces.find((p) => p.d.tipo === 'casa')
   const others = pieces.filter((p) => p !== housePiece)
 
+  // ---------- brilho de fundo (mesmo ::before do mapa da página 2) ----------
+  const glowC = document.createElement('canvas'); glowC.width = glowC.height = 256
+  const gg = glowC.getContext('2d'); const gr = gg.createRadialGradient(128, 128, 0, 128, 128, 128)
+  gr.addColorStop(0, 'rgba(241,237,226,0.74)'); gr.addColorStop(0.72, 'rgba(241,237,226,0)')
+  gg.fillStyle = gr; gg.fillRect(0, 0, 256, 256)
+  const glowTex = new THREE.CanvasTexture(glowC); glowTex.colorSpace = THREE.SRGBColorSpace
+  const glowMat = new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, fog: false })
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(manifest.width / UNIT * 0.84, manifest.height / UNIT * 0.72), glowMat)
+  glow.position.set(0, 0, -0.05); glow.renderOrder = -1
+  scene.add(glow)
+
   // ---------- fios ----------
   const linePositions = new Float32Array(others.length * 6)
   const lineGeo = new THREE.BufferGeometry()
@@ -199,13 +210,14 @@ async function mount(section) {
   let target = 0, progress = 0, visible = false, raf = 0
   let page3Intersecting = false, installationIntersecting = false
   let heroPinFinished = false
+  let wantActive = false
   ScrollTrigger.create({
     trigger: section, start: 'top top', end: 'bottom bottom',
     onUpdate: (st) => {
       target = st.progress
       const active = st.progress > 0.0005
-      if (domMap) domMap.style.visibility = active ? 'hidden' : ''
-      canvas.style.opacity = active ? '1' : '0'
+      wantActive = active
+      if (!active) { measureStart(); if (domMap) domMap.style.visibility = ''; canvas.style.opacity = '0' }
     },
     onRefresh: measureStart,
   })
@@ -228,15 +240,15 @@ async function mount(section) {
   const frame = (now) => {
     raf = visible ? requestAnimationFrame(frame) : 0
     const t = now
-    progress += (target - progress) * (reduced < 1 ? 1 : 0.09)
+    progress += (target - progress) * (reduced < 1 ? 1 : 0.14)
     const p = progress
     pointer.sx += (pointer.x - pointer.sx) * 0.05
     pointer.sy += (pointer.y - pointer.sy) * 0.05
 
     // fases do scroll
-    const focus = smooth(0.08, 0.62, p) // aproxima da casa
+    const focus = smooth(0.0, 0.5, p) // aproxima da casa
     const enter = smooth(0.67, 0.84, p) // atravessa a porta
-    const explode = smooth(0.12, 0.7, p) // fragmentos se espalham em profundidade
+    const explode = smooth(0.0, 0.55, p) // fragmentos se espalham em profundidade
     const leave = smooth(0.91, 0.99, p)
     const out = smooth(0.975, 1, p) // revela a próxima página
 
@@ -265,8 +277,9 @@ async function mount(section) {
     })
     lineGeo.attributes.position.needsUpdate = true
     lineMat.opacity = 1 - enter
+    glowMat.opacity = 1 - focus
 
-    scene.fog.near = lerp(14, 6, focus); scene.fog.far = lerp(30, 18, focus)
+    scene.fog.near = lerp(400, 6, focus); scene.fog.far = lerp(800, 18, focus)
 
     // trajetória da câmera
     // enquadramento inicial idêntico ao mapa da página 2 (mesma posição e tamanho na tela)
@@ -279,7 +292,7 @@ async function mount(section) {
       sx0 = -(startRect.cx - vw / 2) * wpp
       sy0 = (startRect.cy - vh / 2) * wpp
     }
-    const toDoor = smooth(0.35, 0.7, p)
+    const toDoor = smooth(0.28, 0.66, p)
     const parallax = focus * (1 - enter) * 0.2
     camPos.set(
       lerp(lerp(sx0, housePos.x, focus), door.x, toDoor) + pointer.sx * parallax,
@@ -317,12 +330,17 @@ async function mount(section) {
       sw.pivot.rotation.z = sw.angle + Math.sin(t * 0.0009 + sw.phase) * 0.035 * reduced
     })
 
-    renderer.setClearColor(0xffffff, smooth(0.0, 0.18, p))
+    renderer.setClearColor(0xffffff, smooth(0.0, 0.05, p))
 
-    capA.style.opacity = String(smooth(0.02, 0.12, p) * (1 - smooth(0.22, 0.32, p)))
+    capA.style.opacity = String(smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
     capB.style.opacity = String(smooth(0.36, 0.46, p) * (1 - smooth(0.56, 0.64, p)))
     fade.style.opacity = String(out)
     renderer.render(scene, camera)
+    if (wantActive && canvas.style.opacity !== '1') {
+      measureStart()
+      canvas.style.opacity = '1'
+      if (domMap) domMap.style.visibility = 'hidden'
+    }
   }
 
   const warmRenderer = () => {
