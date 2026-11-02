@@ -1,6 +1,7 @@
 // Página 3 — transição em three.js: o mapa de memória vira cena 3D,
-// a câmera foca a casa, atravessa a porta e revela a página seguinte.
+// a casa se abre em papel, revela as memórias e se funde à página seguinte.
 import * as THREE from './vendor/three.module.min.js'
+import { createPaperTransition } from './paper-transition.js?v=1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -22,7 +23,7 @@ function buildSection() {
       <canvas class="page3-canvas" aria-hidden="true"></canvas>
       <p class="page3-caption page3-caption--a">cada fragmento aponta para um lugar</p>
       <p class="page3-caption page3-caption--b">entre na casa</p>
-      <div class="page3-fade" aria-hidden="true"></div>
+      <p class="page3-description">Dentro da casa, fragmentos de fotografias e lembranças ficam suspensos nas paredes.</p>
     </div>`
   return section
 }
@@ -46,13 +47,8 @@ async function mount(section) {
   const manifest = await (await fetch(MANIFEST_URL)).json()
   const canvas = section.querySelector('.page3-canvas')
   const stage = section.querySelector('.page3-stage')
-  const fade = section.querySelector('.page3-fade')
   const capA = section.querySelector('.page3-caption--a')
   const capB = section.querySelector('.page3-caption--b')
-  const next = section.nextElementSibling
-  fade.style.background = next ? getComputedStyle(next).backgroundColor : getComputedStyle(document.body).backgroundColor
-  if (!fade.style.background || fade.style.background === 'rgba(0, 0, 0, 0)') fade.style.background = getComputedStyle(document.body).backgroundColor
-
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false })
   renderer.setPixelRatio(clamp(window.devicePixelRatio || 1, 1, 2))
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -60,16 +56,29 @@ async function mount(section) {
   const paper = new THREE.Color('#ffffff')
   scene.fog = new THREE.Fog(paper, 14, 30)
   const camera = new THREE.PerspectiveCamera(42, 1, 0.02, 80)
+  const roomScene = new THREE.Scene()
+  const roomCamera = camera.clone()
+  const transition = createPaperTransition(renderer)
   const maxAniso = renderer.capabilities.getMaxAnisotropy()
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)')
+  let reduced = motionPreference.matches
+  section.classList.toggle('is-reduced-motion', reduced)
 
   const cx = manifest.width / 2, cy = manifest.height / 2
   const toWorld = (px, py) => new THREE.Vector3((px - cx) / UNIT, -(py - cy) / UNIT, 0)
+  const textureReady = []
   const loader = new THREE.TextureLoader()
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.5 : 1
+  const loadTexture = (url) => {
+    let texture
+    textureReady.push(new Promise((resolve, reject) => {
+      texture = loader.load(url, resolve, undefined, reject)
+    }))
+    return texture
+  }
 
   // ---------- peças do mapa ----------
   const pieces = manifest.pieces.map((d, i) => {
-    const tex = loader.load(d.src.replace('.webp', '-hd.webp')); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = maxAniso
+    const tex = loadTexture(d.src.replace('.webp', '-hd.webp')); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = maxAniso
     const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.02, depthWrite: d.tipo === 'casa', fog: true })
     const w = d.w / UNIT, h = d.h / UNIT
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat)
@@ -136,48 +145,7 @@ async function mount(section) {
   })
   const door = toWorld(DOOR_PX.x, DOOR_PX.y)
   room.position.set(door.x, door.y + roomH / 2 - 0.25, -roomDepth / 2 - 0.05)
-  room.visible = false
-  scene.add(room)
-
-  // Portas com pivô na dobradiça; o progresso do scroll controla ida e volta.
-  const doorW = 0.24, doorH = 0.65
-  const doorTexture = housePiece.mat.map.clone()
-  const hd = housePiece.d
-  doorTexture.repeat.set(doorW * UNIT / hd.w, doorH * UNIT / hd.h)
-  doorTexture.offset.set((DOOR_PX.x - doorW * UNIT / 2 - hd.x) / hd.w,
-    1 - (DOOR_PX.y + doorH * UNIT / 2 - hd.y) / hd.h)
-  doorTexture.needsUpdate = true
-  const makeDoor = (width, height, texture) => {
-    const group = new THREE.Group()
-    const opening = new THREE.Mesh(new THREE.PlaneGeometry(width, height),
-      new THREE.MeshBasicMaterial({ color: 0x18140f, side: THREE.DoubleSide, fog: false }))
-    opening.position.z = -0.006
-    group.add(opening)
-    const hinge = new THREE.Group()
-    hinge.position.x = -width / 2
-    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(width, height),
-      new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, fog: false }))
-    leaf.position.x = width / 2
-    hinge.add(leaf)
-    group.add(hinge)
-    const frameMat = new THREE.MeshBasicMaterial({ color: 0x95876c, fog: false })
-    for (const side of [-1, 1]) {
-      const jamb = new THREE.Mesh(new THREE.BoxGeometry(width * 0.07, height * 1.07, 0.06), frameMat)
-      jamb.position.x = side * width * 0.535
-      group.add(jamb)
-    }
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(width * 1.14, height * 0.045, 0.06), frameMat)
-    lintel.position.y = height * 0.535
-    group.add(lintel)
-    return { group, hinge, opening }
-  }
-  const entrance = makeDoor(doorW, doorH, doorTexture)
-  entrance.group.position.set(door.x, door.y, 0.025)
-  scene.add(entrance.group)
-  const exit = makeDoor(1.25, 2.5, doorTexture)
-  exit.group.position.set(door.x, door.y + 0.05, -roomDepth + 0.03)
-  exit.opening.material.color.set(fade.style.background || '#ffffff')
-  scene.add(exit.group)
+  roomScene.add(room)
 
   // ---------- câmera ----------
   const mapH = manifest.height / UNIT
@@ -198,32 +166,53 @@ async function mount(section) {
     const r = domMap.getBoundingClientRect(), s0 = section.getBoundingClientRect()
     if (r.width) startRect = { cx: r.left + r.width / 2, cy: r.top - s0.top + r.height / 2, h: r.height }
   }
+  let viewportW = 1, viewportH = 1
+  const updatePaperColor = () => {
+    // #sobre is inserted by another module after mount has started.
+    const next = document.querySelector('#sobre') || section.nextElementSibling
+    const color = next && getComputedStyle(next).backgroundColor
+    transition.uniforms.paper.value.set(color && color !== 'rgba(0, 0, 0, 0)' ? color : '#ffffff')
+  }
   const resize = () => {
     measureStart()
-    const w = stage.clientWidth, h = stage.clientHeight
-    renderer.setSize(w, h, false)
-    camera.aspect = w / h; camera.updateProjectionMatrix()
+    viewportW = Math.max(1, stage.clientWidth)
+    viewportH = Math.max(1, stage.clientHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, viewportW < 760 ? 1.5 : 2))
+    renderer.setSize(viewportW, viewportH, false)
+    camera.aspect = roomCamera.aspect = viewportW / viewportH
+    camera.updateProjectionMatrix()
+    roomCamera.updateProjectionMatrix()
+    transition.resize(viewportW, viewportH)
+    updatePaperColor()
+    staticDirty = true
+    if (visible && !raf) raf = requestAnimationFrame(frame)
   }
-  resize()
-  new ResizeObserver(resize).observe(stage)
 
-  let target = 0, progress = 0, visible = false, raf = 0
-  let page3Intersecting = false, installationIntersecting = false
-  let heroPinFinished = false
-  let wantActive = false
-  ScrollTrigger.create({
+  let target = 0, progress = 0, visible = false, raf = 0, lastFrame = 0
+  let page3Intersecting = false, staticDirty = true
+  const scroll = ScrollTrigger.create({
+    id: 'hipocampo-house',
     trigger: section, start: 'top top', end: 'bottom bottom',
     onUpdate: (st) => {
       target = st.progress
-      const active = st.progress > 0.0005
-      wantActive = active
-      if (!active) { measureStart(); if (domMap) domMap.style.visibility = ''; canvas.style.opacity = '0' }
+      if (target <= 0.0005 && !reduced) {
+        if (domMap) domMap.style.visibility = ''
+        canvas.style.opacity = '0'
+      }
     },
-    onRefresh: measureStart,
+    onRefresh: () => {
+      measureStart()
+      updatePaperColor()
+    },
   })
-  let lastPX = 0, pointerVel = 0
+  target = progress = scroll.progress
+  resize()
+  const resizeObserver = new ResizeObserver(resize)
+  resizeObserver.observe(stage)
+  let lastPX = null, pointerVel = 0
   const onPointerMove = (e) => {
-    pointerVel += (e.clientX - lastPX) / window.innerWidth; lastPX = e.clientX
+    if (lastPX !== null) pointerVel += (e.clientX - lastPX) / viewportW
+    lastPX = e.clientX
     pointer.x = (e.clientX / window.innerWidth) * 2 - 1
     pointer.y = (e.clientY / window.innerHeight) * 2 - 1
   }
@@ -232,31 +221,41 @@ async function mount(section) {
     if (enabled === pointerListening) return
     pointerListening = enabled
     if (enabled) window.addEventListener('pointermove', onPointerMove, { passive: true })
-    else window.removeEventListener('pointermove', onPointerMove)
+    else {
+      window.removeEventListener('pointermove', onPointerMove)
+      lastPX = null
+      pointer.x = pointer.y = pointer.sx = pointer.sy = pointerVel = 0
+    }
   }
 
   const tmp = new THREE.Vector3()
+  const projectedDoor = new THREE.Vector3()
   canvas.style.opacity = '0'
   const frame = (now) => {
-    raf = visible ? requestAnimationFrame(frame) : 0
-    const t = now
-    progress += (target - progress) * (reduced < 1 ? 1 : 0.14)
-    const p = progress
+    raf = visible && !reduced ? requestAnimationFrame(frame) : 0
+    const dt = Math.min((now - (lastFrame || now)) / 1000, 0.05)
+    lastFrame = now
+    if (reduced && !staticDirty) return
+    staticDirty = false
+    const t = reduced ? 0 : now
+    progress += (target - progress) * (1 - Math.exp(-dt * 16))
+    if (Math.abs(target - progress) < 0.0001) progress = target
+    const p = reduced ? 0.72 : progress
+    const motion = reduced ? 0 : 1
     pointer.sx += (pointer.x - pointer.sx) * 0.05
     pointer.sy += (pointer.y - pointer.sy) * 0.05
 
     // fases do scroll
-    const focus = smooth(0.0, 0.5, p) // aproxima da casa
-    const enter = smooth(0.67, 0.84, p) // atravessa a porta
-    const explode = smooth(0.0, 0.55, p) // fragmentos se espalham em profundidade
-    const leave = smooth(0.91, 0.99, p)
-    const out = smooth(0.975, 1, p) // revela a próxima página
+    const focus = smooth(0.0, 0.44, p) // aproxima da casa
+    const enter = smooth(0.46, 0.66, p) // o papel revela o interior
+    const explode = smooth(0.0, 0.46, p) // fragmentos se espalham em profundidade
+    const leave = reduced ? 0 : smooth(0.86, 0.98, p)
 
     // peças: movimento de respiração original (mantido) + dispersão 3D
     others.forEach((pc) => {
-      const idleX = Math.sin(t * 0.00042 + pc.phase) * 0.028 * reduced
-      const idleY = Math.cos(t * 0.00036 + pc.phase * 1.17) * 0.024 * reduced
-      const idleR = Math.sin(t * 0.00025 + pc.phase) * 0.38 * reduced
+      const idleX = Math.sin(t * 0.00042 + pc.phase) * 0.028 * motion
+      const idleY = Math.cos(t * 0.00036 + pc.phase * 1.17) * 0.024 * motion
+      const idleR = Math.sin(t * 0.00025 + pc.phase) * 0.38 * motion
       const spread = explode * (1.2 + pc.seed * 2.4)
       pc.group.position.set(
         pc.center.x + idleX + pc.dir.x * spread * 0.9,
@@ -268,7 +267,7 @@ async function mount(section) {
       pc.mat.opacity = 1 - enter
     })
     // casa: leve respiração própria
-    housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * 0.01 * reduced, 0)
+    housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * 0.01 * motion, 0)
 
     // fios: da casa até a âncora de cada peça (acompanham o movimento)
     others.forEach((pc, i) => {
@@ -284,7 +283,7 @@ async function mount(section) {
     // trajetória da câmera
     // enquadramento inicial idêntico ao mapa da página 2 (mesma posição e tamanho na tela)
     const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)
-    const vh = stage.clientHeight, vw = stage.clientWidth
+    const vh = viewportH, vw = viewportW
     let z0 = fitZ(), sx0 = 0, sy0 = 0
     if (startRect) {
       z0 = mapH * vh / (startRect.h * 2 * tanH)
@@ -292,92 +291,105 @@ async function mount(section) {
       sx0 = -(startRect.cx - vw / 2) * wpp
       sy0 = (startRect.cy - vh / 2) * wpp
     }
-    const toDoor = smooth(0.28, 0.66, p)
-    const parallax = focus * (1 - enter) * 0.2
+    const toDoor = smooth(0.2, 0.44, p)
+    const parallax = focus * (1 - enter) * 0.035 * motion
     camPos.set(
       lerp(lerp(sx0, housePos.x, focus), door.x, toDoor) + pointer.sx * parallax,
       lerp(lerp(sy0, housePos.y, focus), door.y + 0.05, toDoor) - pointer.sy * parallax,
-      lerp(lerp(z0, 1.6, focus), -roomDepth + 2.2, enter),
+      lerp(z0, 1.8, focus),
     )
-    camPos.z = lerp(camPos.z, -roomDepth - 0.3, leave)
-    entrance.hinge.rotation.y = -smooth(0.55, 0.67, p) * Math.PI * 0.48
-    entrance.group.visible = camPos.z > 0.02
-    entrance.group.position.y = door.y + Math.sin(t * 0.0003) * 0.01 * reduced
-    exit.hinge.rotation.y = -smooth(0.85, 0.93, p) * Math.PI * 0.48
-    exit.group.visible = p > 0.7 && camPos.z > exit.group.position.z
-    lookAt.set(camPos.x, camPos.y, camPos.z - 5)
-    // The interior must not show through the facade's transparent windows.
-    // Reveal it only once the camera has crossed the room's front plane.
-    const roomFrontZ = room.position.z + roomDepth / 2
-    const insideRoom = camPos.z < roomFrontZ - camera.near
-    room.visible = insideRoom
-    housePiece.mat.opacity = insideRoom ? 0 : 1
-    housePiece.mat.depthWrite = !insideRoom
     camera.position.copy(camPos)
+    lookAt.set(camPos.x, camPos.y, camPos.z - 5)
     camera.lookAt(lookAt)
-    // balanço com o mouse dentro da casa
-    camera.rotation.y += -pointer.sx * 0.22 * enter * (1 - leave)
-    camera.rotation.x += -pointer.sy * 0.12 * enter * (1 - leave)
-    camera.rotation.z = Math.sin(enter * Math.PI) * 0.04 + pointer.sx * 0.03 * enter + Math.sin(t * 0.0006) * 0.008 * enter
+    camera.updateMatrixWorld()
+    projectedDoor.copy(door).project(camera)
+    transition.uniforms.center.value.set((projectedDoor.x + 1) / 2, (projectedDoor.y + 1) / 2)
+    const pixelsPerUnit = vh / (2 * camPos.z * tanH)
+    transition.uniforms.doorway.value.set(0.12 * pixelsPerUnit, 0.325 * pixelsPerUnit)
+
+    // An independent camera is already inside the room. It never crosses a wall.
+    const travel = reduced ? 0.3 : smooth(0.66, 0.86, p)
+    roomCamera.position.set(door.x, room.position.y - 0.15, lerp(-0.9, -4.8, travel))
+    roomCamera.rotation.set(-pointer.sy * 0.035 * motion, -pointer.sx * 0.06 * motion, 0)
 
     // pêndulos: as memórias penduradas balançam com o movimento do mouse
     pointerVel *= 0.85
     swingers.forEach((sw) => {
+      if (reduced) { sw.angle = sw.vel = sw.pivot.rotation.z = 0; return }
       const dir = sw.side === 1 ? -1 : 1
-      sw.vel += (-sw.angle * 0.012 + pointerVel * 0.05 * dir / sw.mass) * reduced
+      sw.vel += (-sw.angle * 0.012 + pointerVel * 0.05 * dir / sw.mass) * motion
       sw.vel *= 0.965
       sw.angle += sw.vel
-      sw.pivot.rotation.z = sw.angle + Math.sin(t * 0.0009 + sw.phase) * 0.035 * reduced
+      sw.pivot.rotation.z = sw.angle + Math.sin(t * 0.0009 + sw.phase) * 0.035 * motion
     })
 
-    renderer.setClearColor(0xffffff, smooth(0.0, 0.05, p))
+    renderer.setClearColor(0xffffff, reduced ? 1 : smooth(0.0, 0.05, p))
 
-    capA.style.opacity = String(smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
-    capB.style.opacity = String(smooth(0.36, 0.46, p) * (1 - smooth(0.56, 0.64, p)))
-    fade.style.opacity = String(out)
-    renderer.render(scene, camera)
-    if (wantActive && canvas.style.opacity !== '1') {
-      measureStart()
+    capA.style.opacity = String(reduced ? 0 : smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
+    capB.style.opacity = String(reduced ? 0 : smooth(0.31, 0.39, p) * (1 - smooth(0.44, 0.49, p)))
+    transition.render(scene, camera, roomScene, roomCamera, enter, leave)
+    if (reduced || target > 0.0005) {
       canvas.style.opacity = '1'
-      if (domMap) domMap.style.visibility = 'hidden'
+      if (domMap && !reduced) domMap.style.visibility = 'hidden'
     }
   }
 
-  const warmRenderer = () => {
-    renderer.compileAsync?.(scene, camera).catch(() => {})
+  // Do not replace the DOM map with a frame whose images are still loading.
+  try {
+    await Promise.all(textureReady)
+  } catch (error) {
+    scroll.kill()
+    resizeObserver.disconnect()
+    transition.dispose()
+    renderer.dispose()
+    throw error
   }
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(warmRenderer, { timeout: 1500 })
-  } else {
-    window.setTimeout(warmRenderer, 0)
-  }
-
+  let contextLost = false
   const updateRenderActivity = () => {
-    visible = heroPinFinished && page3Intersecting && !installationIntersecting
-    setPointerListening(visible)
+    const wasVisible = visible
+    visible = page3Intersecting && !document.hidden && !contextLost
+    setPointerListening(visible && !reduced)
+    if (visible && !wasVisible) {
+      progress = target = scroll.progress
+      lastFrame = 0
+      staticDirty = true
+    }
     if (visible && !raf) raf = requestAnimationFrame(frame)
-  }
-  const onHeroPinState = (event) => {
-    heroPinFinished = event.detail?.finished === true
-    updateRenderActivity()
+    if (!visible && raf) { cancelAnimationFrame(raf); raf = 0 }
+    if (domMap && (!visible || reduced)) domMap.style.visibility = ''
   }
   const page3Observer = new IntersectionObserver((entries) => {
     page3Intersecting = entries[0].isIntersecting
     updateRenderActivity()
   }, { threshold: 0 })
-  const installationObserver = new IntersectionObserver((entries) => {
-    installationIntersecting = entries[0].isIntersecting
-    updateRenderActivity()
-  }, { threshold: 0, rootMargin: '300px 0px 300px 0px' })
-  const observeInstallation = () => {
-    const installation = document.querySelector('#instalacao')
-    if (!installation) return false
-    installationObserver.observe(installation)
-    return true
-  }
   page3Observer.observe(section)
-  if (!observeInstallation()) window.__hipocampoWhenReady?.(observeInstallation)
-  window.addEventListener('hipocampo:hero-pin-state', onHeroPinState)
+  document.addEventListener('visibilitychange', updateRenderActivity)
+  motionPreference.addEventListener('change', () => {
+    if (contextLost) return
+    reduced = motionPreference.matches
+    section.classList.toggle('is-reduced-motion', reduced)
+    staticDirty = true
+    setPointerListening(visible && !reduced)
+    if (domMap) domMap.style.visibility = ''
+    resize()
+    ScrollTrigger.refresh()
+  })
+  // Context loss falls back to ordinary page navigation instead of a blank runway.
+  canvas.addEventListener('webglcontextlost', (event) => {
+    event.preventDefault()
+    contextLost = true
+    visible = false
+    cancelAnimationFrame(raf)
+    raf = 0
+    setPointerListening(false)
+    page3Observer.disconnect()
+    resizeObserver.disconnect()
+    scroll.kill()
+    transition.dispose()
+    if (domMap) domMap.style.visibility = ''
+    section.hidden = true
+    ScrollTrigger.refresh()
+  })
   ScrollTrigger.refresh()
 }
 
@@ -387,7 +399,13 @@ function init() {
   if (document.querySelector('#casa')) return true
   const section = buildSection()
   project.after(section)
-  mount(section).catch((e) => console.error('[hipocampo page3]', e))
+  mount(section).catch((e) => {
+    console.error('[hipocampo page3]', e)
+    section.hidden = true
+    const map = document.querySelector('#projeto [data-memory-map]')
+    if (map) map.style.visibility = ''
+    ScrollTrigger.refresh()
+  })
   return true
 }
 

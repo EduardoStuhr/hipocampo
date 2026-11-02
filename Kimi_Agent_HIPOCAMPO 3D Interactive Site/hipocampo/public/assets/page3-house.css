@@ -1,7 +1,7 @@
 #casa.hipocampo-page3 {
   position: relative;
   z-index: 21;
-  height: 620svh;
+  height: 520svh;
   margin-top: -100svh; /* sobrepõe a página 2: a mesma casa vira 3D */
   pointer-events: none;
 }
@@ -24,8 +24,19 @@
   font-size: clamp(1.4rem, 2.2vw, 2.2rem);
   letter-spacing: -0.04em;
   text-transform: lowercase;
-  white-space: nowrap;
+  width: min(80%, 32rem);
+  text-align: center;
+  text-wrap: balance;
   opacity: 0;
   pointer-events: none;
 }
-.page3-fade { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.page3-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+#casa.is-reduced-motion { height: 100svh; margin-top: 0; }
+#casa.is-reduced-motion .page3-stage { position: relative; }
+#casa[hidden] { display: none; }
