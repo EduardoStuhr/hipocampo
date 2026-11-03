@@ -78,10 +78,12 @@ node --check public/assets/installation-room.js
 node --check public/assets/installation-scene.js
 npm run build
 python3 tools/installation-qa.py
+python3 tools/installation-navigation-qa.py
+python3 tools/installation-entry-profile.py
 git diff --check
 ```
 
-As 30 verificações do navegador passaram: transferência entre ilhas com mouse
+As 30 verificações de regressão do navegador passaram: transferência entre ilhas com mouse
 e toque nativo, câmera independente, leitura de memória, Enter/setas/Escape,
 porta/luz vermelha, objetos internos fora do foco com porta fechada, reset
 completo, alternativa sem arrastar, renderização ociosa/fora da tela, movimento
@@ -92,10 +94,43 @@ O ambiente bloqueia dez URLs Unsplash já referenciadas pelo bundle original,
 em outras seções. Elas estão discriminadas em `qa-results.json`; não são usadas
 pela nova sala, que carrega fotos, fontes, texturas e Three.js locais.
 
-Os arquivos originais das demais seções e o chunk antigo da instalação estão
-intactos. Retirar as duas entradas novas do HTML foi verificado como suficiente
-para restaurar o HTML anterior byte a byte. Backup remoto:
+O chunk antigo da instalação, os bundles recuperados e os layouts das demais
+seções estão intactos. Na entrega original, retirar as duas entradas novas do
+HTML foi verificado como suficiente para restaurar seu estado anterior. Backup:
 `backup/instalacao-antes-3d-2026-11-03` → `46f0105`.
+
+## Revisão de entrada, imersão e saída
+
+- Giro horizontal livre, demonstrado por gesto real de mouse de 16,18 radianos
+  (mais de duas voltas), sem mover os fragmentos. Pan por botão direito/meio ou
+  Shift, zoom até perto dos móveis e movimento suave por câmera amortecida.
+- Modo explorar com roda, WASD/QE/setas e toque; Escape e saída da seção limpam
+  as capturas de ponteiro e `data-lenis-prevent`. Nenhum bloqueio de body ou
+  pin de scroll foi acrescentado.
+- Barra de saída permanece dentro da área visível da sala. A geometria é
+  medida no ResizeObserver de layout; o handler de scroll usa o cache local.
+  Resize no mesmo breakpoint preserva a posição de câmera escolhida.
+- “Seguir para os fragmentos” usa o Lenis existente, evitando disputa entre
+  salto nativo e interpolação. O único ajuste em `hero-motion.js` retira a
+  exceção permanente para todo canvas da instalação; a reserva passa a valer
+  somente no modo explorar. A animação da hero não foi modificada.
+- Os 22 checks de navegação também passaram: 360°, pan, zoom, WASD, liberação
+  por Escape, rolagem normal após sair, chegada e rolagem na próxima seção,
+  resize, saída da tela e passagem no mobile. Total: 52 checks funcionais.
+- Evidência: `artifacts/installation-navigation/cached-entry.png`,
+  `orbit-360.png`, `next-section.png` e `navigation-results.json`.
+- Perfil A/B no mesmo Chromium com SwiftShader e viewport 1366 × 768: quadro
+  mais longo da entrada caiu de 1283,2 ms para 33,4 ms; versão atual preparada
+  antes da aproximação, sem long tasks ou reversões de scroll. Os dados estão
+  em `entry-comparison.json`, `entry-baseline.json` e `entry-current.json`.
+  Isso mede esse ambiente, não garante o mesmo FPS em GPUs diferentes.
+- A preparação de geometrias é dividida em tarefas ociosas; upload, shaders,
+  shadow maps e buffer real são aquecidos antecipadamente, com fence consultada
+  sem bloquear. O quadro pronto é mantido, evitando renderização redundante
+  na primeira entrada e em reentradas estáticas. A renderização continua
+  interrompida fora da tela.
+- Backup antes desta correção: `backup/instalacao-antes-camera-2026-11-03`
+  → `b8dc907`; nova tag: `release/instalacao-camera-2026-11-03`.
 
 ## Refinamentos possíveis
 

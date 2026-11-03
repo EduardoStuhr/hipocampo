@@ -335,7 +335,7 @@ function initializeHeroMotion() {
     wheelMultiplier: 0.92,
     prevent: (node) => (
       node instanceof Element
-      && Boolean(node.closest('#instalacao canvas, [data-lenis-prevent], input, textarea, select'))
+      && Boolean(node.closest('[data-lenis-prevent], input, textarea, select'))
     ),
   })
 

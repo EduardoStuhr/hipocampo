@@ -15,6 +15,14 @@
 .installation-stage { position: relative; width: 100%; max-width: 1500px; height: clamp(630px, 65vw, 960px); margin: auto; isolation: isolate; background: #000; }
 .installation-canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
 .installation-canvas.is-dragging { cursor: grabbing; }
+.installation-stage.is-exploring .installation-canvas { touch-action: none; }
+.installation-canvas:focus-visible { outline: 1px solid #b99a56; outline-offset: -2px; }
+.installation-navigation { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.installation-navigation-bar { position: absolute; left: .75rem; top: .75rem; display: flex; flex-wrap: wrap; align-items: center; gap: .2rem 1.4rem; width: fit-content; max-width: calc(100% - 1.5rem); padding: .5rem .8rem; background: #000e; pointer-events: auto; }
+.installation-navigation button, .installation-navigation a { background: none; border: 0; color: #d2b475; font: .75rem/1.4 Georgia, serif; min-height: 44px; display: inline-flex; align-items: center; text-underline-offset: .3em; }
+.installation-navigation a { color: #b8b0a3; text-decoration: underline; }
+.installation-navigation p { flex-basis: 100%; margin: 0; color: #aaa49b; font-size: .69rem; line-height: 1.5; pointer-events: none; }
+.installation-navigation a:focus-visible { outline: 2px solid #f0c765; outline-offset: 4px; }
 .installation-labels, .installation-hit-targets { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .installation-island { position: absolute; top: 0; left: 0; color: #edc267; font: 400 clamp(1.15rem, 1.75vw, 1.8rem)/1.25 "AquilineTwo", cursive; white-space: nowrap; transform: translate(-50%, 0); opacity: 0; text-shadow: 0 1px 8px #000; }
 .installation-object, .installation-fridge-hit { position: absolute; left: 0; top: 0; border: 1px solid transparent; background: transparent; width: 44px; height: 44px; padding: 0; pointer-events: auto; touch-action: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; }

@@ -25,7 +25,9 @@ intacta para restauração.
 ## Interações
 
 - Mouse: arrastar um objeto de qualquer ilha até a mesa de luz; clicar lê sua
-  memória. Soltar fora da mesa devolve à ilha. Arrastar o fundo gira a câmera.
+  memória. Soltar fora da mesa devolve à ilha. Arrastar o fundo gira a câmera
+  em 360° sem limite horizontal. Botão direito, botão do meio ou Shift e arrastar
+  desloca a câmera. O zoom permite aproximar-se dos objetos.
 - Toque: os alvos ampliados dos objetos aceitam arrastar; tocar lê a memória.
   O fundo mantém a rolagem vertical da página.
 - Teclado: Tab encontra objetos; Enter/Espaço leva à mesa; setas deslocam;
@@ -36,6 +38,30 @@ intacta para restauração.
   1,5, shadow maps atualizados quando necessário e recursos liberados no unmount.
 - Com movimento reduzido, as transferências e a porta mudam sem animação. Sem
   WebGL, a leitura de memórias continua disponível na lista de objetos.
+- “Explorar a sala em 360°” habilita zoom pela roda, WASD para caminhar, Q/E
+  para altura, setas para olhar e toque/pinça para navegar. Escape, sair da
+  navegação, perda de foco ou saída da seção liberam os gestos. A página nunca
+  recebe bloqueio de body ou pin. “Seguir para os fragmentos” usa o controlador
+  Lenis existente e transfere o foco para o próximo capítulo.
+
+## Correção de entrada e navegação
+
+A criação das malhas é dividida em tarefas ociosas. Texturas, shaders, sombras e
+o buffer real são preparados antes da aproximação da sala. Uma GPU fence é
+consultada de forma assíncrona, sem `gl.finish()` nem espera bloqueante. O quadro
+pronto permanece válido; entrar novamente na seção não força um novo desenho
+nem recalcula sombras. Resize no mesmo breakpoint preserva a câmera.
+
+Comparação reproduzível no Chromium com SwiftShader, viewport 1366 × 768 e
+cinco segundos de leitura antes de aproximar-se da sala: maior intervalo de
+quadro na entrada de 1283,2 ms para 33,4 ms, sem tarefas longas ou reversões de
+scroll na nova versão. São medidas deste ambiente, não uma garantia de FPS em
+todo aparelho. O script `tools/installation-entry-profile.py` serve a versão
+anterior a partir da tag Git, sem alterar o checkout, e registra os dois runs.
+
+O único ajuste no controlador global de scroll é retirar a exceção permanente
+para todo canvas da instalação. A reserva de gestos é feita apenas enquanto
+o modo explorar tem `data-lenis-prevent`; fora dele, Lenis continua dono da roda.
 
 As fotos da cliente podem substituir os quatro arquivos de fotografia usados
 pela cena; outros objetos podem ser adicionados no catálogo `FRAGMENTS`.
@@ -58,6 +84,8 @@ Com Python Playwright e Chromium instalados:
 ```bash
 HOST=0.0.0.0 PORT=4173 npm run dev
 python3 tools/installation-qa.py
+python3 tools/installation-navigation-qa.py
+python3 tools/installation-entry-profile.py
 ```
 
 `HIPOCAMPO_QA_URL` e `HIPOCAMPO_CHROME` permitem usar outro endereço e executável.
@@ -70,11 +98,18 @@ Capturas e resultados são escritos em `artifacts/installation/` (ignorado).
 - Tag de backup no GitHub: `backup/instalacao-antes-3d-2026-11-03`.
 - Tag da nova versão: `release/instalacao-3d-2026-11-03`.
 - Branch de trabalho: `feat/instalacao-3d-realista`.
+- Backup antes da correção da câmera: `backup/instalacao-antes-camera-2026-11-03`
+  → `b8dc907`.
+- Correção de entrada/câmera: tag `release/instalacao-camera-2026-11-03`, branch
+  `fix/instalacao-entrada-camera`.
 
 Para desfazer esta entrega preservando o histórico posterior, reverta o commit
-identificado pela tag da nova versão e faça um push normal:
+identificado pela tag correspondente e faça um push normal. Para voltar somente
+à sala anterior à correção da câmera, reverta `release/instalacao-camera-2026-11-03`.
+Para retornar ao site anterior à instalação, reverta as duas entregas nesta ordem:
 
 ```bash
+git revert release/instalacao-camera-2026-11-03
 git revert release/instalacao-3d-2026-11-03
 git push origin HEAD:main
 ```

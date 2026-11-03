@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=room-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=navigation-2'
 
 const React = requireReact() // Reuse the application's React singleton.
 const h = React.createElement
@@ -13,37 +13,47 @@ export default function Installation() {
   const [unavailable, setUnavailable] = React.useState(false)
   const [selected, setSelected] = React.useState(null)
   const [fridgeOpen, setFridgeOpen] = React.useState(true)
+  const [navigating, setNavigating] = React.useState(false)
   const [message, setMessage] = React.useState('Cada objeto guarda uma memória. Aproxime os fragmentos na mesa de luz.')
 
   React.useEffect(() => {
     let disposed = false
     let started = false
     const element = root.current
-    const start = () => {
+    const controller = new AbortController()
+    let idle = 0
+    let timer = 0
+    const start = async () => {
       if (started || disposed) return
       started = true
       try {
-        room.current = createInstallationRoom(element, {
+        const instance = await createInstallationRoom(element, {
           onSelect(fragment, atTable) {
             setSelected(fragment.id)
             setMessage(fragment.memory + (atTable ? ' O fragmento agora faz parte da mesa de luz.' : ''))
           },
           onFridgeChange(open) { setFridgeOpen(open) },
+          onNavigationChange(active) { if (!disposed) setNavigating(active) },
           onReady() { if (!disposed) setReady(true) },
           onUnavailable() { if (!disposed) setUnavailable(true) },
-        })
+        }, { signal: controller.signal })
+        if (disposed) instance.dispose()
+        else room.current = instance
       } catch (error) {
+        if (disposed || error.name === 'AbortError') return
         console.error('Não foi possível iniciar a instalação.', error)
         setUnavailable(true)
       }
     }
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) start()
-    }, { rootMargin: '300px' })
-    observer.observe(element)
+    // Prepare during idle time, well before scrolling reaches the room. Heavy
+    // geometry/shader work is also split into tasks inside the scene builder.
+    if ('requestIdleCallback' in window) idle = window.requestIdleCallback(start, { timeout: 1800 })
+    else timer = window.setTimeout(start, 250)
     return () => {
       disposed = true
-      observer.disconnect()
+      if (idle) window.cancelIdleCallback(idle)
+      window.clearTimeout(timer)
+      controller.abort()
       room.current?.dispose()
       room.current = null
     }
@@ -64,6 +74,24 @@ export default function Installation() {
     setFridgeOpen(true)
     setMessage('A sala foi recomposta. Cada fragmento voltou à sua ilha.')
   }
+  const continueToFragments = (event) => {
+    if (event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const target = document.querySelector('#fragmentos')
+    if (!target) return
+    event.preventDefault()
+    room.current?.setNavigation(false)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const focusNext = () => {
+      const heading = target.querySelector('h2') || target
+      heading.setAttribute('tabindex', '-1')
+      heading.focus({ preventScroll: true })
+    }
+    if (window.location.hash !== '#fragmentos') window.history.pushState(null, '', '#fragmentos')
+    // Reuse the page's scroll controller. A native anchor jump would compete
+    // with an in-flight Lenis interpolation and could pull the reader back.
+    if (window.__hipocampoLenis) window.__hipocampoLenis.scrollTo(target, { duration: reduced ? 0 : 1, immediate: reduced, onComplete: focusNext })
+    else { target.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth' }); focusNext() }
+  }
 
   return h('section', { id: 'instalacao', ref: root, className: 'installation', 'aria-labelledby': 'installation-title' },
     h('div', { className: 'installation-heading' },
@@ -81,8 +109,15 @@ export default function Installation() {
         h('button', { type: 'button', onClick: reset, 'data-action': 'reset' }, 'recompor a sala'),
       ),
     ),
-    h('div', { className: 'installation-stage', 'aria-busy': !ready && !unavailable },
-      h('canvas', { className: 'installation-canvas', 'aria-label': 'Instalação tridimensional com três mesas, um cabideiro e uma geladeira. Use os objetos ou os controles abaixo para explorar.', role: 'img' }),
+    h('div', { className: `installation-stage${navigating ? ' is-exploring' : ''}`, 'aria-busy': !ready && !unavailable },
+      h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. No modo explorar, a roda aproxima e afasta, WASD desloca e Escape sai.', role: 'group' }),
+      h('div', { className: 'installation-navigation' },
+        h('div', { className: 'installation-navigation-bar' },
+          h('button', { type: 'button', 'data-action': 'navigate', disabled: !ready || unavailable, 'aria-pressed': navigating, onClick: () => room.current?.setNavigation(!navigating) }, navigating ? 'sair da navegação · Esc' : 'explorar a sala em 360°'),
+          h('a', { href: '#fragmentos', 'data-action': 'continue', onClick: continueToFragments }, 'seguir para os fragmentos'),
+          h('p', null, navigating ? 'roda: aproximar · botão direito: deslocar · WASD: caminhar' : 'arraste: girar 360° · Shift + arrastar: deslocar'),
+        ),
+      ),
       h('div', { className: 'installation-labels', 'aria-hidden': true },
         ...['passado', 'presente', 'futuros', 'temporalidade'].map(island =>
           h('span', { className: 'installation-island', 'data-island': island, key: island }, island === 'futuros' ? 'ilha dos futuros' : island === 'temporalidade' ? 'ilha da temporalidade' : `ilha do ${island}`),
@@ -109,7 +144,7 @@ export default function Installation() {
       ),
     ),
     h('div', { className: 'installation-caption' },
-      h('p', null, 'arraste o fundo para olhar ao redor · toque em um objeto para descobrir sua memória'),
+      h('p', null, 'gire 360° pelo fundo · botão direito ou Shift + arrastar desloca a câmera · toque nos objetos para descobrir memórias'),
       h('p', null, 'fotografias, matéria e tempo'),
     ),
     h('div', { className: 'installation-memory' },

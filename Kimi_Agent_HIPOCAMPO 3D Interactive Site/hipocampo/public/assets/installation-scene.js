@@ -19,9 +19,11 @@ const MOBILE_LAYOUT = {
   past: [-2.15, 0, -.1], present: [2.15, 0, -.1], future: [0, 0, 3.8], fridge: [0, 0, -3.8],
 }
 
-export function createInstallationRoom(root, callbacks) {
+export async function createInstallationRoom(root, callbacks, { signal } = {}) {
+  const buildStarted = performance.now()
   const stage = root.querySelector('.installation-stage')
   const canvas = root.querySelector('.installation-canvas')
+  const navigationBar = root.querySelector('.installation-navigation-bar')
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#000000')
   scene.fog = new THREE.Fog('#000000', 25, 55)
@@ -53,16 +55,33 @@ export function createInstallationRoom(root, callbacks) {
   const textures = new Set()
   const materials = new Set()
   const geometries = new Set()
+  const textureReady = []
   const motions = new Map()
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
   let disposed = false
+  let prepared = false
+  let preparationMs = 0
+  let observer = null
+  let resizeObserver = null
+  let api = null
   let visible = false
   let contextLost = false
   let raf = 0
+  let controlsFrame = 0
+  let controlsDocumentTop = 0
+  let controlsHeight = 0
   let dirty = true
   let shadowsDirty = true
   let mobile = false
-  let view = { yaw: 0, pitch: .38, distance: 16.8 }
+  let view = { yaw: 0, pitch: .38, distance: 16.8, panX: 0, panY: 0, panZ: 0 }
+  let renderedView = { ...view }
+  let navigating = false
+  const cameraKeys = new Set()
+  const cameraRight = new THREE.Vector3()
+  const cameraUp = new THREE.Vector3()
+  const gesturePan = new THREE.Vector3()
+  const touchPoints = new Map()
+  let pinch = null
   let drag = null
   let orbit = null
   let fridgeOpen = true
@@ -73,6 +92,21 @@ export function createInstallationRoom(root, callbacks) {
   let width = 1
   let height = 1
   const cachedRect = { left: 0, top: 0, width: 1, height: 1 }
+
+  async function buildYield() {
+    await new Promise(resolve => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, { timeout: 100 })
+      else window.setTimeout(resolve, 0)
+    })
+    if (disposed || signal?.aborted) {
+      disposeRoom()
+      throw new DOMException('Preparação cancelada', 'AbortError')
+    }
+  }
+  if (signal) {
+    signal.addEventListener('abort', disposeRoom, { once: true })
+    removers.push(() => signal.removeEventListener('abort', disposeRoom))
+  }
 
   function listen(target, event, listener, options) {
     target.addEventListener(event, listener, options)
@@ -115,9 +149,12 @@ export function createInstallationRoom(root, callbacks) {
     return mesh(parent, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 20, radius, 8, false), surface)
   }
   function loadTexture(url) {
-    const texture = new THREE.TextureLoader().load(url, invalidate, undefined, () => {
+    let loaded
+    textureReady.push(new Promise(resolve => { loaded = resolve }))
+    const texture = new THREE.TextureLoader().load(url, () => { loaded(); invalidate(false) }, undefined, () => {
       // Furniture retains its base PBR colour if a texture fails.
-      invalidate()
+      invalidate(false)
+      loaded()
     })
     texture.colorSpace = THREE.SRGBColorSpace
     texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy())
@@ -139,6 +176,7 @@ export function createInstallationRoom(root, callbacks) {
   const floor = mesh(scene, new THREE.PlaneGeometry(150, 150), material({ color: '#171818', roughness: .96 }), [0, -.025, 0], false)
   floor.rotation.x = -Math.PI / 2
   scene.add(new THREE.HemisphereLight('#b5c5d1', '#3b2617', .42))
+  await buildYield()
 
   function spotlight(parent, color, intensity, position, targetPosition, angle, shadows = true) {
     const light = new THREE.SpotLight(color, intensity, 20, angle, .11, 1.65)
@@ -219,6 +257,7 @@ export function createInstallationRoom(root, callbacks) {
     for (const z of [-d / 2 + .075, d / 2 - .075]) box(parent, w - .12, .22, .09, darkWood, [0, h - .22, z], .012)
     for (const x of [-w / 2 + .075, w / 2 - .075]) box(parent, .09, .22, d - .18, darkWood, [x, h - .22, 0], .012)
   }
+  await buildYield()
 
   // Past: a small table and a turned wood coat rack with a draped, folded coat.
   const pastTable = new THREE.Group()
@@ -289,6 +328,7 @@ export function createInstallationRoom(root, callbacks) {
     tube(coat, [[side * .14, .66, .137], [side * .24, .69, .12]], .009, fabric)
   }
   for (const y of [.53, .78, 1.03]) mesh(coat, new THREE.SphereGeometry(.018, 8, 6), brass, [.045, y, .148])
+  await buildYield()
 
   // Present: a proper writing desk, drawers, hardware, shelf and bound books.
   table(groups.present, 2.8, 1.22, 1.56)
@@ -310,6 +350,7 @@ export function createInstallationRoom(root, callbacks) {
     box(groups.present, .17, height + .02, .035, cover, [x, 2.82 + height / 2, -.25], .008)
     for (const f of [.18, .77]) box(groups.present, .14, .011, .008, brass, [x, 2.82 + height * f, -.227])
   })
+  await buildYield()
 
   // Future: luminous opal glass set into a thick, bevelled wooden light table.
   table(groups.future, 4.6, 2.6, 1.58)
@@ -319,6 +360,7 @@ export function createInstallationRoom(root, callbacks) {
   const tableBounce = new THREE.PointLight('#ffce83', 3.2, 4.4, 2)
   tableBounce.position.set(0, 1.95, 0)
   groups.future.add(tableBounce)
+  await buildYield()
 
   // Temporal island: hollow refrigerator cabinet, shelves and a hinged door.
   const fridge = groups.fridge
@@ -361,6 +403,7 @@ export function createInstallationRoom(root, callbacks) {
   const redSpill = spotlight(fridge, '#ff1c0e', 6, [0, 1.4, .25], [0, .05, 1.4], .7, false)
 
   const photoTextures = [1, 2, 3, 4].map(n => loadTexture(`/images/trail/photo-${n}.webp`))
+  await buildYield()
   function photo(parent, n, scale = 1) {
     const w = .66 * scale, d = .47 * scale
     box(parent, w, .013, d, paper, [0, .008, 0], .004)
@@ -420,6 +463,7 @@ export function createInstallationRoom(root, callbacks) {
     const button = root.querySelector(`[data-object="${definition.id}"]`)
     objects.set(definition.id, { object, button, definition, atTable: definition.island === 'future' })
     object.traverse(child => { if (child.isMesh) pickables.push(child) })
+    await buildYield()
   }
   for (const x of [-.36, .02, .37]) {
     const object = new THREE.Group()
@@ -445,24 +489,29 @@ export function createInstallationRoom(root, callbacks) {
     if (disposed) return
     dirty = true
     shadowsDirty ||= withShadows
-    if (visible && !document.hidden && !contextLost && !raf) raf = requestAnimationFrame(frame)
+    requestFrame()
+  }
+  function requestFrame() {
+    if (prepared && visible && !document.hidden && !contextLost && !raf) raf = requestAnimationFrame(frame)
   }
   function updateCamera() {
-    const horizontal = Math.cos(view.pitch) * view.distance
-    camera.position.set(Math.sin(view.yaw) * horizontal, 1.2 + Math.sin(view.pitch) * view.distance, Math.cos(view.yaw) * horizontal)
-    camera.lookAt(0, mobile ? 1.2 : .8, .2)
+    const v = renderedView
+    const horizontal = Math.cos(v.pitch) * v.distance
+    camera.position.set(v.panX + Math.sin(v.yaw) * horizontal, v.panY + 1.2 + Math.sin(v.pitch) * v.distance, v.panZ + Math.cos(v.yaw) * horizontal)
+    camera.lookAt(v.panX, v.panY + (mobile ? 1.2 : .8), v.panZ + .2)
     camera.updateMatrixWorld()
   }
   function toScreen(position) {
     projected.copy(position).project(camera)
     return { x: (projected.x * .5 + .5) * width, y: (-projected.y * .5 + .5) * height, inside: projected.z < 1 && projected.z > -1 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1 }
   }
-  function place(element, point, center = true) {
+  function place(element, point) {
     const p = toScreen(point)
     element.style.left = `${p.x}px`
     element.style.top = `${p.y}px`
     element.style.opacity = p.inside ? '1' : '0'
     element.style.visibility = p.inside ? 'visible' : 'hidden'
+    return p.inside
   }
   function updateOverlays() {
     scene.updateMatrixWorld(true)
@@ -471,7 +520,7 @@ export function createInstallationRoom(root, callbacks) {
       // On narrow screens the side furniture sits just behind the light table.
       // Put those two labels above it so the script never crosses bright glass.
       if (mobile && (label.parent === groups.past || label.parent === groups.present)) worldPosition.set(0, 4.8, .3)
-      place(label.element, label.parent.localToWorld(worldPosition), false)
+      place(label.element, label.parent.localToWorld(worldPosition))
     }
     for (const entry of objects.values()) {
       entry.object.getWorldPosition(worldPosition)
@@ -481,9 +530,8 @@ export function createInstallationRoom(root, callbacks) {
         entry.button.tabIndex = -1
         continue
       }
-      entry.button.tabIndex = 0
       worldPosition.y += entry.definition.kind === 'bottle' ? .23 : .035
-      place(entry.button, worldPosition)
+      entry.button.tabIndex = place(entry.button, worldPosition) ? 0 : -1
     }
     place(fridgeButton, door.localToWorld(worldPosition.set(-.71, .05, .1)))
   }
@@ -491,27 +539,47 @@ export function createInstallationRoom(root, callbacks) {
     const rect = canvas.getBoundingClientRect()
     Object.assign(cachedRect, { left: rect.left, top: rect.top, width: rect.width, height: rect.height })
   }
+  function positionControls() {
+    controlsFrame = 0
+    if (disposed) return
+    const top = clamp(96 - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
+    navigationBar.style.top = `${Math.round(top)}px`
+  }
   function resize() {
     if (disposed) return
-    width = stage.clientWidth
-    height = stage.clientHeight
+    // Cache document geometry on layout changes, not on every scroll frame.
+    controlsDocumentTop = stage.getBoundingClientRect().top + window.scrollY
+    controlsHeight = navigationBar.offsetHeight
+    positionControls()
+    const nextWidth = stage.clientWidth, nextHeight = stage.clientHeight
+    if (!nextWidth || !nextHeight || (nextWidth === width && nextHeight === height)) return
+    const previousMobile = mobile
+    const firstSize = width === 1
+    width = nextWidth
+    height = nextHeight
     mobile = width < 650
-    const layout = mobile ? MOBILE_LAYOUT : BASE_LAYOUT
-    for (const [id, group] of Object.entries(groups)) {
-      group.position.set(...layout[id])
-      group.scale.setScalar(mobile ? (id === 'fridge' ? .9 : id === 'future' ? .82 : .65) : 1)
+    const relayout = firstSize || mobile !== previousMobile
+    if (relayout) {
+      const layout = mobile ? MOBILE_LAYOUT : BASE_LAYOUT
+      for (const [id, group] of Object.entries(groups)) {
+        group.position.set(...layout[id])
+        group.scale.setScalar(mobile ? (id === 'fridge' ? .9 : id === 'future' ? .82 : .65) : 1)
+      }
     }
     camera.aspect = width / Math.max(1, height)
     camera.fov = mobile ? 40 : 35
     camera.updateProjectionMatrix()
     renderer.setSize(width, height, false)
     cacheRect()
-    resetView()
+    positionControls()
+    if (relayout) { shadowsDirty = true; resetView() }
+    else invalidate(false)
   }
   function resetView() {
-    view = { yaw: 0, pitch: mobile ? .45 : .38, distance: mobile ? 18.5 : 16.8 }
+    view = { yaw: 0, pitch: mobile ? .45 : .38, distance: mobile ? 18.5 : 16.8, panX: 0, panY: 0, panZ: 0 }
+    renderedView = { ...view }
     updateCamera()
-    invalidate()
+    invalidate(false)
   }
   function frame(time) {
     raf = 0
@@ -519,6 +587,23 @@ export function createInstallationRoom(root, callbacks) {
     const dt = Math.min(.05, (time - (lastFrame || time - 16)) / 1000)
     lastFrame = time
     let moving = false
+    if (navigating && cameraKeys.size) {
+      const speed = Math.max(1.6, view.distance * .27) * dt
+      const lateral = Number(cameraKeys.has('d')) - Number(cameraKeys.has('a'))
+      const forward = Number(cameraKeys.has('w')) - Number(cameraKeys.has('s'))
+      view.panX = clamp(view.panX + (Math.cos(view.yaw) * lateral - Math.sin(view.yaw) * forward) * speed, -12, 12)
+      view.panZ = clamp(view.panZ + (-Math.sin(view.yaw) * lateral - Math.cos(view.yaw) * forward) * speed, -12, 12)
+      view.panY = clamp(view.panY + (Number(cameraKeys.has('e')) - Number(cameraKeys.has('q'))) * speed, -.5, 4)
+      view.yaw += (Number(cameraKeys.has('arrowright')) - Number(cameraKeys.has('arrowleft'))) * dt * 1.6
+      view.pitch = clamp(view.pitch + (Number(cameraKeys.has('arrowup')) - Number(cameraKeys.has('arrowdown'))) * dt, .07, 1.4)
+      moving = dirty = true
+    }
+    for (const key of Object.keys(view)) {
+      const next = reducedMotion.matches ? view[key] : THREE.MathUtils.damp(renderedView[key], view[key], 16, dt)
+      const settled = Math.abs(next - view[key]) < .0003
+      renderedView[key] = settled ? view[key] : next
+      if (!settled) moving = dirty = true
+    }
     if (Math.abs(doorAngle - doorTarget) > .001) {
       doorAngle = reducedMotion.matches ? doorTarget : THREE.MathUtils.damp(doorAngle, doorTarget, 9, dt)
       if (Math.abs(doorAngle - doorTarget) < .005) doorAngle = doorTarget
@@ -592,7 +677,8 @@ export function createInstallationRoom(root, callbacks) {
     raycaster.setFromCamera(pointer, camera)
   }
   function beginDrag(event, entry) {
-    if (event.button !== 0 || contextLost) return
+    if (event.button !== 0 || event.shiftKey || contextLost || !prepared || drag) return
+    view = { ...renderedView }
     event.preventDefault()
     event.stopPropagation()
     cacheRect()
@@ -624,6 +710,32 @@ export function createInstallationRoom(root, callbacks) {
     canvas.classList.add('is-dragging')
     invalidate()
   }
+  function panCamera(dx, dy, start) {
+    const units = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * start.distance / height
+    cameraRight.setFromMatrixColumn(camera.matrixWorld, 0)
+    cameraUp.setFromMatrixColumn(camera.matrixWorld, 1)
+    gesturePan.copy(cameraRight).multiplyScalar(-dx * units).addScaledVector(cameraUp, dy * units)
+    view.panX = clamp(start.panX + gesturePan.x, -12, 12)
+    view.panY = clamp(start.panY + gesturePan.y, -.5, 4)
+    view.panZ = clamp(start.panZ + gesturePan.z, -12, 12)
+  }
+  function beginCamera(event, mode = 'orbit') {
+    if (drag || !prepared || contextLost) return
+    event.preventDefault()
+    cacheRect()
+    canvas.setPointerCapture(event.pointerId)
+    if (event.pointerType === 'touch') {
+      touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (touchPoints.size > 1) {
+        const [a, b] = [...touchPoints.values()]
+        pinch = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, distance: Math.hypot(a.x - b.x, a.y - b.y), view: { ...view } }
+        orbit = null
+        return
+      }
+    }
+    orbit = { target: canvas, pointerId: event.pointerId, x: event.clientX, y: event.clientY, view: { ...view }, mode }
+    canvas.classList.add('is-dragging')
+  }
   function movePointer(event) {
     if (drag && event.pointerId === drag.pointerId) {
       event.preventDefault()
@@ -640,9 +752,25 @@ export function createInstallationRoom(root, callbacks) {
       }
       return
     }
+    if (touchPoints.has(event.pointerId)) {
+      touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (pinch && touchPoints.size > 1) {
+        event.preventDefault()
+        const [a, b] = [...touchPoints.values()]
+        view.distance = clamp(pinch.view.distance * pinch.distance / Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), 2.8, 36)
+        panCamera((a.x + b.x) / 2 - pinch.x, (a.y + b.y) / 2 - pinch.y, pinch.view)
+        invalidate(false)
+        return
+      }
+    }
     if (orbit && event.pointerId === orbit.pointerId) {
-      view.yaw = clamp(orbit.yaw - (event.clientX - orbit.x) * .004, -.65, .65)
-      view.pitch = clamp(orbit.pitch + (event.clientY - orbit.y) * .002, .24, .79)
+      event.preventDefault()
+      const dx = event.clientX - orbit.x, dy = event.clientY - orbit.y
+      if (orbit.mode === 'pan') panCamera(dx, dy, orbit.view)
+      else {
+        view.yaw = orbit.view.yaw - dx * .006
+        view.pitch = clamp(orbit.view.pitch + dy * .003, .07, 1.4)
+      }
       invalidate(false)
     }
   }
@@ -673,12 +801,42 @@ export function createInstallationRoom(root, callbacks) {
         invalidate()
       }
     }
-    if (orbit && event.pointerId === orbit.pointerId) {
+    if (touchPoints.has(event.pointerId)) {
+      touchPoints.delete(event.pointerId)
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId)
+      pinch = null
+      if (touchPoints.size === 1) {
+        const [id, point] = [...touchPoints.entries()][0]
+        orbit = { target: canvas, pointerId: id, x: point.x, y: point.y, view: { ...view }, mode: 'orbit' }
+      } else orbit = null
+      if (!touchPoints.size) canvas.classList.remove('is-dragging')
+    } else if (orbit && event.pointerId === orbit.pointerId) {
       const target = orbit.target, id = orbit.pointerId
       orbit = null
       if (target.hasPointerCapture(id)) target.releasePointerCapture(id)
       canvas.classList.remove('is-dragging')
     }
+  }
+  function cancelGestures() {
+    if (drag) endPointer({ pointerId: drag.pointerId }, true)
+    if (orbit?.target.hasPointerCapture(orbit.pointerId)) orbit.target.releasePointerCapture(orbit.pointerId)
+    for (const id of touchPoints.keys()) if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id)
+    orbit = pinch = null
+    touchPoints.clear()
+    cameraKeys.clear()
+    canvas.classList.remove('is-dragging')
+  }
+  function setNavigation(active) {
+    active = !!active && prepared && visible && !contextLost
+    if (!active) cancelGestures()
+    if (navigating === active) return
+    navigating = active
+    stage.classList.toggle('is-exploring', active)
+    stage.toggleAttribute('data-lenis-prevent', active)
+    callbacks.onNavigationChange?.(active)
+    if (active) canvas.focus({ preventScroll: true })
+    else if (document.activeElement === canvas) canvas.blur()
+    invalidate(false)
   }
   for (const entry of objects.values()) {
     listen(entry.button, 'pointerdown', event => beginDrag(event, entry))
@@ -703,8 +861,17 @@ export function createInstallationRoom(root, callbacks) {
       }
     })
   }
+  listen(stage, 'pointerdown', event => {
+    if (event.target.closest('.installation-navigation, .installation-zoom')) return
+    if (event.button === 1 || event.button === 2 || (event.button === 0 && event.shiftKey)) {
+      event.stopPropagation()
+      beginCamera(event, 'pan')
+    }
+  }, { capture: true })
+  listen(canvas, 'contextmenu', event => event.preventDefault())
+  listen(root.querySelector('.installation-hit-targets'), 'contextmenu', event => event.preventDefault())
   listen(canvas, 'pointerdown', event => {
-    if (event.button !== 0 || event.pointerType === 'touch') return
+    if (event.button !== 0 || (event.pointerType === 'touch' && !navigating)) return
     cacheRect()
     setRay(event)
     const hit = raycaster.intersectObjects(pickables, false)[0]
@@ -716,34 +883,73 @@ export function createInstallationRoom(root, callbacks) {
         if (entry.object.parent !== fridge || doorAngle > .55) return beginDrag(event, entry)
       }
     }
-    orbit = { target: canvas, pointerId: event.pointerId, x: event.clientX, y: event.clientY, yaw: view.yaw, pitch: view.pitch }
-    canvas.setPointerCapture(event.pointerId)
-    canvas.classList.add('is-dragging')
+    beginCamera(event)
   })
   listen(window, 'pointermove', movePointer, { passive: false })
   listen(window, 'pointerup', event => endPointer(event))
   listen(window, 'pointercancel', event => endPointer(event, true))
+  listen(stage, 'wheel', event => {
+    // Outside explicit exploration the wheel always belongs to the document.
+    // No body lock, global preventDefault or scroll pin is introduced.
+    if (!navigating || event.ctrlKey || event.target.closest('.installation-navigation')) return
+    event.preventDefault()
+    event.stopPropagation()
+    const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? height : 1)
+    view.distance = clamp(view.distance * Math.exp(clamp(delta, -600, 600) * .0013), 2.8, 36)
+    invalidate(false)
+  }, { passive: false })
+  listen(canvas, 'keydown', event => {
+    const key = event.key.toLowerCase()
+    if (navigating && ['w', 'a', 's', 'd', 'q', 'e', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)) {
+      event.preventDefault()
+      cameraKeys.add(key)
+      invalidate(false)
+    }
+  })
+  listen(window, 'keyup', event => cameraKeys.delete(event.key.toLowerCase()))
+  listen(window, 'keydown', event => {
+    if (event.key === 'Escape' && (navigating || drag || orbit)) {
+      setNavigation(false)
+      cancelGestures()
+    }
+  })
+  listen(canvas, 'blur', () => cameraKeys.clear())
+  listen(window, 'blur', () => setNavigation(false))
+  listen(window, 'pagehide', () => setNavigation(false))
+  listen(window, 'scroll', () => {
+    if (!controlsFrame) controlsFrame = requestAnimationFrame(positionControls)
+  }, { passive: true })
   listen(fridgeButton, 'click', toggleFridge)
   listen(document, 'visibilitychange', () => {
-    if (document.hidden && raf) { cancelAnimationFrame(raf); raf = 0 }
+    if (document.hidden) {
+      setNavigation(false)
+      if (raf) cancelAnimationFrame(raf)
+      raf = 0
+    }
     else invalidate(false)
   })
   listen(canvas, 'webglcontextlost', event => {
     event.preventDefault()
     contextLost = true
+    setNavigation(false)
     if (raf) cancelAnimationFrame(raf)
+    if (controlsFrame) cancelAnimationFrame(controlsFrame)
     raf = 0
     callbacks.onUnavailable()
   })
   listen(canvas, 'webglcontextrestored', () => window.location.reload())
-  const observer = new IntersectionObserver(([entry]) => {
+  observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
-    if (visible) invalidate()
+    if (!visible || entry.intersectionRect.height < 100) setNavigation(false)
+    if (visible) { positionControls(); requestFrame() }
     else if (raf) { cancelAnimationFrame(raf); raf = 0 }
-  }, { rootMargin: '100px' })
+  }, { threshold: [0, .15, .3] })
   observer.observe(stage)
-  const resizeObserver = new ResizeObserver(resize)
+  resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(stage)
+  resizeObserver.observe(navigationBar)
+  const main = root.closest('main')
+  if (main) resizeObserver.observe(main)
   function toggleFridge() {
     fridgeOpen = !fridgeOpen
     doorTarget = fridgeOpen ? Math.PI * .56 : 0
@@ -758,8 +964,7 @@ export function createInstallationRoom(root, callbacks) {
     invalidate()
   }
   function reset() {
-    drag = orbit = null
-    canvas.classList.remove('is-dragging')
+    cancelGestures()
     motions.clear()
     for (const entry of objects.values()) {
       entry.object.userData.homeParent.add(entry.object)
@@ -779,35 +984,96 @@ export function createInstallationRoom(root, callbacks) {
     resetView()
   }
   resize()
-  callbacks.onReady()
+  try {
+    await Promise.all(textureReady)
+    await buildYield()
+    updateCamera()
+    scene.updateMatrixWorld(true)
+    await renderer.compileAsync(scene, camera)
+    await buildYield()
+    // The first material uploads, shadow maps and draw happen offscreen while
+    // the reader is still in earlier chapters, rather than on the entry frame.
+    const warmup = new THREE.WebGLRenderTarget(64, 64)
+    try {
+      renderer.setRenderTarget(warmup)
+      renderer.shadowMap.needsUpdate = true
+      renderer.render(scene, camera)
+    } finally {
+      renderer.setRenderTarget(null)
+      warmup.dispose()
+    }
+    await buildYield()
+    // Warm the actual drawing buffer too: drivers may create a different
+    // pipeline for the onscreen colour space. Await a GPU fence asynchronously
+    // so the first visible frame does not pay that cost or block the CPU.
+    renderer.shadowMap.needsUpdate = false
+    renderer.render(scene, camera)
+    dirty = shadowsDirty = false
+    const gl = renderer.getContext()
+    if (gl.fenceSync) {
+      await new Promise((resolve, reject) => {
+        const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+        gl.flush()
+        const poll = () => {
+          if (disposed || signal?.aborted || gl.isContextLost()) {
+            gl.deleteSync(fence)
+            reject(new DOMException('Preparação cancelada', 'AbortError'))
+            return
+          }
+          const status = gl.clientWaitSync(fence, 0, 0)
+          if (status === gl.TIMEOUT_EXPIRED) window.setTimeout(poll, 16)
+          else {
+            gl.deleteSync(fence)
+            if (status === gl.WAIT_FAILED) reject(new Error('Falha ao preparar o contexto 3D'))
+            else resolve()
+          }
+        }
+        poll()
+      })
+    }
+    await buildYield()
+    prepared = true
+    preparationMs = Math.round(performance.now() - buildStarted)
+  } catch (error) {
+    disposeRoom()
+    throw error
+  }
 
   // A read-only inspector enables behavioural checks without using the DOM as
   // the source of truth. It also helps diagnose lost WebGL contexts in support.
-  const api = {
-    moveToTable, returnToIsland, reset, resetView, toggleFridge,
-    zoom(direction) { view.distance = clamp(view.distance + direction * 1.5, mobile ? 14 : 13, 25); invalidate(false) },
+  api = {
+    moveToTable, returnToIsland, reset, resetView, toggleFridge, setNavigation,
+    zoom(direction) { view.distance = clamp(view.distance * Math.exp(direction * .17), 2.8, 36); invalidate(false) },
     inspect() {
       return {
-        renderer: 'WebGL', visible, contextLost, framePending: !!raf, fridgeOpen, doorAngle, redLightIntensity: redLight.intensity, redSpillIntensity: redSpill.intensity,
-        camera: { ...view }, mobile, selectedId,
+        renderer: 'WebGL', prepared, preparationMs, visible, contextLost, framePending: !!raf, fridgeOpen, doorAngle, redLightIntensity: redLight.intensity, redSpillIntensity: redSpill.intensity,
+        camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
         objects: [...objects.values()].map(entry => ({ id: entry.definition.id, parent: entry.object.parent.name, position: entry.object.position.toArray(), atTable: entry.atTable })),
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       }
     },
-    dispose() {
-      disposed = true
-      if (raf) cancelAnimationFrame(raf)
-      observer.disconnect()
-      resizeObserver.disconnect()
-      for (const remove of removers) remove()
-      for (const texture of textures) texture.dispose()
-      for (const surface of materials) surface.dispose()
-      for (const shape of geometries) shape.dispose()
-      scene.traverse(object => { if (object.isLight) object.dispose?.() })
-      renderer.dispose()
-      if (root.installationRoom === api) delete root.installationRoom
-    },
+    dispose: disposeRoom,
+  }
+  function disposeRoom() {
+    if (disposed) return
+    setNavigation(false)
+    disposed = true
+    if (raf) cancelAnimationFrame(raf)
+    if (controlsFrame) cancelAnimationFrame(controlsFrame)
+    raf = 0
+    observer?.disconnect()
+    resizeObserver?.disconnect()
+    for (const remove of removers) remove()
+    for (const texture of textures) texture.dispose()
+    for (const surface of materials) surface.dispose()
+    for (const shape of geometries) shape.dispose()
+    scene.traverse(object => { if (object.isLight) object.dispose?.() })
+    renderer.dispose()
+    if (root.installationRoom === api) delete root.installationRoom
   }
   root.installationRoom = api
+  callbacks.onReady()
+  updateOverlays()
+  requestFrame()
   return api
 }

@@ -120,9 +120,10 @@ def desktop_checks(browser):
 
     page.locator(".installation-stage").scroll_into_view_if_needed()
     box = page.locator(".installation-stage").bounding_box()
-    page.mouse.move(box["x"] + 40, box["y"] + 40)
+    blank_y = max(220, box["y"] + 220)
+    page.mouse.move(box["x"] + 40, blank_y)
     page.mouse.down()
-    page.mouse.move(box["x"] + 160, box["y"] + 65, steps=8)
+    page.mouse.move(box["x"] + 160, blank_y + 25, steps=8)
     page.mouse.up()
     settle(page)
     check("arrastar o fundo muda ponto de vista", abs(state(page)["camera"]["yaw"]) > .1)
