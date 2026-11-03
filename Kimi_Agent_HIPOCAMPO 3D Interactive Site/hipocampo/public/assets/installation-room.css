@@ -1,0 +1,61 @@
+/* Scoped to the installation: the opening and the other chapters keep their styles. */
+#instalacao.installation { background: #000; color: #e8dfcb; font-family: Georgia, "Times New Roman", serif; position: relative; padding: clamp(5rem, 9vw, 9rem) clamp(1.1rem, 3vw, 3.5rem) 5rem; overflow: hidden; scroll-margin-top: 4rem; }
+.installation-heading { display: flex; justify-content: space-between; align-items: end; gap: 3rem; max-width: 1500px; margin: 0 auto 2.5rem; }
+.installation-kicker { margin: 0 0 1rem; color: #c9a764; font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; }
+.installation-heading h2 { margin: 0; color: #f0c765; font: 400 clamp(2rem, 3.6vw, 4rem)/1.1 "Estrella", cursive; }
+.installation-intro { max-width: 26rem; margin: 0; font-size: .87rem; line-height: 1.7; color: #a7a29a; }
+.installation-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; max-width: 1500px; margin: 0 auto; padding: 1rem 0; border-top: 1px solid #332a1b; }
+.installation-toolbar > p { color: #d3b672; font: 400 clamp(1rem, 1.3vw, 1.3rem)/1.4 "Estrella", cursive; margin: 0; }
+.installation-actions { display: flex; gap: clamp(.7rem, 1.8vw, 1.8rem); flex-wrap: wrap; justify-content: end; }
+.installation button { font-family: inherit; cursor: pointer; }
+.installation-actions button, .installation-zoom button, .installation-memory-actions button, .installation-fallback button { background: transparent; border: 0; padding: .6rem .1rem; min-height: 44px; color: #b3aaa0; font-size: .66rem; letter-spacing: .035em; text-decoration: underline; text-decoration-color: #62513a; text-underline-offset: .4em; transition: color .2s; }
+.installation button:hover { color: #f4ce7b; }
+.installation button:focus-visible, .installation summary:focus-visible { outline: 2px solid #f0c765; outline-offset: 5px; }
+.installation button:disabled { opacity: .4; cursor: default; }
+.installation-stage { position: relative; width: 100%; max-width: 1500px; height: clamp(630px, 65vw, 960px); margin: auto; isolation: isolate; background: #000; }
+.installation-canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
+.installation-canvas.is-dragging { cursor: grabbing; }
+.installation-labels, .installation-hit-targets { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.installation-island { position: absolute; top: 0; left: 0; color: #edc267; font: 400 clamp(1.15rem, 1.75vw, 1.8rem)/1.25 "AquilineTwo", cursive; white-space: nowrap; transform: translate(-50%, 0); opacity: 0; text-shadow: 0 1px 8px #000; }
+.installation-object, .installation-fridge-hit { position: absolute; left: 0; top: 0; border: 1px solid transparent; background: transparent; width: 44px; height: 44px; padding: 0; pointer-events: auto; touch-action: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; }
+.installation-object:focus-visible, .installation-object:hover { border-color: #f0c765; outline-offset: 3px; }
+.installation-object-caption { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); color: #e4c78f; background: #080706ed; padding: .45rem .65rem; font-size: .72rem; white-space: nowrap; pointer-events: none; }
+.installation-object:focus-visible .installation-object-caption, .installation-object:hover .installation-object-caption { display: block; }
+.installation-fridge-hit { width: 66px; height: 110px; border-radius: 8px; touch-action: pan-y; }
+.installation-fridge-hit:focus-visible { border-color: #f0c765; }
+.installation-loading { position: absolute; inset: 46% 0 auto; text-align: center; color: #d3b672; font: 1.5rem "Estrella", cursive; pointer-events: none; }
+.installation-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; background: #080706; text-align: center; gap: 1rem; }
+.installation-zoom { position: absolute; right: .5rem; bottom: 0; display: flex; gap: 1.25rem; }
+.installation-zoom button { font-size: .62rem; color: #aaa49c; }
+.installation-caption { display: flex; justify-content: space-between; gap: 1rem; max-width: 1500px; margin: auto; border-bottom: 1px solid #282216; padding: 1.3rem 0; color: #aaa49c; font-size: .65rem; line-height: 1.7; }
+.installation-caption p { margin: 0; }
+.installation-caption p:last-child { color: #c6ac7b; font-family: "Estrella", cursive; font-size: 1rem; }
+.installation-memory { max-width: 720px; margin: 2rem auto 0; min-height: 8rem; text-align: center; }
+.installation-memory-label { font-size: .58rem; text-transform: uppercase; letter-spacing: .16em; color: #a08964; margin: 0 0 .7rem; }
+.installation-memory-text { font-size: .92rem; line-height: 1.75; color: #c7bca6; margin: 0; }
+.installation-memory-actions { display: flex; justify-content: center; gap: 1.8rem; }
+.installation-accessible { border-top: 1px solid #282216; max-width: 720px; margin: 1rem auto 0; padding: 1rem 0; font-size: .8rem; color: #a8a39a; }
+.installation-accessible summary { cursor: pointer; width: fit-content; padding: .5rem 0; color: #c6ac7b; }
+.installation-accessible > p { margin: 1rem 0; line-height: 1.7; }
+.installation-accessible ul { list-style: none; padding: 0; margin: 1rem 0; }
+.installation-accessible li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid #262015; }
+.installation-accessible li button { background: none; border: none; color: #e0c48b; text-align: left; padding: .8rem 0; min-height: 44px; }
+.installation-accessible li span { color: #a8a39a; font-size: .7rem; }
+@media (max-width: 700px) {
+  #instalacao.installation { padding: 4rem 1.1rem 3rem; }
+  .installation-heading { display: block; margin-bottom: 1.8rem; }
+  .installation-heading h2 { font-size: 2.4rem; }
+  .installation-intro { margin-top: 1rem; max-width: 28rem; font-size: .82rem; }
+  .installation-toolbar { flex-direction: column; align-items: start; gap: .35rem; }
+  .installation-actions { justify-content: start; gap: 1.1rem; width: 100%; }
+  .installation-actions button { font-size: .6rem; }
+  .installation-stage { height: 670px; }
+  .installation-island { font-size: 1.03rem; }
+  .installation-caption { display: block; }
+  .installation-caption p:last-child { margin-top: .6rem; }
+  .installation-memory { min-height: 9rem; }
+  .installation-memory-text { font-size: .84rem; }
+  .installation-accessible li { gap: .6rem; }
+  .installation-accessible li span { max-width: 6rem; text-align: right; }
+}
+@media (prefers-reduced-motion: reduce) { .installation *, .installation *::before, .installation *::after { transition: none !important; } }
