@@ -1,7 +1,7 @@
 // A continuous camera passes through a physical doorway, crosses the archive
 // and leaves through its far opening. The original memory map stays aligned.
 import * as THREE from './vendor/three.module.min.js'
-import { createHouseInterior } from './house-interior.js?v=depth-1'
+import { createHouseInterior } from './house-interior.js?v=door-sway-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -34,7 +34,7 @@ async function mount(section) {
   const stage = section.querySelector('.page3-stage')
   const capA = section.querySelector('.page3-caption--a')
   const capB = section.querySelector('.page3-caption--b')
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, premultipliedAlpha: false })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -66,9 +66,12 @@ async function mount(section) {
   // ---------- peças do mapa ----------
   const pieces = manifest.pieces.map((d, i) => {
     const tex = loadTexture(d.src.replace('.webp', '-hd.webp')); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = maxAniso
-    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.02, depthWrite: d.tipo === 'casa', fog: true, toneMapped: false })
+    // The facade is a depth-writing cutout, so door/interior ordering cannot
+    // change as the camera approaches its transparent photographic silhouette.
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: d.tipo !== 'casa', alphaTest: 0.02, alphaToCoverage: d.tipo === 'casa', depthWrite: d.tipo === 'casa', fog: true, toneMapped: false })
     const w = d.w / UNIT, h = d.h / UNIT
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat)
+    if (d.tipo === 'casa') mesh.renderOrder = -20
     const center = toWorld(d.center.xPct / 100 * manifest.width, d.center.yPct / 100 * manifest.height)
     const rectCenter = toWorld(d.x + d.w / 2, d.y + d.h / 2)
     const group = new THREE.Group()
@@ -127,7 +130,7 @@ async function mount(section) {
     new THREE.Vector3(.12, 1.55, -12),
     new THREE.Vector3(0, 1.55, -15.4),
   ], false, 'centripetal')
-  const pointer = { x: 0, y: 0, sx: 0, sy: 0 }
+  const pointer = { x: 0, y: 0, sx: 0, sy: 0, dx: 0, dy: 0, known: false }
 
   const domMap = document.querySelector('#projeto [data-memory-map]')
   let startRect = null
@@ -184,8 +187,16 @@ async function mount(section) {
   const resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(stage)
   const onPointerMove = (e) => {
-    pointer.x = (e.clientX / window.innerWidth) * 2 - 1
-    pointer.y = (e.clientY / window.innerHeight) * 2 - 1
+    if (e.pointerType === 'touch') return
+    const x = (e.clientX / window.innerWidth) * 2 - 1
+    const y = (e.clientY / window.innerHeight) * 2 - 1
+    if (pointer.known) {
+      pointer.dx += x - pointer.x
+      pointer.dy += y - pointer.y
+    }
+    pointer.x = x
+    pointer.y = y
+    pointer.known = true
   }
   let pointerListening = false
   const setPointerListening = (enabled) => {
@@ -195,6 +206,8 @@ async function mount(section) {
     else {
       window.removeEventListener('pointermove', onPointerMove)
       pointer.x = pointer.y = pointer.sx = pointer.sy = 0
+      pointer.dx = pointer.dy = 0
+      pointer.known = false
     }
   }
 
@@ -222,6 +235,7 @@ async function mount(section) {
     const explode = smooth(.02, .35, p)
     const vanish = smooth(.24, .42, p)
     const leave = reduced ? 0 : smooth(.87, .995, p)
+    const interiorMotion = motion * smooth(.47, .55, p) * (1 - smooth(.88, .97, p))
     const fov = lerp(42, viewportW < 760 ? 64 : 48, smooth(.12, .43, p))
     if (Math.abs(camera.fov - fov) > .001) {
       camera.fov = fov
@@ -245,7 +259,7 @@ async function mount(section) {
       pc.group.visible = vanish < .999
     })
     // casa: leve respiração própria
-    housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * .01 * motion * (1 - focus), 0)
+    housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * .01 * motion * (1 - smooth(.12, .26, p)), 0)
 
     // fios: da casa até a âncora de cada peça (acompanham o movimento)
     others.forEach((pc, i) => {
@@ -270,7 +284,7 @@ async function mount(section) {
       sy0 = (startRect.cy - vh / 2) * wpp
     }
     const toDoor = smooth(.11, .34, p)
-    const parallax = focus * (1 - open) * .025 * motion
+    const parallax = focus * (1 - smooth(.23, .32, p)) * .025 * motion
     camPos.set(
       lerp(lerp(sx0, housePos.x, focus), door.x, toDoor) + pointer.sx * parallax,
       lerp(lerp(sy0, housePos.y, focus), archive.eyeY, toDoor) - pointer.sy * parallax,
@@ -282,10 +296,11 @@ async function mount(section) {
     }
     camera.position.copy(camPos)
     const glance = (viewportW < 760 ? .95 : .68) * Math.sin(enter * Math.PI * 2 + .4) * smooth(.12, .3, enter) * (1 - smooth(.76, .92, enter))
-    lookAt.set(p < .34 ? camPos.x : door.x + glance + pointer.sx * .025 * motion, camPos.y - smooth(.38, .6, p) * .065, camPos.z - 3.4)
+    lookAt.set(p < .34 ? camPos.x : door.x + glance + pointer.sx * .025 * interiorMotion, camPos.y - smooth(.38, .6, p) * .065, camPos.z - 3.4)
     camera.lookAt(lookAt)
     camera.updateMatrixWorld()
-    if (archive.update(open, t, motion, pointer.sx)) renderer.shadowMap.needsUpdate = true
+    if (archive.update(open, t, interiorMotion, pointer, dt, camera)) renderer.shadowMap.needsUpdate = true
+    pointer.dx = pointer.dy = 0
 
     renderer.setClearColor(0xffffff, reduced ? 1 : smooth(0.0, 0.05, p))
 
@@ -361,7 +376,7 @@ async function mount(section) {
   })
   ScrollTrigger.refresh()
   section.houseJourney = {
-    inspect: () => ({ progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], doorOpen: smooth(.29, .48, reduced ? .69 : progress), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
 }
 

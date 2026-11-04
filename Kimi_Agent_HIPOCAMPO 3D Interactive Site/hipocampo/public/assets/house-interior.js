@@ -7,9 +7,12 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
   const doorW = .94, doorH = 2.3
   const floorY = door.y - doorH / 2
   const root = new THREE.Group()
+  root.name = 'house-archive'
   root.position.set(door.x, floorY, 0)
   scene.add(root)
   const shapes = new Set(), surfaces = new Set(), textures = new Set()
+  const portalMaterials = new Set()
+  const portalState = { stencilWrite: true, stencilRef: 1, stencilFunc: THREE.EqualStencilFunc, stencilWriteMask: 0 }
   const mesh = (parent, geometry, material, position = [0, 0, 0], shadow = true) => {
     shapes.add(geometry)
     const m = new THREE.Mesh(geometry, material)
@@ -20,16 +23,37 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
     return m
   }
   const mat = (options) => {
-    const m = new THREE.MeshStandardMaterial(options)
+    const m = new THREE.MeshStandardMaterial({ ...portalState, ...options })
     surfaces.add(m)
+    if (m.stencilWrite) portalMaterials.add(m)
     return m
   }
   const box = (parent, dimensions, material, position, shadow = true) => mesh(parent, new THREE.BoxGeometry(...dimensions), material, position, shadow)
   const basic = (color) => {
-    const m = new THREE.MeshBasicMaterial({ color, toneMapped: false })
+    const m = new THREE.MeshBasicMaterial({ ...portalState, color, toneMapped: false })
+    surfaces.add(m)
+    portalMaterials.add(m)
+    return m
+  }
+  const unmasked = material => {
+    const m = material.clone()
+    m.stencilWrite = false
     surfaces.add(m)
     return m
   }
+
+  // Before crossing the threshold, the archive may only be seen through the
+  // doorway. A stencil aperture also hides walls beyond the photo's silhouette.
+  const portalMaterial = new THREE.MeshBasicMaterial({
+    colorWrite: false, depthWrite: false, depthTest: false,
+    stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc,
+    stencilZPass: THREE.ReplaceStencilOp,
+  })
+  surfaces.add(portalMaterial)
+  const portal = mesh(root, new THREE.PlaneGeometry(doorW, doorH), portalMaterial, [0, doorH / 2, 0], false)
+  portal.name = 'house-door-portal'
+  portal.renderOrder = -30
+  let portalActive = true
 
   // Quiet plaster grain, lit by the room rather than a painted radial gradient.
   const grainCanvas = document.createElement('canvas')
@@ -69,16 +93,19 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
   root.add(floorSeams)
   for (let i = -2; i <= 2; i++) box(floorSeams, [.007, .002, depth], darkWood, [i * .96, .001, -depth / 2], false)
   const walls = []
-  const frameLights = []
-  const hanging = []
+  const pendulums = []
   const wallPositions = [-3.4, -7.3, -11.15]
   const chosen = [3, 14, 23, 9, 19, 25].map(i => pieces[i % pieces.length])
   function framedMemory(parent, source, x, y, z, rotation) {
-    const frame = new THREE.Group()
-    frame.position.set(x, y, z)
-    frame.rotation.y = rotation
-    parent.add(frame)
     const w = source.d.tipo === 'mao' ? 1.02 : 1.22, h = 1.62
+    const pivot = new THREE.Group()
+    pivot.position.set(x, y + h / 2 + .065, z)
+    pivot.rotation.y = rotation
+    parent.add(pivot)
+    const frame = new THREE.Group()
+    frame.position.y = -h / 2 - .065
+    pivot.add(frame)
+    pendulums.push({ pivot, angle: 0, velocity: 0, limit: .075, gain: .62, direction: rotation > 0 ? 1 : -1, phase: pendulums.length * 1.7, free: false })
     box(frame, [w + .13, h + .13, .075], darkWood, [0, 0, 0], false)
     box(frame, [w, h, .025], card, [0, 0, .055], false)
     const scale = Math.min((w - .21) / (source.d.w / unit), (h - .24) / (source.d.h / unit))
@@ -102,7 +129,6 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
       light.position.set(-side * .95, 3.35, z + .4)
       light.target.position.set(-side * .08, 1.85, z)
       wall.add(light, light.target)
-      frameLights.push(light)
       box(wall, [.1, .025, .58], darkWood, [-side * .45, height - .09, z + .15], false)
     }
   }
@@ -120,6 +146,7 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
   daylight.castShadow = true
   daylight.shadow.mapSize.set(1024, 1024)
   Object.assign(daylight.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: .2, far: 22 })
+  daylight.shadow.camera.updateProjectionMatrix()
   daylight.shadow.bias = -.0003
   daylight.shadow.normalBias = .025
   root.add(daylight, daylight.target)
@@ -128,21 +155,22 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
   root.add(thresholdLight)
 
   // The photographic door has a fixed architectural opening in world space.
-  const aperture = new THREE.Vector4(door.x, floorY + doorH / 2, doorW / 2 + .025, doorH / 2 + .02)
+  const aperture = new THREE.Vector4(door.x, floorY + doorH / 2, doorW / 2, doorH / 2)
   facade.onBeforeCompile = shader => {
     shader.uniforms.houseDoor = { value: aperture }
     shader.vertexShader = 'varying vec2 houseWorldXY;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nhouseWorldXY = (modelMatrix * vec4(transformed, 1.0)).xy;')
     shader.fragmentShader = 'varying vec2 houseWorldXY;\nuniform vec4 houseDoor;\n' + shader.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nvec2 opening = abs(houseWorldXY - houseDoor.xy) - houseDoor.zw;\nif (max(opening.x, opening.y) < 0.0) discard;')
   }
-  facade.customProgramCacheKey = () => 'house-physical-door-v1'
+  facade.customProgramCacheKey = () => 'house-physical-door-v2'
   const entrance = new THREE.Group()
   root.add(entrance)
   const sideW = (width - doorW) / 2
   const frontPanels = [-1, 1].map(side => box(entrance, [sideW, height, .2], plaster, [side * (doorW / 2 + sideW / 2), height / 2, -.18], false))
-  const frontTop = box(entrance, [doorW, height - doorH, .2], plaster, [0, doorH + (height - doorH) / 2, -.18], false)
-  for (const x of [-doorW / 2 - .035, doorW / 2 + .035]) box(entrance, [.07, doorH + .08, .48], darkWood, [x, (doorH + .08) / 2, -.13])
-  box(entrance, [doorW + .14, .075, .48], darkWood, [0, doorH + .025, -.13])
-  box(entrance, [doorW + .2, .055, .6], stone, [0, .015, -.12])
+  box(entrance, [doorW, height - doorH, .2], plaster, [0, doorH + (height - doorH) / 2, -.18], false)
+  const entranceWood = unmasked(darkWood), entranceBrass = unmasked(brass), entranceStone = unmasked(stone)
+  for (const x of [-doorW / 2 - .035, doorW / 2 + .035]) box(entrance, [.07, doorH + .08, .48], entranceWood, [x, (doorH + .08) / 2, -.13])
+  box(entrance, [doorW + .14, .075, .48], entranceWood, [0, doorH + .025, -.13])
+  box(entrance, [doorW + .2, .055, .6], entranceStone, [0, .015, -.12])
   const doors = []
   const u0 = (277 - doorW * unit / 2 - houseData.x) / houseData.w
   const v0 = 1 - (527 + doorH * unit / 2 - houseData.y) / houseData.h
@@ -155,9 +183,9 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
     doorTexture.repeat.set(doorW * unit / (2 * houseData.w), doorH * unit / houseData.h)
     doorTexture.needsUpdate = true
     textures.add(doorTexture)
-    const face = mat({ map: doorTexture, roughness: .84 })
-    const panel = box(pivot, [doorW / 2, doorH, .065], [darkWood, darkWood, darkWood, darkWood, face, darkWood], [-side * doorW / 4, 0, -.02])
-    box(pivot, [.023, .14, .045], brass, [-side * (doorW / 2 - .07), -.06, .04])
+    const face = mat({ map: doorTexture, roughness: .84, stencilWrite: false })
+    const panel = box(pivot, [doorW / 2, doorH, .065], [entranceWood, entranceWood, entranceWood, entranceWood, face, entranceWood], [-side * doorW / 4, 0, -.02])
+    box(pivot, [.023, .14, .045], entranceBrass, [-side * (doorW / 2 - .07), -.06, .04])
     doors.push({ pivot, side, panel })
   }
 
@@ -186,7 +214,7 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
     const scale = Math.min((w - .06) / (source.d.w / unit), (h - .08) / (source.d.h / unit))
     mesh(pivot, new THREE.PlaneGeometry(source.d.w / unit * scale, source.d.h / unit * scale), material, [0, -h / 2, .009], false)
     mesh(root, new THREE.CylinderGeometry(.003, .003, height - 2.56, 6), brass, [x, (height + 2.56) / 2, z], false)
-    hanging.push({ pivot, phase: i * 1.7 })
+    pendulums.push({ pivot, angle: 0, velocity: 0, limit: .25, gain: 1.5, direction: i ? -1 : 1, phase: i * 1.7, free: true })
   }
 
   // The exit is an actual opening at the far end. Its light fills the lens as
@@ -232,11 +260,36 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
       })
     },
-    update(open, time, motion, pointer) {
+    inspect: () => ({ portalActive, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
+    update(open, time, motion, pointer, dt, camera) {
+      // Switch only after the aperture fills the view, before its near plane
+      // can be clipped. The same rule applies when scrolling backwards.
+      const outside = camera.position.z > .18
+      if (outside !== portalActive) {
+        portalActive = outside
+        portal.visible = outside
+        portalMaterials.forEach(m => { m.stencilFunc = outside ? THREE.EqualStencilFunc : THREE.AlwaysStencilFunc })
+      }
       const angle = open * 1.48
       doors.forEach(({ pivot, side }) => { pivot.rotation.y = -side * angle })
-      hanging.forEach(({ pivot, phase }) => {
-        pivot.rotation.z = motion * (Math.sin(time * .0005 + phase) * .012 + pointer * .025)
+      const impulse = Math.max(-1.4, Math.min(1.4, pointer.dx + pointer.dy * .35)) * motion
+      const steps = Math.max(1, Math.ceil(dt * 120)), step = dt / steps
+      pendulums.forEach(p => {
+        if (!motion) {
+          p.angle = p.velocity = p.pivot.rotation.z = 0
+          return
+        }
+        p.velocity += impulse * p.gain * p.direction
+        const rest = motion * (Math.sin(time * .0005 + p.phase) * (p.free ? .007 : .002) + pointer.sx * (p.free ? .025 : .008))
+        for (let i = 0; i < steps; i++) {
+          p.velocity += ((rest - p.angle) * 18 - p.velocity * 3.4) * step
+          p.angle += p.velocity * step
+          if (Math.abs(p.angle) > p.limit) {
+            p.angle = Math.sign(p.angle) * p.limit
+            p.velocity *= .2
+          }
+        }
+        p.pivot.rotation.z = p.angle
       })
       const changed = Math.abs(angle - lastDoorAngle) > .001
       lastDoorAngle = angle

@@ -30,6 +30,15 @@ def state(page):
 def open_page(browser, w, h, reduced=False):
     context = browser.new_context(viewport={'width':w,'height':h}, device_scale_factor=1, reduced_motion='reduce' if reduced else 'no-preference', extra_http_headers={'Accept-Encoding':'identity'})
     page = context.new_page()
+    # Add a reference only to the test's response, leaving production read-only.
+    # Three.js defines renderer.render on each instance, not on its prototype.
+    def instrument_renderer(route):
+        response=route.fetch()
+        body=response.text()
+        needle='  const maxAniso ='
+        assert body.count(needle)==1
+        route.fulfill(response=response,body=body.replace(needle,'  window.__houseQA={renderer,scene,camera,draw:renderer.render.bind(renderer),THREE};\n'+needle))
+    page.route('**/assets/page3-house.js?*',instrument_renderer)
     page.on('pageerror', lambda error: results['errors'].append(str(error)))
     page.on('console', lambda message: results['errors'].append(message.text) if message.type == 'error' and not message.text.startswith('Failed to load resource') else None)
     page.on('response', lambda response: results['local_failures'].append(f'{response.status} {response.url}') if response.status >= 400 and response.url.startswith(URL) else None)
@@ -52,6 +61,73 @@ def go(page, progress):
     return state(page)
 
 
+def pointer_handoff_check(page,w,h):
+    page.mouse.move(w*.9,h*.2,steps=3)
+    before=go(page,.3395)
+    after=go(page,.3405)
+    back=go(page,.3395)
+    jump=math.dist(before['camera'],after['camera'])
+    turn=math.dist(before['cameraRotation'],after['cameraRotation'])
+    return_jump=math.dist(before['camera'],back['camera'])
+    return_turn=math.dist(before['cameraRotation'],back['cameraRotation'])
+    check(f'{w}: entrada e retorno contínuos com mouse fora do centro', jump<.025 and turn<.002 and return_jump<.025 and return_turn<.002, {'distance':jump,'rotation':turn,'return_distance':return_jump,'return_rotation':return_turn})
+
+
+def doorway_and_mouse_checks(page, w, h):
+    go(page, .2)
+    page.wait_for_function('window.__houseQA != null')
+    for progress in [.2,.29,.32,.37,.42,.48]:
+        go(page, progress)
+        pixels=page.evaluate('''()=>{
+          const {renderer,scene,camera,draw,THREE}=window.__houseQA;
+          const root=scene.getObjectByName('house-archive');
+          const portal=document.querySelector('#casa').houseJourney.inspect().interior;
+          const gl=renderer.getContext(), width=gl.drawingBufferWidth, height=gl.drawingBufferHeight;
+          const a=new Uint8Array(width*height*4),b=new Uint8Array(a.length);
+          draw(scene,camera);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,a);
+          root.visible=false;
+          draw(scene,camera);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,b);
+          root.visible=true;
+          draw(scene,camera);
+          const [cx,cy]=portal.doorway.center;
+          const xs=[],ys=[];
+          for(const x of [-1,1])for(const y of [-1,1]){
+            const p=new THREE.Vector3(cx+x*(portal.doorway.width+.28)/2,cy+y*(portal.doorway.height+.24)/2,.16).project(camera);
+            xs.push((p.x+1)*width/2);ys.push((p.y+1)*height/2);
+          }
+          const bounds=[Math.min(...xs)-4,Math.min(...ys)-4,Math.max(...xs)+4,Math.max(...ys)+4];
+          let leaks=0;
+          for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+            if(x>=bounds[0]&&x<=bounds[2]&&y>=bounds[1]&&y<=bounds[3])continue;
+            const i=(y*width+x)*4;
+            if(Math.abs(a[i]-b[i])>3||Math.abs(a[i+1]-b[i+1])>3||Math.abs(a[i+2]-b[i+2])>3||Math.abs(a[i+3]-b[i+3])>3)leaks++;
+          }
+          return {leaks,stencilBits:gl.getParameter(gl.STENCIL_BITS),portalActive:portal.portalActive};
+        }''')
+        check(f'{w}: interior não vaza pela lateral em {progress}', pixels['leaks']==0 and pixels['stencilBits']>0 and pixels['portalActive'], pixels)
+
+    go(page,.42)
+    page.wait_for_timeout(250)
+    first=page.locator('.page3-canvas').screenshot(path=str(ARTIFACTS/f'door-still-{w}-a.png'))
+    page.wait_for_timeout(450)
+    second=page.locator('.page3-canvas').screenshot(path=str(ARTIFACTS/f'door-still-{w}-b.png'))
+    check(f'{w}: porta sem oscilação visual com scroll e mouse parados', first==second)
+
+    go(page,.6)
+    y=page.evaluate('scrollY')
+    page.mouse.move(w*.15,h*.48)
+    page.mouse.move(w*.85,h*.55,steps=4)
+    page.wait_for_function('''()=>{
+      const swings=document.querySelector('#casa').houseJourney.inspect().interior.swings;
+      return swings.some(s=>!s.free&&Math.abs(s.angle)>.012)&&swings.some(s=>s.free&&Math.abs(s.angle)>.035);
+    }''')
+    swings=state(page)['interior']['swings']
+    page.screenshot(path=str(ARTIFACTS/f'mouse-sway-{w}.png'))
+    check(f'{w}: mouse balança quadros e imagens suspensas', any(not s['free'] and abs(s['angle'])>.012 for s in swings) and any(s['free'] and abs(s['angle'])>.035 for s in swings), swings)
+    check(f'{w}: balanço mantém limites e não altera o scroll', all(abs(s['angle'])<=(.25 if s['free'] else .075) for s in swings) and page.evaluate('scrollY')==y)
+    pointer_handoff_check(page,w,h)
+
+
 def run(browser, w, h):
     context, page = open_page(browser, w, h)
     check(f'{w}: montagem única e outras seções preservadas', page.locator('#casa').count()==1 and all(page.locator(f'#{id}').count()==1 for id in ['projeto','sobre','oficina','instalacao','fragmentos']))
@@ -72,6 +148,7 @@ def run(browser, w, h):
         back = go(page, progress)
         distance = math.dist(back['camera'], states[progress]['camera'])
         check(f'{w}: retorno reversível em {progress}', distance < .035, {'distance':distance,'initial':states[progress]['camera'],'reverse':back['camera']})
+    doorway_and_mouse_checks(page,w,h)
     go(page, .68)
     page.set_viewport_size({'width':w-24,'height':h-30})
     page.wait_for_timeout(300)
@@ -105,6 +182,7 @@ def reduced_check(browser):
     page.wait_for_timeout(350)
     second=state(page)
     check('movimento reduzido: câmera estática sem loop', first['camera']==second['camera'] and not second['framePending'])
+    check('movimento reduzido: quadros e imagens sem balanço', all(s['angle']==0 and s['velocity']==0 for s in second['interior']['swings']))
     check('movimento reduzido: seção compacta', page.locator('#casa').evaluate('el=>el.getBoundingClientRect().height')<=770)
     page.emulate_media(reduced_motion='no-preference')
     page.wait_for_timeout(400)

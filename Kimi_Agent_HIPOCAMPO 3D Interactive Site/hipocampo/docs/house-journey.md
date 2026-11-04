@@ -11,7 +11,29 @@ com espessura, piso de madeira, paredes, teto, trilhos de luz, quadros com supor
 fotografias penduradas e mesa com uma impressão. A abertura em tela do shader
 `paper-transition.js` não é utilizada.
 
-![Entrada, galeria e saída: capturas reais do Three.js](house-journey-preview.webp)
+![Fachada, porta e balanço: capturas reais dos ajustes no Three.js](house-journey-preview.webp)
+
+## Balanço e oclusão da porta
+
+Os seis quadros e as duas imagens suspensas respondem ao deslocamento do mouse
+com um pêndulo amortecido. O pivô fica na borda superior, com limite de 4,3° nos
+quadros e 14,3° nas imagens livres. O movimento desacelera ao parar o mouse, sem
+arrastar a página; o touch continua dedicado ao scroll. A integração usa o
+tempo entre frames e pequenos passos para manter o balanço estável.
+
+Enquanto a câmera está fora, um stencil restringe a sala ao retângulo da porta.
+Isso impede que paredes, piso e fundo apareçam nas partes transparentes da foto
+ou além da lateral da casa. O recorte é desativado somente quando já preenche a
+tela, antes de alcançar o near plane, e volta a funcionar no scroll reverso.
+A porta e o batente mantêm geometria e profundidade próprias.
+
+A fachada escreve profundidade como recorte opaco, com alpha-to-coverage, e é
+desenhada antes das folhas da porta. A abertura da foto e o stencil têm as mesmas
+medidas. A leve respiração da fachada termina antes da abertura, evitando
+desalinhamento entre a foto e o batente fixo.
+O parallax externo termina antes da trajetória interna, e a influência do mouse
+sobre o olhar retorna gradualmente após abrir a porta. Não há troca brusca de
+posição ou direção da câmera quando o cursor está nas bordas.
 
 ## Ritmo e continuidade
 
@@ -42,7 +64,7 @@ instalação interativa mais abaixo na página.
   adaptação da largura ao celular e descarte dos recursos.
 - `public/assets/page3-house.css`: altura do percurso, viewport sticky, legendas
   e união com a próxima seção.
-- `index.html`: versões `?v=depth-1` dos módulos/estilos para invalidar o cache.
+- `index.html`: módulo `?v=door-sway-1` e estilo `?v=depth-1` para invalidar o cache.
 
 Usa o Three.js local, os recortes do mapa e as texturas/fotografias já existentes
 no projeto. Nenhuma dependência de runtime foi adicionada. Apenas uma cena é
@@ -68,20 +90,29 @@ O QA usa `http://127.0.0.1:4173/`; ajuste `HIPOCAMPO_QA_URL` e
 `HIPOCAMPO_CHROME` se necessário. Capturas e resultados ficam em
 `artifacts/house-depth/`, fora do Git.
 `document.querySelector('#casa').houseJourney.inspect()` expõe apenas o estado
-da câmera, progresso e renderização para inspeção no navegador.
+da câmera, progresso, stencil, ângulos dos pêndulos e renderização para inspeção
+no navegador. O QA compara pixels com/sem a sala para detectar qualquer vazamento
+fora da abertura em seis pontos da aproximação, verifica dois frames parados
+da porta e usa movimentos reais do mouse para testar o balanço dos dois tipos
+de imagem.
 
-A validação em Chromium passou em 41 verificações, com viewports de 1366×768 e
-390×844: passagem física, continuidade da câmera, reversão, resize, próxima
-seção, movimento reduzido, perda de contexto, ausência de WebGL e assets locais.
+A validação em Chromium passou em 62 verificações, com viewports de 1366×768 e
+390×844: passagem física, continuidade da câmera com o mouse fora do centro,
+reversão, ausência de vazamento lateral, estabilidade da porta, balanço com o
+mouse, resize, próxima seção, movimento reduzido, perda de contexto, ausência
+de WebGL e assets locais.
 Esses resultados verificam comportamento e renderização; não medem FPS em
 aparelhos reais.
 
 ## Restauração
 
-- Versão anterior: `c8a0763`.
-- Backup: `backup/casa-antes-travessia-2026-11-04`.
-- Nova versão: `release/casa-travessia-2026-11-04`.
+- Antes da travessia: `c8a0763`, tag `backup/casa-antes-travessia-2026-11-04`.
+- Travessia inicial: tag `release/casa-travessia-2026-11-04`.
+- Antes dos ajustes da porta e do balanço: `7b6fe74`, tag
+  `backup/casa-antes-ajustes-porta-2026-11-04`.
+- Ajustes da porta e do balanço: tag `release/casa-balanco-porta-2026-11-04`.
 
-Para desfazer apenas esta entrega, use `git revert` na tag da nova versão e
-faça um push normal. Não é necessário alterar as correções anteriores da sala
+Para desfazer apenas estes ajustes, use
+`git revert release/casa-balanco-porta-2026-11-04` e faça um push normal.
+Não é necessário alterar as correções anteriores da sala
 interativa ou da posição dos botões.
