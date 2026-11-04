@@ -38,6 +38,23 @@ def scene_in_view(page):
     return page.locator('.installation-stage').bounding_box()
 
 
+def toggle_navigation(page):
+    canvas = page.locator('.installation-canvas')
+    canvas.focus()
+    canvas.press('Enter')
+
+
+def scroll_to_fragments(page):
+    page.keyboard.press('Escape')
+    distance = page.locator('#fragmentos').evaluate('el=>el.getBoundingClientRect().top')
+    page.mouse.move(5, 500)
+    page.mouse.wheel(0, max(300, distance))
+    page.wait_for_function('''()=>{
+      const r=document.querySelector('#fragmentos').getBoundingClientRect();
+      return r.top < innerHeight * .6 && r.bottom > 0;
+    }''', timeout=15000)
+
+
 def drag_background(page, button='left', modifiers=False):
     box = scene_in_view(page)
     x, y = box['x'] + box['width'] * .85, max(150, box['y'] + 160)
@@ -91,7 +108,7 @@ def desktop(browser):
     page.get_by_role('button', name='visão inicial', exact=True).click()
     settle(page)
     scene_in_view(page)
-    page.locator('[data-action="navigate"]').click()
+    toggle_navigation(page)
     check('modo explorar reserva eventos apenas da sala', state(page)['navigating'] and state(page)['scrollReserved'] and page.evaluate('document.body.style.overflow') != 'hidden')
     box = page.locator('.installation-stage').bounding_box()
     page.mouse.move(box['x'] + box['width'] / 2, max(220, box['y'] + 220))
@@ -121,12 +138,11 @@ def desktop(browser):
     check('roda continua a página após sair do modo explorar', page.evaluate('scrollY') > y + 100 and state(page)['camera'] == camera)
 
     scene_in_view(page)
-    page.locator('[data-action="navigate"]').click()
-    page.locator('[data-action="continue"]').click()
-    page.wait_for_function('Math.abs(document.querySelector("#fragmentos").getBoundingClientRect().top) < 5', timeout=15000)
+    toggle_navigation(page)
+    scroll_to_fragments(page)
     page.wait_for_timeout(350)
     top = page.locator('#fragmentos').evaluate('el=>el.getBoundingClientRect().top')
-    check('continuar chega à próxima seção e libera a sala', abs(top) < 5 and not state(page)['navigating'] and not state(page)['scrollReserved'], {'fragmentosTop': top})
+    check('rolagem chega à próxima seção e libera a sala', top < 768 and not state(page)['navigating'] and not state(page)['scrollReserved'], {'fragmentosTop': top})
     page.screenshot(path=str(ARTIFACTS / 'next-section.png'))
     y = page.evaluate('scrollY')
     page.mouse.move(600, 500)
@@ -140,7 +156,7 @@ def desktop(browser):
     page.set_viewport_size({'width':1280, 'height':720})
     settle(page)
     check('resize no mesmo layout não faz câmera voltar', state(page)['camera'] == before)
-    page.locator('[data-action="navigate"]').click()
+    toggle_navigation(page)
     page.evaluate('window.scrollTo({top:0,behavior:"instant"})')
     page.wait_for_timeout(700)
     check('sair da seção desativa navegação e renderização', not state(page)['navigating'] and not state(page)['scrollReserved'] and not state(page)['framePending'])
@@ -154,7 +170,7 @@ def mobile(browser):
     page.goto(URL, wait_until='networkidle')
     page.wait_for_function('document.querySelector("#instalacao")?.installationRoom != null')
     box = scene_in_view(page)
-    page.locator('[data-action="navigate"]').tap()
+    toggle_navigation(page)
     session = context.new_cdp_session(page)
     x, y = box['x'] + 150, max(220, box['y'] + 200)
     session.send('Input.dispatchTouchEvent', {'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
@@ -163,11 +179,10 @@ def mobile(browser):
     session.send('Input.dispatchTouchEvent', {'type':'touchEnd','touchPoints':[]})
     settle(page)
     check('toque gira a câmera quando explorar está ativo', abs(state(page)['camera']['yaw']) > .2)
-    page.locator('[data-action="navigate"]').tap()
-    check('sair por toque remove a captura de gestos', not state(page)['navigating'] and not state(page)['scrollReserved'])
-    page.locator('[data-action="continue"]').tap()
-    page.wait_for_function('Math.abs(document.querySelector("#fragmentos").getBoundingClientRect().top) < 5', timeout=15000)
-    check('mobile avança sem prender a próxima seção', abs(page.locator('#fragmentos').evaluate('el=>el.getBoundingClientRect().top')) < 5)
+    page.keyboard.press('Escape')
+    check('Escape remove a captura de gestos no mobile', not state(page)['navigating'] and not state(page)['scrollReserved'])
+    scroll_to_fragments(page)
+    check('mobile avança sem prender a próxima seção', page.locator('#fragmentos').evaluate('el=>el.getBoundingClientRect().top') < 844)
     context.close()
 
 

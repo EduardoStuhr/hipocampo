@@ -23,7 +23,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const buildStarted = performance.now()
   const stage = root.querySelector('.installation-stage')
   const canvas = root.querySelector('.installation-canvas')
-  const navigationBar = root.querySelector('.installation-navigation-bar')
+  const navigationBar = root.querySelector('.installation-zoom')
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#000000')
   scene.fog = new THREE.Fog('#000000', 25, 55)
@@ -862,7 +862,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     })
   }
   listen(stage, 'pointerdown', event => {
-    if (event.target.closest('.installation-navigation, .installation-zoom')) return
+    if (event.target.closest('.installation-zoom')) return
     if (event.button === 1 || event.button === 2 || (event.button === 0 && event.shiftKey)) {
       event.stopPropagation()
       beginCamera(event, 'pan')
@@ -888,10 +888,14 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   listen(window, 'pointermove', movePointer, { passive: false })
   listen(window, 'pointerup', event => endPointer(event))
   listen(window, 'pointercancel', event => endPointer(event, true))
+  listen(canvas, 'dblclick', event => {
+    event.preventDefault()
+    setNavigation(!navigating)
+  })
   listen(stage, 'wheel', event => {
     // Outside explicit exploration the wheel always belongs to the document.
     // No body lock, global preventDefault or scroll pin is introduced.
-    if (!navigating || event.ctrlKey || event.target.closest('.installation-navigation')) return
+    if (!navigating || event.ctrlKey || event.target.closest('.installation-zoom')) return
     event.preventDefault()
     event.stopPropagation()
     const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? height : 1)
@@ -900,6 +904,11 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   }, { passive: false })
   listen(canvas, 'keydown', event => {
     const key = event.key.toLowerCase()
+    if (key === 'enter') {
+      event.preventDefault()
+      setNavigation(!navigating)
+      return
+    }
     if (navigating && ['w', 'a', 's', 'd', 'q', 'e', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key)) {
       event.preventDefault()
       cameraKeys.add(key)

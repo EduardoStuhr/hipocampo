@@ -140,6 +140,20 @@ HTML foi verificado como suficiente para restaurar seu estado anterior. Backup:
 - [P3] Validação em aparelhos físicos e GPUs variadas; o teste touch foi real
   pelo protocolo do Chromium com emulação mobile, não em um telefone físico.
 
+## Ajuste de controles — 4 de novembro de 2026
+
+“Aproximar” e “afastar” foram movidos para o alto, no lugar do bloco antigo.
+Removidos os dois CTAs e a dica mostrados na segunda imagem da solicitação.
+O giro 360° e o pan continuam disponíveis. A ativação da navegação avançada
+passou para duplo clique/Enter, com Escape para liberar a rolagem.
+
+Validação focada em 1600 × 900 e 390 × 844: ambos os botões visíveis no alto,
+aproximar/afastar efetivos, bloco removido, Enter/Escape e duplo clique
+funcionando, página rolando após sair, sem exceções JavaScript. Capturas antes
+e depois e resultados em `artifacts/installation-controls/`. Build e sintaxe
+verificados. A matriz de 52 checks acima registra a entrega anterior; esta
+alteração teve verificação focada no comportamento afetado.
+
 ## Checklist de entrega
 
 - Cena e detalhes comparados à referência, inclusive no mobile.

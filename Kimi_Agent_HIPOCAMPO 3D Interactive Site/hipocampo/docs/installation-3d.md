@@ -38,11 +38,13 @@ intacta para restauração.
   1,5, shadow maps atualizados quando necessário e recursos liberados no unmount.
 - Com movimento reduzido, as transferências e a porta mudam sem animação. Sem
   WebGL, a leitura de memórias continua disponível na lista de objetos.
-- “Explorar a sala em 360°” habilita zoom pela roda, WASD para caminhar, Q/E
-  para altura, setas para olhar e toque/pinça para navegar. Escape, sair da
-  navegação, perda de foco ou saída da seção liberam os gestos. A página nunca
-  recebe bloqueio de body ou pin. “Seguir para os fragmentos” usa o controlador
-  Lenis existente e transfere o foco para o próximo capítulo.
+- Duplo clique no fundo ou Enter com foco no canvas habilita zoom pela roda, WASD para caminhar, Q/E
+  para altura, setas para olhar e toque/pinça para navegar. Escape, novo duplo
+  clique/Enter, perda de foco ou saída da seção liberam os gestos. A página nunca
+  recebe bloqueio de body ou pin; a rolagem normal leva ao próximo capítulo.
+  Os botões “aproximar” e “afastar” ficam no alto da cena. O antigo bloco com
+  “explorar a sala em 360°”, “seguir para os fragmentos” e a dica foi removido
+  a pedido em 4 de novembro de 2026.
 
 ## Correção de entrada e navegação
 
@@ -102,13 +104,16 @@ Capturas e resultados são escritos em `artifacts/installation/` (ignorado).
   → `b8dc907`.
 - Correção de entrada/câmera: tag `release/instalacao-camera-2026-11-03`, branch
   `fix/instalacao-entrada-camera`.
+- Ajuste dos botões superiores: tag `release/instalacao-zoom-superior-2026-11-04`;
+  backup anterior `backup/instalacao-antes-zoom-superior-2026-11-04` → `603c7dc`.
 
 Para desfazer esta entrega preservando o histórico posterior, reverta o commit
 identificado pela tag correspondente e faça um push normal. Para voltar somente
 à sala anterior à correção da câmera, reverta `release/instalacao-camera-2026-11-03`.
-Para retornar ao site anterior à instalação, reverta as duas entregas nesta ordem:
+Para retornar ao site anterior à instalação, reverta as entregas nesta ordem:
 
 ```bash
+git revert release/instalacao-zoom-superior-2026-11-04
 git revert release/instalacao-camera-2026-11-03
 git revert release/instalacao-3d-2026-11-03
 git push origin HEAD:main

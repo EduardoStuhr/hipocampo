@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=navigation-2'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=zoom-top-1'
 
 const React = requireReact() // Reuse the application's React singleton.
 const h = React.createElement
@@ -74,24 +74,6 @@ export default function Installation() {
     setFridgeOpen(true)
     setMessage('A sala foi recomposta. Cada fragmento voltou à sua ilha.')
   }
-  const continueToFragments = (event) => {
-    if (event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-    const target = document.querySelector('#fragmentos')
-    if (!target) return
-    event.preventDefault()
-    room.current?.setNavigation(false)
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const focusNext = () => {
-      const heading = target.querySelector('h2') || target
-      heading.setAttribute('tabindex', '-1')
-      heading.focus({ preventScroll: true })
-    }
-    if (window.location.hash !== '#fragmentos') window.history.pushState(null, '', '#fragmentos')
-    // Reuse the page's scroll controller. A native anchor jump would compete
-    // with an in-flight Lenis interpolation and could pull the reader back.
-    if (window.__hipocampoLenis) window.__hipocampoLenis.scrollTo(target, { duration: reduced ? 0 : 1, immediate: reduced, onComplete: focusNext })
-    else { target.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth' }); focusNext() }
-  }
 
   return h('section', { id: 'instalacao', ref: root, className: 'installation', 'aria-labelledby': 'installation-title' },
     h('div', { className: 'installation-heading' },
@@ -110,13 +92,10 @@ export default function Installation() {
       ),
     ),
     h('div', { className: `installation-stage${navigating ? ' is-exploring' : ''}`, 'aria-busy': !ready && !unavailable },
-      h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. No modo explorar, a roda aproxima e afasta, WASD desloca e Escape sai.', role: 'group' }),
-      h('div', { className: 'installation-navigation' },
-        h('div', { className: 'installation-navigation-bar' },
-          h('button', { type: 'button', 'data-action': 'navigate', disabled: !ready || unavailable, 'aria-pressed': navigating, onClick: () => room.current?.setNavigation(!navigating) }, navigating ? 'sair da navegação · Esc' : 'explorar a sala em 360°'),
-          h('a', { href: '#fragmentos', 'data-action': 'continue', onClick: continueToFragments }, 'seguir para os fragmentos'),
-          h('p', null, navigating ? 'roda: aproximar · botão direito: deslocar · WASD: caminhar' : 'arraste: girar 360° · Shift + arrastar: deslocar'),
-        ),
+      h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. Duplo clique ou Enter ativa a navegação com roda e WASD; Escape libera a rolagem da página.', role: 'group' }),
+      h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Distância da câmera' },
+        h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
+        h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
       ),
       h('div', { className: 'installation-labels', 'aria-hidden': true },
         ...['passado', 'presente', 'futuros', 'temporalidade'].map(island =>
@@ -137,10 +116,6 @@ export default function Installation() {
         h('p', null, 'A sala 3D não está disponível neste navegador.'),
         h('p', null, 'Você pode conhecer os objetos e suas memórias em “explorar sem arrastar”, abaixo.'),
         h('button', { type: 'button', onClick: () => window.location.reload() }, 'tentar novamente'),
-      ),
-      h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Distância da câmera' },
-        h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
-        h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
       ),
     ),
     h('div', { className: 'installation-caption' },
