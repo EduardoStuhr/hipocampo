@@ -1,5 +1,9 @@
 # Passagem de papel — casa da memória
 
+> Histórico da versão anterior. Em 4 de novembro de 2026, a abertura de papel
+> foi substituída pela [travessia com câmera contínua](house-journey.md).
+> O shader antigo permanece no repositório, sem ser carregado pela nova cena.
+
 A transição em `#casa` substitui as portas articuladas por uma abertura de papel.
 O exterior e o interior usam câmeras independentes no mesmo contexto WebGL: a
 câmera não precisa atravessar a fachada nem a parede de fundo. O shader de

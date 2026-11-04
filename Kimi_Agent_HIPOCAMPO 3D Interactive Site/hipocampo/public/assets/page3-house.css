@@ -1,7 +1,7 @@
 #casa.hipocampo-page3 {
   position: relative;
   z-index: 21;
-  height: 520svh;
+  height: 560svh;
   margin-top: -100svh; /* sobrepõe a página 2: a mesma casa vira 3D */
   pointer-events: none;
 }
@@ -13,6 +13,9 @@
   overflow: hidden;
 }
 .page3-canvas { display: block; width: 100%; height: 100%; }
+#casa.hipocampo-page3:not(.is-reduced-motion):not([hidden]) + #sobre {
+  margin-top: -24svh; /* the next chapter enters as the camera reaches daylight */
+}
 .page3-caption {
   position: absolute;
   left: 50%;
