@@ -162,3 +162,64 @@ alteração teve verificação focada no comportamento afetado.
 - Backup remoto e instruções de reversão documentados.
 
 final result: passed
+
+## Revisão adicional — câmera e recortes geométricos (5/11/2026)
+
+Escopo desta entrega: somente o disparador da câmera na seção Vestígios.
+O usuário escolheu a interação da câmera da prévia e pediu fotos existentes,
+recortes diferentes por clique e nenhuma ação nova no envelope. O restante da
+composição mantém o layout anterior; não se trata de clonar toda a prévia.
+
+### Evidência desta revisão
+
+- Conceito selecionado: `/workspace/generated_images/exec-cd268ac6-af4c-49de-b203-2dd7d1858e6a.png`,
+  921×1708 px, mostrado na conversa; referência da interação da metade inferior.
+- Fonte de layout: `artifacts/camera-photos/before-1366.png`, captura anterior
+  desta mesma seção em viewport CSS 1366×900, deviceScaleFactor 1.
+- Implementação: `artifacts/camera-photos/after-desktop-3.png` após três cliques
+  reais e `artifacts/camera-photos/after-mobile.png` após toque, em 375×667.
+- Antes/depois do desktop: 1366×901 pixels; captura completa da seção móvel:
+  375×915 pixels, viewport CSS 375×667 e deviceScaleFactor 1, sem moldura de aparelho.
+- Comparação conjunta: `artifacts/camera-photos/comparison.png`. Antes e depois
+  da seção foram reduzidos proporcionalmente para até 1000×660 px e colocados
+  lado a lado; não se esticaram imagens para forçar alinhamento.
+- A prévia conceitual longa não tem o mesmo viewport da seção real. Sua câmera
+  e a função de revelar uma nova fotografia foram comparadas por componente;
+  o texto menor, o envelope e o gesto de arrastar da prévia não foram adotados.
+- As capturas de desktop e mobile foram abertas e inspecionadas; a câmera
+  original `public/images/vestigios/camera-topo.webp` também foi inspecionada
+  para localizar seu disparador real em 78,9% × 67,8% da imagem.
+
+### Cinco superfícies de fidelidade
+
+- **Tipografia:** preservadas AquilineTwo e SquidBoy locais, título e texto
+  existentes. A indicação “gerar fotografia” usa a cursiva azul do projeto.
+- **Espaçamento:** câmera, texto e colagem mantêm suas regiões. A nova pilha
+  ocupa espaço sobre o filme e deixa a marca azul em primeiro plano. No celular,
+  a foto revelada fica visível após tocar no disparador; não há overflow.
+- **Cores:** fundo branco, texto marrom e indicação azul preservados. Sombras
+  discretas acompanham os recortes de papel.
+- **Imagens:** câmera original e nove fotografias locais, sem substitutos
+  gerados. Oito máscaras recortam fotografia e papel conforme o pedido. Três
+  camadas limitam o acúmulo. As diferenças em relação à moldura retangular da
+  prévia são intencionais e seguem a solicitação posterior do usuário.
+- **Conteúdo:** texto original preservado. Apenas a ação “gerar fotografia” e
+  a descrição acessível da nova fotografia foram adicionadas.
+
+### Histórico e resultado
+
+- Na primeira conferência, a imagem lazy ainda não possuía altura ao medir o
+  alvo. Foram reservadas as dimensões reais, 1259×717, e a proporção do controle.
+  As capturas pós-correção e o teste da posição do disparador confirmam o ajuste.
+- Passaram 24 verificações da câmera: alvo real, áreas inativas, recortes,
+  fotografias, teclado, toque, sequência rápida, limite de camadas, movimento
+  reduzido, falha/recuperação de imagem, rolagem e próxima seção. Sem exceções
+  JavaScript ou falhas de recursos locais nas visitas normais.
+- Passaram novamente as 17 verificações da primeira rolagem, com cache
+  desabilitado, desktop e viewport móvel com CPU limitada.
+- Não há divergência P0/P1/P2 pendente dentro deste escopo. O sorteio pode
+  repetir uma forma após completar sua rodada, sempre evitando repetir a anterior.
+- Build, sintaxe e comparação visual aprovados. Prévias reais em
+  `docs/camera-photos-preview.webp` e `docs/camera-photos-mobile.webp`.
+
+final result: passed

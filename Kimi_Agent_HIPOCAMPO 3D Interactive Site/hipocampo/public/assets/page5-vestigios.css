@@ -30,8 +30,23 @@
   word-break: normal;
   overflow-wrap: normal;
 }
-.page5-camera { width: 21vw; max-width: none; margin-top: .4vw; display: block; }
+.page5-camera-control { position: relative; width: 21vw; aspect-ratio: 1259 / 717; max-width: none; margin-top: .4vw; line-height: 0; }
+.page5-camera { width: 100%; height: auto; max-width: none; margin: 0; display: block; pointer-events: none; }
+.page5-shutter {
+  position: absolute; left: 78.9%; top: 67.8%; width: 9.5%; aspect-ratio: 1;
+  min-width: 32px; min-height: 32px; padding: 0; border: 0; border-radius: 50%;
+  transform: translate(-50%, -50%); background: transparent; cursor: pointer;
+  box-shadow: 0 0 0 1px #3a3ff080; touch-action: manipulation;
+}
+.page5-shutter:hover { box-shadow: 0 0 0 2px #3a3ff0; }
+.page5-shutter:focus-visible { outline: 2px solid #3a3ff0; outline-offset: 4px; }
+.page5-camera-hint { margin: .8rem 0 0; color: #3a3ff0; font: 400 clamp(1.3rem, 1.6vw, 1.7rem)/1.3 "AquilineTwo", Georgia, serif; pointer-events: none; }
+.page5-camera-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .page5-right { position: relative; min-height: 46vw; transform: translateX(7vw) scale(.85); transform-origin: top left; }
+.page5-revealed-photos { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.page5-generated-photo { position: absolute; left: 2vw; top: -1vw; width: 18vw; aspect-ratio: 1; margin: 0; filter: drop-shadow(0 6px 7px #30251b26); }
+.page5-photo-paper { position: absolute; inset: 0; display: block; background: #ece5d5; clip-path: var(--photo-shape); }
+.page5-photo-paper img { position: absolute; left: 3.5%; top: 3.5%; width: 93%; height: 93%; max-width: none; object-fit: cover; clip-path: var(--photo-shape); }
 .page5-colagem {
   position: absolute; right: 13vw; top: -7vw; width: 12vw;
   box-shadow: 0 0 0 1px rgba(0,0,0,.03);
@@ -43,7 +58,7 @@
   mask-image: radial-gradient(ellipse 72% 68% at 50% 45%, #000 55%, transparent 100%);
 }
 .page5-brand {
-  position: absolute; left: 4vw; top: 16.5vw; margin: 0;
+  position: absolute; left: 4vw; top: 16.5vw; margin: 0; z-index: 3;
   font-family: "AquilineTwo", Georgia, serif; font-weight: 400;
   font-size: clamp(3.5rem, 9vw, 10rem); line-height: 1;
   color: #3a3ff0;
@@ -51,11 +66,15 @@
 @media (max-width: 760px) {
   #vestigios.hipocampo-page5 { grid-template-columns: 1fr; padding: 22vw 8vw 8vw; }
   .page5-text { width: 70vw; }
-  .page5-camera { width: 70vw; }
+  .page5-camera-control { width: 70vw; }
+  .page5-generated-photo { left: 2vw; top: 6vw; width: 45vw; }
   .page5-right { min-height: 110vw; }
   .page5-colagem { right: 0; top: 4vw; width: 40vw; }
   .page5-filme { left: 0; top: 34vw; width: 72vw; }
   .page5-brand { left: 4vw; top: 68vw; font-size: 22vw; }
+}
+@media (pointer: coarse) {
+  .page5-shutter { min-width: 44px; min-height: 44px; }
 }
 
 /* A seção antiga "02 — Como funciona" foi retirada da navegação e do layout. */

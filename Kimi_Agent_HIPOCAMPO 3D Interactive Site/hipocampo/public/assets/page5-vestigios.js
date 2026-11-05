@@ -1,4 +1,148 @@
 // Página 5 — "vestígios": entra logo após a página 4 (#sobre).
+import { n as gsap } from './index-BXEErpTi.js?v=perf-1'
+
+const PHOTOGRAPHS = Array.from({ length: 9 }, (_, i) => ({
+  src: `/images/trail/photo-${i + 1}.webp`,
+  alt: ['Fotografia de uma família', 'Fotografia de rochas junto ao mar', 'Fotografia de uma cadeia de montanhas', 'Fotografia de pássaros em voo'][i] || `Fotografia ${i + 1} do acervo do Hipocampo`,
+}))
+const SHAPES = [
+  { name: 'círculo', clip: 'circle(48% at 50% 50%)' },
+  { name: 'triângulo', clip: 'polygon(50% 3%, 97% 94%, 3% 94%)' },
+  { name: 'quadrado', clip: 'polygon(6% 6%, 94% 6%, 94% 94%, 6% 94%)' },
+  { name: 'hexágono', clip: 'polygon(25% 6%, 75% 6%, 99% 50%, 75% 94%, 25% 94%, 1% 50%)' },
+  { name: 'losango', clip: 'polygon(50% 1%, 99% 50%, 50% 99%, 1% 50%)' },
+  { name: 'pentágono', clip: 'polygon(50% 2%, 98% 38%, 80% 96%, 20% 96%, 2% 38%)' },
+  { name: 'octógono', clip: 'polygon(30% 2%, 70% 2%, 98% 30%, 98% 70%, 70% 98%, 30% 98%, 2% 70%, 2% 30%)' },
+  { name: 'trapézio', clip: 'polygon(22% 9%, 78% 9%, 98% 91%, 2% 91%)' },
+]
+
+// A shuffled bag visits every choice before repeating, including at its seam.
+function createPicker(choices) {
+  let remaining = [], previous = null
+  return () => {
+    if (!remaining.length) {
+      remaining = [...choices]
+      for (let i = remaining.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[remaining[i], remaining[j]] = [remaining[j], remaining[i]]
+      }
+      if (remaining[0] === previous) [remaining[0], remaining[1]] = [remaining[1], remaining[0]]
+    }
+    previous = remaining.shift()
+    return previous
+  }
+}
+
+function mountCamera(section) {
+  const shutter = section.querySelector('.page5-shutter')
+  const gallery = section.querySelector('.page5-revealed-photos')
+  const status = section.querySelector('.page5-camera-status')
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const choosePhoto = createPicker(PHOTOGRAPHS), chooseShape = createPicker(SHAPES)
+  const loaded = new Map(), prints = []
+  let queue = Promise.resolve(), requests = 0, revealed = 0, destroyed = false, visible = false
+  let shutterMotion = null
+
+  const load = photo => {
+    if (!loaded.has(photo.src)) {
+      const image = new Image()
+      image.decoding = 'async'
+      image.src = photo.src
+      loaded.set(photo.src, image.decode().then(() => image).catch(error => {
+        loaded.delete(photo.src)
+        throw error
+      }))
+    }
+    return loaded.get(photo.src)
+  }
+  const near = new IntersectionObserver(entries => {
+    visible = entries.some(entry => entry.isIntersecting)
+    if (visible) load(PHOTOGRAPHS[0]).catch(() => {})
+  }, { rootMargin: '200px 0px' })
+  near.observe(section)
+
+  const stop = print => {
+    print.motion?.kill()
+    print.motion = null
+  }
+  const reveal = (photo, shape, image) => {
+    const quiet = reduced.matches || document.hidden || !visible
+    revealed++
+    while (prints.length >= 3) {
+      const oldest = prints.pop()
+      stop(oldest)
+      oldest.element.remove()
+    }
+    prints.forEach((print, index) => {
+      stop(print)
+      gsap.set(print.image, { opacity: 1 })
+      const pose = { x: -(index + 1) * 23, y: (index + 1) * 12, scale: 1 - (index + 1) * .055, rotation: print.angle + (index + 1) * 5, opacity: 1 - (index + 1) * .22 }
+      if (quiet) gsap.set(print.element, pose)
+      else print.motion = gsap.to(print.element, { ...pose, duration: .3, ease: 'power2.out', onComplete: () => { print.motion = null } })
+    })
+    const element = document.createElement('figure')
+    element.className = 'page5-generated-photo'
+    element.dataset.shape = shape.name
+    element.dataset.photoNumber = String(revealed)
+    element.style.setProperty('--photo-shape', shape.clip)
+    const paper = document.createElement('span')
+    paper.className = 'page5-photo-paper'
+    const printImage = image.cloneNode()
+    printImage.alt = `${photo.alt}, recorte em ${shape.name}`
+    paper.append(printImage)
+    element.append(paper)
+    gallery.append(element)
+    const angle = -8 + Math.random() * 15
+    const print = { element, image: printImage, angle, motion: null }
+    prints.unshift(print)
+    const pose = { x: 0, y: 0, scale: 1, rotation: angle, opacity: 1 }
+    if (quiet) gsap.set(element, pose)
+    else {
+      // Measure once per click. Convert viewport coordinates into the scaled
+      // collage's local coordinates; no geometry reads or scroll locks per frame.
+      const from = shutter.getBoundingClientRect(), to = element.getBoundingClientRect()
+      const scale = gallery.getBoundingClientRect().width / Math.max(1, gallery.offsetWidth)
+      const x = (from.left + from.width / 2 - to.left - to.width / 2) / scale
+      const y = (from.top + from.height / 2 - to.top - to.height / 2) / scale
+      print.motion = gsap.timeline({ onComplete: () => { print.motion = null } })
+        .fromTo(element, { x, y, scale: .12, rotation: angle - 15, opacity: 0 }, { ...pose, duration: .8, ease: 'power3.out' }, 0)
+        .fromTo(printImage, { opacity: 0 }, { opacity: 1, duration: .65, ease: 'power2.out' }, .12)
+    }
+    status.textContent = `Fotografia ${revealed} revelada em forma de ${shape.name}. Clique no disparador para gerar outra.`
+  }
+  const generate = () => {
+    if (destroyed) return
+    const photo = choosePhoto(), shape = chooseShape()
+    requests++
+    shutter.setAttribute('aria-busy', 'true')
+    shutterMotion?.kill()
+    if (!reduced.matches) shutterMotion = gsap.fromTo(shutter, { scale: .88 }, { scale: 1, duration: .2, ease: 'power2.out', onComplete: () => { shutterMotion = null } })
+    // Keep rapid clicks in order, without retaining an unbounded pile of prints.
+    queue = queue.then(async () => {
+      if (destroyed) return
+      try {
+        const image = await load(photo)
+        if (!destroyed) reveal(photo, shape, image)
+      } catch {
+        if (!destroyed) status.textContent = 'Não foi possível revelar esta fotografia. Clique no disparador para tentar outra.'
+      } finally {
+        requests--
+        if (!destroyed) shutter.setAttribute('aria-busy', String(requests > 0))
+      }
+    })
+  }
+  const cleanup = () => {
+    destroyed = true
+    near.disconnect()
+    shutter.removeEventListener('click', generate)
+    shutterMotion?.kill()
+    prints.forEach(stop)
+    loaded.clear()
+  }
+  shutter.addEventListener('click', generate)
+  window.addEventListener('pagehide', cleanup, { once: true })
+}
+
 function buildSection() {
   const s = document.createElement('section')
   s.id = 'vestigios'
@@ -7,11 +151,17 @@ function buildSection() {
   s.innerHTML = `
     <div class="page5-left">
       <p class="page5-text">Ao chegar ao Hipocampo, cada participante recebe uma sinopse que apresenta os primeiros vestígios de uma memória desaparecida, marcada por ausências e perguntas sem resposta, nova possibilidade de memória, revelando como atribuímos significado às imagens e aos objetos que sobrevivem ao tempo.</p>
-      <img class="page5-camera" src="/images/vestigios/camera-topo.webp" alt="Câmera fotográfica antiga prateada" loading="lazy" />
+      <div class="page5-camera-control">
+        <img class="page5-camera" src="/images/vestigios/camera-topo.webp" width="1259" height="717" alt="Câmera fotográfica antiga prateada" loading="lazy" />
+        <button class="page5-shutter" type="button" aria-label="Gerar fotografia pelo disparador" aria-describedby="page5-camera-hint" aria-controls="page5-revealed-photos" title="Gerar fotografia"></button>
+      </div>
+      <p id="page5-camera-hint" class="page5-camera-hint">gerar fotografia</p>
+      <p class="page5-camera-status" role="status" aria-live="polite" aria-atomic="true">Clique no disparador da câmera para revelar fotografias do acervo em formas diferentes.</p>
     </div>
     <div class="page5-right">
       <img class="page5-colagem" src="/images/vestigios/colagem.webp" alt="Colagem de fotografias em preto e branco com recorte laranja" loading="lazy" />
       <img class="page5-filme" src="/images/vestigios/filme.webp" alt="Duas mulheres com rostos cobertos por círculos vermelhos, sob uma tira de filme com carta manuscrita" loading="lazy" />
+      <div id="page5-revealed-photos" class="page5-revealed-photos" role="group" aria-label="Fotografias reveladas"></div>
       <p class="page5-brand" aria-hidden="true">Hipocampo</p>
     </div>`
   return s
@@ -22,6 +172,7 @@ function init() {
   if (!sobre) return false
   if (document.querySelector('#vestigios')) return true
   sobre.after(buildSection())
+  mountCamera(document.querySelector('#vestigios'))
   window.dispatchEvent(new Event('resize'))
   return true
 }
