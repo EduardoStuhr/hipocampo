@@ -344,3 +344,37 @@ a implementação anterior à paleta, `6c1f822`, junto aos prints da correção.
 - Nenhuma divergência P0/P1/P2 pendente dentro deste escopo.
 
 final result: passed
+
+## Correção — tons naturais do acervo (5/11/2026)
+
+O usuário apontou o amarelado do envelope, da montagem da montanha e do filme.
+O escopo desta revisão é a composição de cor dessas imagens; medidas, posições,
+fontes, fundos e interações permanecem na composição restaurada.
+
+- **Referência:** os dois prints do usuário e os arquivos originais do acervo,
+  preservados no Git. Capturas antes/depois em `artifacts/photo-colors/`, viewports
+  reais 1600×900 e 390×844, escala 1, com fontes e imagens carregadas.
+- **Comparação visual:** `artifacts/photo-colors/comparison.png`, antes/depois
+  reduzidos proporcionalmente lado a lado. Capturas reais também em
+  `docs/photo-colors-preview.webp` e `docs/photo-colors-film.webp`.
+- **Tipografia e geometria:** verificação contra os quatro arquivos de referência
+  de `6c1f822` passou em 1600×900, 1366×768, 390×844 e 375×667. Sem diferenças
+  acima de 0,75 px nos elementos existentes e no tamanho visual das fotos geradas.
+- **Cores:** retirada a mistura `multiply` do envelope, da montanha e do filme.
+  Amostras interiores renderizadas sobre amarelo e sobre branco coincidem no
+  desktop e no celular. Fundo amarelo, campo marrom, texto e marca azul mantidos.
+- **Imagens:** mesmos arquivos e proporções. O filtro SVG da montanha retira o
+  entorno claro da digitalização e protege o papel central, compondo os pixels
+  RGB originais. Os quatro cantos medidos mostram o amarelo, sem placa cinza.
+  O filme mantém a máscara suave; a foto do envelope continua no recorte original.
+- **Conteúdo e interação:** texto principal intacto; setas do envelope, dispersão,
+  disparador e preferência de movimento reduzido continuam funcionando. Nenhuma
+  alteração no código dos prazos individuais de cinco segundos.
+- **Validação:** 16 verificações de cor/renderização e 32 de composição/fundos
+  aprovadas, total **48**. Sem exceções JavaScript ou falhas de recursos locais.
+  Build, sintaxe e ausência de overflow aprovados. Chromium/SwiftShader emulado;
+  sem teste físico de Safari ou de telefone nesta revisão.
+- Backup remoto: `backup/antes-cores-naturais-2026-11-05` → `225492c`.
+  Documentação atual em `docs/photo-colors.md`. Sem P0/P1/P2 pendente neste escopo.
+
+final result: passed

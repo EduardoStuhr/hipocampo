@@ -12,7 +12,19 @@ function buildSection() {
   s.id = 'sobre'
   s.className = 'hipocampo-page4'
   s.setAttribute('aria-label', 'Sobre o Hipocampo')
+  // Scan surround: transparent at luma 220, opaque by 185 (sRGB 0–255).
+  // Keep the photograph/paper centre opaque, including its pale details.
   s.innerHTML = `
+    <svg class="page4-image-filters" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="hipocampo-mountain-paper" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -2.428571 -2.428571 -2.428571 0 6.285714" result="scan-matte" />
+          <feFlood x=".274" y=".142" width=".444" height=".746" flood-color="white" result="paper-centre" />
+          <feComposite in="paper-centre" in2="scan-matte" operator="over" result="paper-mask" />
+          <feComposite in="SourceGraphic" in2="paper-mask" operator="in" />
+        </filter>
+      </defs>
+    </svg>
     <h2 class="page4-title"><small>o</small>Hipocampo</h2>
     <div class="page4-text">
       <p>Hipocampo é uma instalação e oficina experimental que investiga as relações entre memória, imagem e narrativa.</p>

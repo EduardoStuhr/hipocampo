@@ -1,5 +1,8 @@
 # Composição original e fundos simplificados — 5 de novembro de 2026
 
+Atualização posterior: [correção do amarelado nas fotografias](photo-colors.md),
+mantendo as medidas e posições documentadas nesta restauração.
+
 A correção atende ao pedido de preservar as fotos, posições e proporções que
 existiam antes da aplicação da paleta. A apresentação mantém somente o fundo
 amarelo `#f0d756` e o texto marrom original `#7a2a17`. A faixa azul inferior e a
