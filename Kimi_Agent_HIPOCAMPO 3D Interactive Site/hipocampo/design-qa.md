@@ -295,3 +295,52 @@ não há obrigação de copiar as coordenadas fixas do conceito gerado.
   apontando para `6c1f822`. Instruções de restauração em `docs/color-story.md`.
 
 final result: passed
+
+## Correção — composição original e fundos simplificados (5/11/2026)
+
+Esta revisão substitui a composição da entrega anterior da paleta. O usuário
+identificou alterações indevidas nas fotos/proporções e rejeitou o encontro da
+faixa azul, borda amarela e campo marrom. A referência de composição passa a ser
+a implementação anterior à paleta, `6c1f822`, junto aos prints da correção.
+
+### Evidência e fidelidade
+
+- Capturas antes/depois em `artifacts/layout-restoration/`, viewports reais
+  1600×900 e 390×844, escala 1 e fontes prontas. Comparação conjunta aberta em
+  `comparison.png`, reduzida proporcionalmente, sem distorção ou troca de viewport.
+- Referência executável: os quatro arquivos originais de página 4/5 de `6c1f822`
+  foram servidos somente ao navegador de referência. O site não foi modificado
+  para produzir a comparação. Medidas registradas em `geometry-*.json`.
+- **Tipografia:** fontes, tamanhos, entrelinhas e espaçamentos iguais à referência
+  nas quatro resoluções: 1600×900, 1366×768, 390×844 e 375×667.
+- **Geometria:** títulos, textos, envelope, retrato, montanha, câmera, colagem,
+  filme e marca têm as posições e dimensões anteriores. Nenhuma diferença acima
+  de 0,75 px. A borda e a legenda adicional de duração foram removidas; a região
+  móvel da colagem voltou a 110vw. O retrato mantém a travessia da divisa original.
+- **Imagens:** restaurados os caminhos e a proporção da montagem de montanhas,
+  envelope e retrato. `page4-sobre.js` é o original integral; o único diff do CSS
+  correspondente é a cor de fundo. Mantido seu tratamento de mistura original.
+- **Cores:** fundo amarelo uniforme na apresentação, texto marrom original.
+  Na câmera, campos marrom/amarelo e marca azul. Pixels acima/abaixo da divisa
+  confirmam somente amarelo e marrom, sem faixa azul nem borda intermediária.
+- **Conteúdo e interação:** textos principais preservados; a troca do envelope
+  por setas continua funcionando. Oito recortes, dispersão e prazos individuais
+  de cinco segundos mantidos. Fotos geradas retomam o tamanho visual anterior,
+  compensando a escala 0,85 da antiga galeria. Câmera sem arraste/seleção acidental.
+
+### Resultado
+
+- **32 verificações de composição/fundos e 27 da câmera aprovadas: 59 no total.**
+  Incluem comparação real de geometria/imagens, passagem de cor, contraste,
+  dispersão, prazos, teclado, toque, movimento reduzido, resize, rolagem e próxima
+  seção. Sem exceções JavaScript ou falhas de recursos locais nas visitas normais.
+- Build, sintaxe, comparação visual e ausência de overflow aprovados. As capturas
+  mostram o viewport, sem pretensão de documentar a seção inteira. Emulação
+  Chromium/SwiftShader; não houve teste em telefone físico nesta revisão.
+- Prévia atual em `docs/layout-restoration-preview.webp`, versão móvel em
+  `docs/layout-restoration-mobile.webp`. Histórico e restauração em
+  `docs/layout-restoration.md`. Backup remoto anterior à correção:
+  `backup/antes-restaurar-composicao-2026-11-05` → `95d0d1b`.
+- Nenhuma divergência P0/P1/P2 pendente dentro deste escopo.
+
+final result: passed

@@ -9,7 +9,6 @@
   min-height: 100svh;
   background: #f0d756;
   color: #f0d756;
-  border-top: clamp(1.2rem, 2.4vw, 2.8rem) solid #f0d756;
   display: grid;
   grid-template-columns: 38% 62%;
   padding: 9vw 4vw 3vw 13.5vw;
@@ -32,7 +31,7 @@
   word-break: normal;
   overflow-wrap: normal;
 }
-.page5-camera-control { position: relative; width: 21vw; aspect-ratio: 1259 / 717; max-width: none; margin-top: .4vw; line-height: 0; }
+.page5-camera-control { position: relative; width: 21vw; aspect-ratio: 1259 / 717; max-width: none; margin-top: .4vw; line-height: 0; user-select: none; }
 .page5-camera { width: 100%; height: auto; max-width: none; margin: 0; display: block; pointer-events: none; }
 .page5-shutter {
   position: absolute; left: 78.9%; top: 67.8%; width: 9.5%; aspect-ratio: 1;
@@ -43,11 +42,11 @@
 .page5-shutter:hover { box-shadow: 0 0 0 2px #f0d756; }
 .page5-shutter:focus-visible { outline: 2px solid #f0d756; outline-offset: 4px; }
 .page5-camera-hint { margin: .8rem 0 0; color: #f0d756; font: 400 clamp(1.3rem, 1.6vw, 1.7rem)/1.3 "AquilineTwo", Georgia, serif; pointer-events: none; }
-.page5-photo-duration { margin: 1.2rem 0 0; color: #f0d756; font: 300 .9rem/1.4 "SquidBoy", sans-serif; text-align: center; }
 .page5-camera-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .page5-right { position: relative; z-index: 1; min-height: 46vw; transform: translateX(7vw) scale(.85); transform-origin: top left; }
 .page5-revealed-photos { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.page5-generated-photo { position: absolute; width: clamp(128px, 15vw, 236px); aspect-ratio: 1; margin: 0; filter: drop-shadow(0 6px 7px #30251b26); }
+/* Match the former gallery's rendered size: 18vw × .85 (45vw × .85 on mobile). */
+.page5-generated-photo { position: absolute; width: 15.3vw; aspect-ratio: 1; margin: 0; filter: drop-shadow(0 6px 7px #30251b26); }
 .page5-photo-paper { position: absolute; inset: 0; display: block; background: #ece5d5; clip-path: var(--photo-shape); }
 .page5-photo-paper img { position: absolute; left: 3.5%; top: 3.5%; width: 93%; height: 93%; max-width: none; object-fit: cover; clip-path: var(--photo-shape); }
 .page5-colagem {
@@ -72,8 +71,8 @@
   .page5-left::before { content: ""; position: absolute; z-index: -1; inset: -22vw -8vw -8vw; background: #6b311c; pointer-events: none; }
   .page5-text { width: 70vw; }
   .page5-camera-control { width: 70vw; }
-  .page5-generated-photo { width: 34vw; min-width: 112px; max-width: 156px; }
-  .page5-right { min-height: 140vw; }
+  .page5-generated-photo { width: 38.25vw; }
+  .page5-right { min-height: 110vw; }
   .page5-colagem { right: 0; top: 4vw; width: 40vw; }
   .page5-filme { left: 0; top: 34vw; width: 72vw; }
   .page5-brand { left: 4vw; top: 68vw; font-size: 22vw; }

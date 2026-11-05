@@ -1,5 +1,9 @@
 # Paleta e fotografias passageiras — 5 de novembro de 2026
 
+**Registro da primeira entrega da paleta.** A revisão posterior restaura as
+fotografias e a composição originais e simplifica os fundos. Consulte o
+[estado atual e a comparação com a versão anterior à paleta](layout-restoration.md).
+
 Aplicação da última prévia aprovada, com o marrom original dos textos da
 apresentação preservado e fotos mais espalhadas que desaparecem em cinco segundos.
 

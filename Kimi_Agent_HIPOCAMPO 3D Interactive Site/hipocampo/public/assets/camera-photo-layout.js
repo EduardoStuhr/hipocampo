@@ -8,7 +8,7 @@ export function measurePhotoLayout(section, gallery) {
   const width = gallery.offsetWidth, height = gallery.offsetHeight
   const sx = rect.width / Math.max(1, width), sy = rect.height / Math.max(1, height)
   const local = r => ({ left: (r.left - rect.left) / sx, top: (r.top - rect.top) / sy, right: (r.right - rect.left) / sx, bottom: (r.bottom - rect.top) / sy })
-  const protectedAreas = [...section.querySelectorAll('.page5-text, .page5-camera-control, .page5-camera-hint, .page5-photo-duration, .page5-brand')].map(el => local(el.getBoundingClientRect())).map(r => ({ left: r.left - 12, right: r.right + 12, top: r.top - 12, bottom: r.bottom + 12 }))
+  const protectedAreas = [...section.querySelectorAll('.page5-text, .page5-camera-control, .page5-camera-hint, .page5-brand')].map(el => local(el.getBoundingClientRect())).map(r => ({ left: r.left - 12, right: r.right + 12, top: r.top - 12, bottom: r.bottom + 12 }))
   const mobile = matchMedia('(max-width: 760px)').matches
   const left = local(section.querySelector('.page5-left').getBoundingClientRect())
   return {

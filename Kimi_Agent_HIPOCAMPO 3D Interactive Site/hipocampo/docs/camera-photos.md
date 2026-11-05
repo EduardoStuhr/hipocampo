@@ -7,6 +7,9 @@ Atualização: a [paleta aprovada e as fotos passageiras](color-story.md) distri
 as fotos pela composição e removem cada uma após cinco segundos. A prévia abaixo
 registra a entrega original da câmera, anterior à mudança dos fundos.
 
+A [revisão dos fundos e das proporções](layout-restoration.md) restaura as fotos
+originais da apresentação e suas medidas, preservando a dispersão e os cinco segundos.
+
 ![Fotografias do projeto reveladas com recortes geométricos](camera-photos-preview.webp)
 
 ## Comportamento

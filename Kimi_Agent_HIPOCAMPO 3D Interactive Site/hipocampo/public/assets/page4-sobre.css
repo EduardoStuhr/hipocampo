@@ -6,12 +6,8 @@
   color: #7a2a17;
   padding: 4vw 9vw 3vw;
   box-sizing: border-box;
-  isolation: isolate;
   overflow: hidden;
 }
-.page4-color-band { position: absolute; z-index: 0; inset: auto 0 0; height: 22%; background: #2626fc; transform-origin: 0 50%; pointer-events: none; }
-.page4-title, .page4-text { position: relative; z-index: 1; }
-.page4-photos { z-index: 2; }
 .page4-title {
   margin: 0;
   text-align: center;
@@ -49,8 +45,8 @@
 .page4-photo.is-playing .page4-frame { opacity: 1; }
 .page4-photo--retrato { left: 0; bottom: 0; width: 9vw; min-width: 90px; aspect-ratio: 458/760; }
 .page4-photo--retrato, .page4-photo--retrato .page4-frame { clip-path: ellipse(47% 48.5% at 50% 50%); }
-.page4-photo--envelope { right: 30vw; top: 3vw; width: 24vw; aspect-ratio: 1; }
-.page4-photo--montanha { right: 6vw; top: 8vw; width: 22vw; aspect-ratio: 320/204; }
+.page4-photo--envelope { right: 30vw; top: 0; width: 24vw; aspect-ratio: 1; mix-blend-mode: multiply; }
+.page4-photo--montanha { right: 6vw; top: 4vw; width: 22vw; aspect-ratio: 576/548; mix-blend-mode: multiply; filter: brightness(1.1) contrast(1.05); }
 /* Rotate only the paper: its side opening becomes the upper opening.
    The clipped window follows the photographed lip, keeping every photo inside. */
 .page4-photo--envelope > img {
