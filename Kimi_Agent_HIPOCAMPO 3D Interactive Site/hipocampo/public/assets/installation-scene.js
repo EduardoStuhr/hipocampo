@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { FRAGMENTS } from './installation-collection.js?v=client-1'
 import { createCollectionBuilder } from './installation-props.js?v=client-1'
+import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
 export { FRAGMENTS } from './installation-collection.js?v=client-1'
 
 const clamp = THREE.MathUtils.clamp
@@ -86,10 +87,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const cachedRect = { left: 0, top: 0, width: 1, height: 1 }
 
   async function buildYield() {
-    await new Promise(resolve => {
-      if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, { timeout: 100 })
-      else window.setTimeout(resolve, 0)
-    })
+    await yieldScenePreparation(signal)
     if (disposed || signal?.aborted) {
       disposeRoom()
       throw new DOMException('Preparação cancelada', 'AbortError')
@@ -996,48 +994,16 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     await buildYield()
     updateCamera()
     scene.updateMatrixWorld(true)
-    await renderer.compileAsync(scene, camera)
+    await prepareSceneMaterials(renderer, scene, camera, textures, signal)
     await buildYield()
     // The first material uploads, shadow maps and draw happen offscreen while
     // the reader is still in earlier chapters, rather than on the entry frame.
-    const warmup = new THREE.WebGLRenderTarget(64, 64)
-    try {
-      renderer.setRenderTarget(warmup)
-      renderer.shadowMap.needsUpdate = true
-      renderer.render(scene, camera)
-    } finally {
-      renderer.setRenderTarget(null)
-      warmup.dispose()
-    }
-    await buildYield()
-    // Warm the actual drawing buffer too: drivers may create a different
-    // pipeline for the onscreen colour space. Await a GPU fence asynchronously
-    // so the first visible frame does not pay that cost or block the CPU.
-    renderer.shadowMap.needsUpdate = false
-    renderer.render(scene, camera)
-    dirty = shadowsDirty = false
-    const gl = renderer.getContext()
-    if (gl.fenceSync) {
-      await new Promise((resolve, reject) => {
-        const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
-        gl.flush()
-        const poll = () => {
-          if (disposed || signal?.aborted || gl.isContextLost()) {
-            gl.deleteSync(fence)
-            reject(new DOMException('Preparação cancelada', 'AbortError'))
-            return
-          }
-          const status = gl.clientWaitSync(fence, 0, 0)
-          if (status === gl.TIMEOUT_EXPIRED) window.setTimeout(poll, 16)
-          else {
-            gl.deleteSync(fence)
-            if (status === gl.WAIT_FAILED) reject(new Error('Falha ao preparar o contexto 3D'))
-            else resolve()
-          }
-        }
-        poll()
-      })
-    }
+    // Use the actual drawing buffer at a tiny resolution. A render target has
+    // a different colour pipeline and required a second full-resolution draw.
+    await warmScene(renderer, scene, camera, signal)
+    resize()
+    dirty = true
+    shadowsDirty = false
     await buildYield()
     prepared = true
     preparationMs = Math.round(performance.now() - buildStarted)

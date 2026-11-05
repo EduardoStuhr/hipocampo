@@ -20,6 +20,8 @@ materiais pendentes e o ponto de restauração desta atualização.
   variantes de CDs e quatro frascos de estudo para os químicos.
 - `public/assets/installation-props.js`: representações provisórias do acervo,
   substituídas por impressões quando as fotografias forem fornecidas.
+- `public/assets/scene-preparation.js`: preparação gradual de texturas, materiais
+  e passes da GPU, compartilhada com a casa.
 - `public/assets/installation-room.css`: estilos limitados à instalação.
 - `public/images/installation/`: texturas locais geradas de madeira e esmalte.
 - `public/images/trail/photo-{1,2,3,4}.webp`: fotografias já existentes no projeto.
@@ -62,11 +64,16 @@ intacta para restauração.
 
 ## Correção de entrada e navegação
 
-A criação das malhas é dividida em tarefas ociosas. Texturas, shaders, sombras e
-o buffer real são preparados antes da aproximação da sala. Uma GPU fence é
+A preparação começa a três alturas de tela de distância da instalação, para não
+competir com a abertura. A criação das malhas é dividida em tarefas ociosas.
+Texturas, shaders e sombras são preparados em pequenos passos; os primeiros
+desenhos usam o buffer real em 64×64 antes de assumir a cena. Uma GPU fence é
 consultada de forma assíncrona, sem `gl.finish()` nem espera bloqueante. O quadro
 pronto permanece válido; entrar novamente na seção não força um novo desenho
 nem recalcula sombras. Resize no mesmo breakpoint preserva a câmera.
+
+A [correção da primeira rolagem](scroll-startup.md) registra o diagnóstico,
+as medições atuais e as verificações com cache desabilitado e CPU limitada.
 
 Medição histórica da versão com oito fragmentos, no Chromium com SwiftShader,
 viewport 1366 × 768 e
@@ -127,11 +134,14 @@ Capturas e resultados são escritos em `artifacts/installation/` (ignorado).
   backup anterior `backup/instalacao-antes-zoom-superior-2026-11-04` → `603c7dc`.
 - Orientações dos áudios: tag `release/cliente-audios-2026-11-05`;
   backup exato `backup/antes-audios-cliente-2026-11-05` → `fc98a3f`.
+- Correção da primeira rolagem: `release/scroll-primeiro-carregamento-2026-11-05`;
+  backup `backup/antes-correcao-scroll-2026-11-05` → `30a2b62`.
 
 Para “desfazer a última coisa” desta atualização, reverta somente
-`release/cliente-audios-2026-11-05`. Isso retorna ao site salvo, com a porta da
-casa ajustada. A [descrição da entrega](installation-client-brief.md) detalha a
-restauração e os arquivos abrangidos.
+`release/scroll-primeiro-carregamento-2026-11-05`. Isso retorna ao site salvo
+com os ajustes da porta e as orientações dos áudios. As descrições da
+[correção de scroll](scroll-startup.md) e da [entrega do acervo](installation-client-brief.md)
+detalham seus pontos de restauração.
 
 Para desfazer esta entrega preservando o histórico posterior, reverta o commit
 identificado pela tag correspondente e faça um push normal. Para voltar somente
@@ -139,6 +149,7 @@ identificado pela tag correspondente e faça um push normal. Para voltar somente
 Para retornar ao site anterior à instalação, reverta as entregas nesta ordem:
 
 ```bash
+git revert release/scroll-primeiro-carregamento-2026-11-05
 git revert release/cliente-audios-2026-11-05
 git revert release/instalacao-zoom-superior-2026-11-04
 git revert release/instalacao-camera-2026-11-03

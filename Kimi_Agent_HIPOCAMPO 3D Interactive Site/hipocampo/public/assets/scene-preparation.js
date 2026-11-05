@@ -1,0 +1,171 @@
+import * as THREE from './vendor/three.module.min.js'
+
+// Background WebGL work must yield to the visitor, even when an idle callback
+// times out. In particular, a room far down the page must not freeze the hero.
+let lastInput = -Infinity
+const noteInput = () => { lastInput = performance.now() }
+const inputOptions = { passive: true }
+const inputEvents = ['wheel', 'touchmove', 'scroll', 'keydown']
+inputEvents.forEach(event => window.addEventListener(event, noteInput, inputOptions))
+window.addEventListener('pagehide', () => {
+  inputEvents.forEach(event => window.removeEventListener(event, noteInput, inputOptions))
+}, { once: true })
+
+export function yieldScenePreparation(signal, { allowDuringScroll = false } = {}) {
+  return new Promise((resolve, reject) => {
+    let idle = 0, timer = 0
+    const cancel = () => {
+      if (idle) window.cancelIdleCallback(idle)
+      window.clearTimeout(timer)
+      signal?.removeEventListener('abort', abort)
+    }
+    const abort = () => {
+      cancel()
+      reject(new DOMException('Preparação cancelada', 'AbortError'))
+    }
+    const schedule = () => {
+      if (signal?.aborted) return abort()
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(run, { timeout: 400 })
+      else timer = window.setTimeout(run, 32)
+    }
+    const run = deadline => {
+      idle = timer = 0
+      const remaining = allowDuringScroll ? 0 : 160 - (performance.now() - lastInput)
+      if (remaining > 0 || document.hidden) {
+        timer = window.setTimeout(schedule, Math.max(remaining, 80))
+        return
+      }
+      if (deadline && !deadline.didTimeout && deadline.timeRemaining() < 6) return schedule()
+      cancel()
+      resolve()
+    }
+    signal?.addEventListener('abort', abort, { once: true })
+    schedule()
+  })
+}
+
+export async function prepareSceneMaterials(renderer, scene, camera, textures, signal, options) {
+  // Upload images and compile one material at a time. compileAsync(scene)
+  // still submits every shader synchronously before its first asynchronous wait.
+  const uploads = new Set(textures)
+  scene.traverse(object => {
+    const surfaces = Array.isArray(object.material) ? object.material : [object.material]
+    surfaces.filter(Boolean).forEach(material => {
+      Object.values(material).forEach(value => { if (value?.isTexture) uploads.add(value) })
+    })
+  })
+  let sliceStarted = -Infinity
+  const yieldBudget = async () => {
+    if (performance.now() - sliceStarted < 4) return
+    await yieldScenePreparation(signal, options)
+    sliceStarted = performance.now()
+  }
+  for (const texture of uploads) {
+    const image = texture.image
+    if (image instanceof HTMLImageElement) {
+      // Decode off the upload path. texImage2D(HTMLImageElement) can otherwise
+      // decode/convert a large transparent photograph synchronously on scroll.
+      await image.decode().catch(() => {})
+      if ('createImageBitmap' in window) {
+        try {
+          const bitmap = await createImageBitmap(image, { imageOrientation: texture.flipY ? 'flipY' : 'none', premultiplyAlpha: 'none', colorSpaceConversion: 'none' })
+          if (signal?.aborted) { bitmap.close(); throw new DOMException('Preparação cancelada', 'AbortError') }
+          texture.image = bitmap
+          texture.flipY = false
+          texture.addEventListener('dispose', () => bitmap.close())
+        } catch (error) {
+          if (error.name === 'AbortError') throw error
+          // Older browsers keep their already-decoded HTML image.
+        }
+      }
+    }
+    await yieldBudget()
+    renderer.initTexture(texture)
+  }
+  const objects = [], materials = new Set()
+  scene.traverse(object => {
+    if (!object.material) return
+    const surfaces = Array.isArray(object.material) ? object.material : [object.material]
+    if (surfaces.some(material => !materials.has(material))) {
+      objects.push(object)
+      surfaces.forEach(material => materials.add(material))
+    }
+  })
+  for (const object of objects) {
+    await yieldBudget()
+    await renderer.compileAsync(object, camera, scene)
+  }
+}
+
+export async function waitForSceneGPU(renderer, signal) {
+  const gl = renderer.getContext()
+  if (!gl.fenceSync) return
+  const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+  gl.flush()
+  try {
+    await new Promise((resolve, reject) => {
+      const poll = () => {
+        if (signal?.aborted || gl.isContextLost()) {
+          reject(new DOMException('Preparação cancelada', 'AbortError'))
+          return
+        }
+        const status = gl.clientWaitSync(fence, 0, 0)
+        if (status === gl.TIMEOUT_EXPIRED) window.setTimeout(poll, 16)
+        else if (status === gl.WAIT_FAILED) reject(new Error('Falha ao preparar o contexto 3D'))
+        else resolve()
+      }
+      poll()
+    })
+  } finally {
+    gl.deleteSync(fence)
+  }
+}
+
+export async function warmScene(renderer, scene, camera, signal, options) {
+  const size = renderer.getSize(new THREE.Vector2())
+  const override = scene.overrideMaterial
+  const pipelines = new Set(), entries = [], samples = []
+  scene.traverse(object => {
+    if (!object.material) return
+    entries.push({ object, visible: object.visible, frustumCulled: object.frustumCulled })
+    const materials = Array.isArray(object.material) ? object.material : [object.material]
+    const keys = materials.map(material => {
+      const program = renderer.properties.get(material).currentProgram
+      return [program?.id ?? material.id, material.side, material.transparent, material.blending, material.depthWrite, material.depthTest, material.colorWrite, material.stencilWrite, material.stencilFunc].join(':')
+    })
+    if (keys.some(key => !pipelines.has(key))) {
+      keys.forEach(key => pipelines.add(key))
+      samples.push(object)
+    }
+  })
+  const simple = new THREE.MeshBasicMaterial({ color: '#ffffff' })
+  try {
+    await yieldScenePreparation(signal, options)
+    renderer.setSize(64, 64, false)
+    // First warm the depth/shadow passes with a cheap colour pass. Submitting
+    // every lit material together stalls some GPUs even after compileAsync.
+    scene.overrideMaterial = simple
+    renderer.shadowMap.needsUpdate = true
+    renderer.render(scene, camera)
+    await waitForSceneGPU(renderer, signal)
+    scene.overrideMaterial = override
+    renderer.shadowMap.needsUpdate = false
+    entries.forEach(({ object }) => { object.visible = false })
+    for (const object of samples) {
+      await yieldScenePreparation(signal, options)
+      object.visible = true
+      object.frustumCulled = false
+      renderer.render(scene, camera)
+      await waitForSceneGPU(renderer, signal)
+      object.visible = false
+    }
+  } finally {
+    entries.forEach(entry => {
+      entry.object.visible = entry.visible
+      entry.object.frustumCulled = entry.frustumCulled
+    })
+    scene.overrideMaterial = override
+    renderer.setSize(size.x, size.y, false)
+    simple.dispose()
+  }
+}

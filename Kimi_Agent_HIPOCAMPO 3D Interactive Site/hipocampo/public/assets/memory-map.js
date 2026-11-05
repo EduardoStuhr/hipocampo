@@ -83,6 +83,7 @@ async function mountMemoryMap(container) {
   const coarsePointer = window.matchMedia('(hover: none), (pointer: coarse)')
   const pointer = { localX: 0, localY: 0, clientX: 0, clientY: 0, active: false }
   let visible = false
+  let covered = container.dataset.houseCovered === 'true'
   let destroyed = false
   let tickerActive = false
   let idleFrame = 0
@@ -239,7 +240,7 @@ async function mountMemoryMap(container) {
   }
 
   const start = () => {
-    if (!destroyed && visible && heroPinFinished() && !tickerActive) {
+    if (!destroyed && visible && !covered && heroPinFinished() && !tickerActive) {
       tickerActive = true
       // ResizeObserver supplies layout dimensions, shared with the percentage-positioned
       // pieces. getBoundingClientRect() includes the entrance scale (0.92 -> 1)
@@ -256,7 +257,7 @@ async function mountMemoryMap(container) {
   }
 
   const updateActivity = () => {
-    if (visible && heroPinFinished()) start()
+    if (visible && !covered && heroPinFinished()) start()
     else stop()
   }
 
@@ -286,11 +287,17 @@ async function mountMemoryMap(container) {
 
   const intersectionObserver = new IntersectionObserver((entries) => {
     visible = entries[0]?.isIntersecting === true
-    setPointerListening(visible)
+    setPointerListening(visible && !covered)
     updateActivity()
   }, { threshold: 0.01 })
 
   intersectionObserver.observe(container)
+  const onCoverageChange = () => {
+    covered = container.dataset.houseCovered === 'true'
+    setPointerListening(visible && !covered)
+    updateActivity()
+  }
+  container.addEventListener('hipocampo:map-coverage', onCoverageChange)
   window.addEventListener('hipocampo:hero-pin-state', updateActivity)
   window.addEventListener('blur', clearPointer)
   document.addEventListener('pointerout', onPointerOut, { passive: true })
@@ -304,6 +311,7 @@ async function mountMemoryMap(container) {
     stop()
     resizeObserver.disconnect()
     intersectionObserver.disconnect()
+    container.removeEventListener('hipocampo:map-coverage', onCoverageChange)
     setPointerListening(false)
     window.removeEventListener('hipocampo:hero-pin-state', updateActivity)
     window.removeEventListener('blur', clearPointer)

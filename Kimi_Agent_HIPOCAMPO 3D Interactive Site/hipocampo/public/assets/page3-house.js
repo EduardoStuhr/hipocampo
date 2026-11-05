@@ -4,6 +4,7 @@ import * as THREE from './vendor/three.module.min.js'
 import { createHouseInterior } from './house-interior.js?v=door-fit-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
+import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -29,7 +30,11 @@ function buildSection() {
 }
 
 async function mount(section) {
-  const manifest = await (await fetch(MANIFEST_URL)).json()
+  const controller = new AbortController()
+  const abortPreparation = () => controller.abort()
+  window.addEventListener('pagehide', abortPreparation, { once: true })
+  const manifest = await (await fetch(MANIFEST_URL, { signal: controller.signal })).json()
+  await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
   const canvas = section.querySelector('.page3-canvas')
   const stage = section.querySelector('.page3-stage')
   const capA = section.querySelector('.page3-caption--a')
@@ -134,6 +139,13 @@ async function mount(section) {
   const pointer = { x: 0, y: 0, sx: 0, sy: 0, dx: 0, dy: 0, known: false }
 
   const domMap = document.querySelector('#projeto [data-memory-map]')
+  const setMapCovered = covered => {
+    if (!domMap) return
+    if (domMap.dataset.houseCovered === String(covered)) return
+    domMap.style.visibility = covered ? 'hidden' : ''
+    domMap.dataset.houseCovered = String(covered)
+    domMap.dispatchEvent(new Event('hipocampo:map-coverage'))
+  }
   let startRect = null
   const measureStart = () => {
     if (!domMap) return
@@ -167,14 +179,16 @@ async function mount(section) {
   }
 
   let target = 0, progress = 0, visible = false, raf = 0, lastFrame = 0
-  let page3Intersecting = false, staticDirty = true
+  let page3Intersecting = false, staticDirty = true, prepared = false
+  const heroFinished = () => (ScrollTrigger.getById('hipocampo-page1-page2')?.progress ?? 1) >= .999
   const scroll = ScrollTrigger.create({
     id: 'hipocampo-house',
     trigger: section, start: 'top top', end: 'bottom bottom',
     onUpdate: (st) => {
       target = st.progress
+      if (prepared) updateRenderActivity()
       if (target <= 0.0005 && !reduced) {
-        if (domMap) domMap.style.visibility = ''
+        setMapCovered(false)
         canvas.style.opacity = '0'
       }
     },
@@ -314,7 +328,7 @@ async function mount(section) {
     } else renderer.render(scene, camera)
     if (reduced || target > 0.0005) {
       canvas.style.opacity = String(reduced ? 1 : 1 - smooth(.97, 1, p))
-      if (domMap && !reduced) domMap.style.visibility = 'hidden'
+      if (!reduced) setMapCovered(true)
     }
     stage.style.backgroundColor = leave > 0 ? exitPaper.getStyle() : 'transparent'
   }
@@ -322,6 +336,17 @@ async function mount(section) {
   // Do not replace the DOM map with a frame whose images are still loading.
   try {
     await Promise.all(textureReady)
+    await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true })
+    await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
+    // Warm the real drawing-buffer pipeline at a tiny resolution. This also
+    // prepares the doorway/shadow passes before the camera handoff, without
+    // drawing a full-screen 3D frame behind the opening circle.
+    camera.position.set(0, 0, fitZ())
+    camera.lookAt(0, 0, 0)
+    scene.updateMatrixWorld(true)
+    await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true })
+    resize()
+    prepared = true
   } catch (error) {
     scroll.kill()
     resizeObserver.disconnect()
@@ -332,7 +357,7 @@ async function mount(section) {
   let contextLost = false
   const updateRenderActivity = () => {
     const wasVisible = visible
-    visible = page3Intersecting && !document.hidden && !contextLost
+    visible = prepared && page3Intersecting && !document.hidden && !contextLost && heroFinished() && (reduced || target > .0005)
     setPointerListening(visible && !reduced)
     if (visible && !wasVisible) {
       progress = target = scroll.progress
@@ -341,7 +366,7 @@ async function mount(section) {
     }
     if (visible && !raf) raf = requestAnimationFrame(frame)
     if (!visible && raf) { cancelAnimationFrame(raf); raf = 0 }
-    if (domMap && (!visible || reduced)) domMap.style.visibility = ''
+    if (!visible || reduced) setMapCovered(false)
   }
   const page3Observer = new IntersectionObserver((entries) => {
     page3Intersecting = entries[0].isIntersecting
@@ -349,13 +374,14 @@ async function mount(section) {
   }, { threshold: 0 })
   page3Observer.observe(section)
   document.addEventListener('visibilitychange', updateRenderActivity)
+  window.addEventListener('hipocampo:hero-pin-state', updateRenderActivity)
   motionPreference.addEventListener('change', () => {
     if (contextLost) return
     reduced = motionPreference.matches
     section.classList.toggle('is-reduced-motion', reduced)
     staticDirty = true
     setPointerListening(visible && !reduced)
-    if (domMap) domMap.style.visibility = ''
+    setMapCovered(false)
     resize()
     ScrollTrigger.refresh()
   })
@@ -371,13 +397,15 @@ async function mount(section) {
     resizeObserver.disconnect()
     scroll.kill()
     archive.dispose()
-    if (domMap) domMap.style.visibility = ''
+    setMapCovered(false)
     section.hidden = true
     ScrollTrigger.refresh()
   })
-  ScrollTrigger.refresh()
+  // Preparation changes no document geometry. Refreshing all pinned sections
+  // here used to force layout in the middle of the first scroll.
+  ScrollTrigger.update()
   section.houseJourney = {
-    inspect: () => ({ progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
 }
 
@@ -388,6 +416,7 @@ function init() {
   const section = buildSection()
   project.after(section)
   mount(section).catch((e) => {
+    if (e.name === 'AbortError') return
     console.error('[hipocampo page3]', e)
     section.hidden = true
     const map = document.querySelector('#projeto [data-memory-map]')

@@ -67,6 +67,7 @@ function initializeHeroMotion() {
   let pointerRenderPending = false
   let pointerListening = false
   let resizePending = false
+  let resizeTimer = 0
   let pointerX = 0
   let pointerY = 0
   let pointerInside = false
@@ -82,6 +83,7 @@ function initializeHeroMotion() {
   )
 
   const measureCharCenters = () => {
+    if (!canUsePointerEffect()) { charCenters = []; return }
     charCenters = chars.map((char) => {
       const rect = char.getBoundingClientRect()
       const translateX = Number.parseFloat(gsap.getProperty(char, 'x')) || 0
@@ -221,9 +223,12 @@ function initializeHeroMotion() {
   }
 
   const onResize = () => {
-    if (resizePending) return
-    resizePending = true
-    gsap.ticker.add(resizeOnTicker)
+    window.clearTimeout(resizeTimer)
+    resizeTimer = window.setTimeout(() => {
+      if (resizePending) return
+      resizePending = true
+      gsap.ticker.add(resizeOnTicker)
+    }, 150)
   }
 
   measureCharCenters()
@@ -333,8 +338,14 @@ function initializeHeroMotion() {
     ),
   })
 
+  let lenisTime = 0, previousTick = null
   const lenisTicker = (time) => {
-    lenis.raf(time * 1000)
+    // A slow first frame must not consume the whole easing duration at once,
+    // jumping from the white circle to the house when the browser recovers.
+    const elapsed = previousTick === null ? 0 : Math.max(0, time - previousTick)
+    lenisTime += Math.min(elapsed, .05)
+    previousTick = time
+    lenis.raf(lenisTime * 1000)
   }
   const onLenisScroll = () => ScrollTrigger.update()
   lenis.on('scroll', onLenisScroll)
@@ -460,6 +471,7 @@ function initializeHeroMotion() {
     })
     charMotions.clear()
     window.clearTimeout(layoutRefreshTimer)
+    window.clearTimeout(resizeTimer)
     layoutObserver.disconnect()
     setPointerListening(false)
     window.removeEventListener('resize', onResize)

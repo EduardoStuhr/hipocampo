@@ -75,9 +75,14 @@ def desktop(browser):
     page.on('pageerror', lambda error: results['errors'].append(str(error)))
     page.on('console', lambda message: results['errors'].append(message.text) if message.type == 'error' and not message.text.startswith('Failed to load resource') else None)
     page.goto(URL, wait_until='networkidle')
+    check('instalação distante não prepara WebGL durante a abertura', not page.locator('#instalacao').evaluate('el=>!!el.installationRoom'))
+    page.evaluate('''()=>{
+      const el=document.querySelector('#instalacao');
+      window.__hipocampoLenis.scrollTo(el.getBoundingClientRect().top+scrollY-innerHeight*1.5,{immediate:true});
+    }''')
     page.wait_for_function('document.querySelector("#instalacao")?.installationRoom != null')
     initial = state(page)
-    check('preparada antes de entrar na sala', initial['prepared'] and not initial['visible'] and page.evaluate('scrollY') == 0, {'preparationMs': initial['preparationMs']})
+    check('preparada durante a aproximação antes de entrar na sala', initial['prepared'] and not initial['visible'], {'preparationMs': initial['preparationMs']})
     check('preparação não mantém renderização fora da tela', not initial['framePending'])
     scene_in_view(page)
     initial = state(page)
@@ -168,6 +173,7 @@ def mobile(browser):
     page = context.new_page()
     page.on('pageerror', lambda error: results['errors'].append(str(error)))
     page.goto(URL, wait_until='networkidle')
+    page.locator('.installation-stage').scroll_into_view_if_needed()
     page.wait_for_function('document.querySelector("#instalacao")?.installationRoom != null')
     box = scene_in_view(page)
     toggle_navigation(page)

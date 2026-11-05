@@ -38,7 +38,7 @@ def open_page(browser,w,h,reduced=False):
     page.on('console',lambda m:results['errors'].append(m.text) if m.type=='error' and not m.text.startswith('Failed to load resource') else None)
     page.on('response',lambda r:results['assets'].append(f'{r.status} {r.url}') if r.status>=400 and r.url.startswith(URL) else None)
     page.goto(URL,wait_until='networkidle')
-    page.wait_for_function("document.querySelector('#instalacao')?.installationRoom!=null&&window.__clientEntry!=null")
+    page.wait_for_function("document.querySelector('#casa')?.houseJourney!=null&&window.__clientEntry!=null")
     return context,page
 
 def layout_checks(browser):
@@ -65,7 +65,7 @@ def layout_checks(browser):
 
 def collection_checks(browser):
     context,page=open_page(browser,1366,900,reduced=True)
-    anchor(page,'instalacao');settle(page)
+    anchor(page,'instalacao');page.wait_for_function("document.querySelector('#instalacao')?.installationRoom!=null");settle(page)
     initial=state(page)
     check('mesa de luz vazia no início',not any(o['atTable'] for o in initial['objects']))
     check('nomes flutuantes retirados',page.locator('.installation-island,.installation-labels').count()==0)

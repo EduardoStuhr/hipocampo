@@ -1,7 +1,8 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=client-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=scroll-start-1'
+import { yieldScenePreparation } from './scene-preparation.js?v=scroll-start-1'
 
 const React = requireReact() // Reuse the application's React singleton.
 const h = React.createElement
@@ -25,12 +26,11 @@ export default function Installation() {
     let started = false
     const element = root.current
     const controller = new AbortController()
-    let idle = 0
-    let timer = 0
     const start = async () => {
       if (started || disposed) return
       started = true
       try {
+        await yieldScenePreparation(controller.signal)
         const instance = await createInstallationRoom(element, {
           onSelect(fragment, atTable) {
             setSelected(fragment.id)
@@ -50,14 +50,18 @@ export default function Installation() {
         setUnavailable(true)
       }
     }
-    // Prepare during idle time, well before scrolling reaches the room. Heavy
-    // geometry/shader work is also split into tasks inside the scene builder.
-    if ('requestIdleCallback' in window) idle = window.requestIdleCallback(start, { timeout: 1800 })
-    else timer = window.setTimeout(start, 250)
+    // Start before the visitor reaches the room, after the opening chapters.
+    // An idle timeout at page load used to compile this entire second WebGL
+    // scene during the white circle, blocking scrolling for over a second.
+    const approach = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return
+      approach.disconnect()
+      start()
+    }, { rootMargin: `${Math.round(window.innerHeight * 3)}px 0px` })
+    approach.observe(element)
     return () => {
       disposed = true
-      if (idle) window.cancelIdleCallback(idle)
-      window.clearTimeout(timer)
+      approach.disconnect()
       controller.abort()
       room.current?.dispose()
       room.current = null
