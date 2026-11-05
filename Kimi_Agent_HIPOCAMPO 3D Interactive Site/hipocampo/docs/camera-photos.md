@@ -3,6 +3,10 @@
 A interação foi aplicada somente à câmera da seção Vestígios. O envelope da
 página anterior conserva seu comportamento original.
 
+Atualização: a [paleta aprovada e as fotos passageiras](color-story.md) distribuem
+as fotos pela composição e removem cada uma após cinco segundos. A prévia abaixo
+registra a entrega original da câmera, anterior à mudança dos fundos.
+
 ![Fotografias do projeto reveladas com recortes geométricos](camera-photos-preview.webp)
 
 ## Comportamento
@@ -16,11 +20,12 @@ página anterior conserva seu comportamento original.
   repetições consecutivas, inclusive entre duas rodadas.
 - As oito formas são círculo, triângulo, quadrado, hexágono, losango, pentágono,
   octógono e trapézio. O recorte afeta a fotografia e sua borda de papel.
-- A foto sai do disparador e se revela na colagem. As três últimas compõem uma
-  pequena pilha; as anteriores são removidas para limitar memória e animações.
+- A foto sai do disparador e se revela em um ponto livre da composição, evitando
+  texto e comandos. Cada uma se dissolve e é removida após cinco segundos.
 - Cliques rápidos entram em sequência. Uma falha ao carregar uma imagem informa
   o problema e libera a próxima tentativa.
-- A preferência por movimento reduzido mantém a revelação sem voo ou pulso.
+- A preferência por movimento reduzido mantém a revelação sem voo ou pulso e
+  preserva o prazo de cinco segundos, com remoção direta.
   O leitor de tela recebe o número da fotografia e a forma revelada.
 
 “Gerar” significa revelar uma fotografia existente com um novo recorte. Não há

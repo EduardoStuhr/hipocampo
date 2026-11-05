@@ -1,5 +1,10 @@
 // Página 5 — "vestígios": entra logo após a página 4 (#sobre).
 import { n as gsap } from './index-BXEErpTi.js?v=perf-1'
+import { mountStoryPalette } from './story-palette.js?v=color-story-1'
+import { measurePhotoLayout, positionPhoto } from './camera-photo-layout.js?v=color-story-1'
+
+const PHOTO_LIFETIME = 5000
+const PHOTO_FADE = 450
 
 const PHOTOGRAPHS = Array.from({ length: 9 }, (_, i) => ({
   src: `/images/trail/photo-${i + 1}.webp`,
@@ -39,7 +44,7 @@ function mountCamera(section) {
   const status = section.querySelector('.page5-camera-status')
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
   const choosePhoto = createPicker(PHOTOGRAPHS), chooseShape = createPicker(SHAPES)
-  const loaded = new Map(), prints = []
+  const loaded = new Map(), prints = new Set()
   let queue = Promise.resolve(), requests = 0, revealed = 0, destroyed = false, visible = false
   let shutterMotion = null
 
@@ -61,29 +66,54 @@ function mountCamera(section) {
   }, { rootMargin: '200px 0px' })
   near.observe(section)
 
-  const stop = print => {
-    print.motion?.kill()
-    print.motion = null
+  const remove = print => {
+    if (!prints.delete(print)) return
+    window.clearTimeout(print.fadeTimer)
+    window.clearTimeout(print.removeTimer)
+    print.enter?.kill()
+    print.exit?.kill()
+    print.element.remove()
   }
+  const fade = print => {
+    if (!prints.has(print)) return
+    const remaining = print.expiresAt - performance.now()
+    if (remaining <= 0) return remove(print)
+    if (reduced.matches || document.hidden || !visible) return
+    print.element.dataset.state = 'fading'
+    print.exit = gsap.to(print.element, { opacity: 0, duration: remaining / 1000, ease: 'power1.out', onComplete: () => { print.exit = null } })
+  }
+  const layoutPrints = () => {
+    if (!prints.size) return
+    const layout = measurePhotoLayout(section, gallery), occupied = []
+    prints.forEach(print => {
+      if (performance.now() >= print.expiresAt) return remove(print)
+      print.enter?.kill()
+      print.enter = null
+      if (print.element.dataset.state !== 'fading') print.element.dataset.state = 'visible'
+      print.size = print.element.offsetWidth
+      const point = positionPhoto(layout, print.size, print.angle, occupied, print.number - 1)
+      print.bounds = point.bounds
+      occupied.push(point.bounds)
+      print.element.style.left = `${point.x}px`
+      print.element.style.top = `${point.y}px`
+      gsap.set(print.element, { x: 0, y: 0, scale: 1, rotation: print.angle, ...(print.element.dataset.state === 'fading' ? {} : { opacity: 1 }) })
+      gsap.set(print.image, { opacity: 1 })
+    })
+  }
+  const resize = new ResizeObserver(layoutPrints)
+  resize.observe(gallery)
+  const onVisibility = () => {
+    prints.forEach(print => { if (performance.now() >= print.expiresAt) remove(print) })
+  }
+  document.addEventListener('visibilitychange', onVisibility)
   const reveal = (photo, shape, image) => {
     const quiet = reduced.matches || document.hidden || !visible
     revealed++
-    while (prints.length >= 3) {
-      const oldest = prints.pop()
-      stop(oldest)
-      oldest.element.remove()
-    }
-    prints.forEach((print, index) => {
-      stop(print)
-      gsap.set(print.image, { opacity: 1 })
-      const pose = { x: -(index + 1) * 23, y: (index + 1) * 12, scale: 1 - (index + 1) * .055, rotation: print.angle + (index + 1) * 5, opacity: 1 - (index + 1) * .22 }
-      if (quiet) gsap.set(print.element, pose)
-      else print.motion = gsap.to(print.element, { ...pose, duration: .3, ease: 'power2.out', onComplete: () => { print.motion = null } })
-    })
     const element = document.createElement('figure')
     element.className = 'page5-generated-photo'
     element.dataset.shape = shape.name
     element.dataset.photoNumber = String(revealed)
+    element.dataset.state = quiet ? 'visible' : 'entering'
     element.style.setProperty('--photo-shape', shape.clip)
     const paper = document.createElement('span')
     paper.className = 'page5-photo-paper'
@@ -93,22 +123,27 @@ function mountCamera(section) {
     element.append(paper)
     gallery.append(element)
     const angle = -8 + Math.random() * 15
-    const print = { element, image: printImage, angle, motion: null }
-    prints.unshift(print)
+    const size = element.offsetWidth
+    const layout = measurePhotoLayout(section, gallery)
+    const point = positionPhoto(layout, size, angle, [...prints].map(print => print.bounds), revealed - 1)
+    element.style.left = `${point.x}px`
+    element.style.top = `${point.y}px`
+    const print = { element, image: printImage, angle, number: revealed, size, bounds: point.bounds, enter: null, exit: null, expiresAt: performance.now() + PHOTO_LIFETIME, fadeTimer: 0, removeTimer: 0 }
+    prints.add(print)
+    gsap.set(element, { xPercent: -50, yPercent: -50 })
     const pose = { x: 0, y: 0, scale: 1, rotation: angle, opacity: 1 }
     if (quiet) gsap.set(element, pose)
     else {
-      // Measure once per click. Convert viewport coordinates into the scaled
-      // collage's local coordinates; no geometry reads or scroll locks per frame.
-      const from = shutter.getBoundingClientRect(), to = element.getBoundingClientRect()
-      const scale = gallery.getBoundingClientRect().width / Math.max(1, gallery.offsetWidth)
-      const x = (from.left + from.width / 2 - to.left - to.width / 2) / scale
-      const y = (from.top + from.height / 2 - to.top - to.height / 2) / scale
-      print.motion = gsap.timeline({ onComplete: () => { print.motion = null } })
+      const from = shutter.getBoundingClientRect()
+      const x = (from.left + from.width / 2 - layout.rect.left) / layout.sx - point.x
+      const y = (from.top + from.height / 2 - layout.rect.top) / layout.sy - point.y
+      print.enter = gsap.timeline({ onComplete: () => { print.enter = null; element.dataset.state = 'visible' } })
         .fromTo(element, { x, y, scale: .12, rotation: angle - 15, opacity: 0 }, { ...pose, duration: .8, ease: 'power3.out' }, 0)
         .fromTo(printImage, { opacity: 0 }, { opacity: 1, duration: .65, ease: 'power2.out' }, .12)
     }
-    status.textContent = `Fotografia ${revealed} revelada em forma de ${shape.name}. Clique no disparador para gerar outra.`
+    print.fadeTimer = window.setTimeout(() => fade(print), PHOTO_LIFETIME - PHOTO_FADE)
+    print.removeTimer = window.setTimeout(() => remove(print), PHOTO_LIFETIME)
+    status.textContent = `Fotografia ${revealed} revelada em forma de ${shape.name}, visível por cinco segundos. Clique no disparador para gerar outra.`
   }
   const generate = () => {
     if (destroyed) return
@@ -117,7 +152,7 @@ function mountCamera(section) {
     shutter.setAttribute('aria-busy', 'true')
     shutterMotion?.kill()
     if (!reduced.matches) shutterMotion = gsap.fromTo(shutter, { scale: .88 }, { scale: 1, duration: .2, ease: 'power2.out', onComplete: () => { shutterMotion = null } })
-    // Keep rapid clicks in order, without retaining an unbounded pile of prints.
+    // Keep rapid clicks in order. Each print owns its five-second deadline.
     queue = queue.then(async () => {
       if (destroyed) return
       try {
@@ -134,9 +169,11 @@ function mountCamera(section) {
   const cleanup = () => {
     destroyed = true
     near.disconnect()
+    resize.disconnect()
+    document.removeEventListener('visibilitychange', onVisibility)
     shutter.removeEventListener('click', generate)
     shutterMotion?.kill()
-    prints.forEach(stop)
+    prints.forEach(remove)
     loaded.clear()
   }
   shutter.addEventListener('click', generate)
@@ -149,6 +186,7 @@ function buildSection() {
   s.className = 'hipocampo-page5'
   s.setAttribute('aria-label', 'A memória desaparecida')
   s.innerHTML = `
+    <div class="page5-color-panel" aria-hidden="true"></div>
     <div class="page5-left">
       <p class="page5-text">Ao chegar ao Hipocampo, cada participante recebe uma sinopse que apresenta os primeiros vestígios de uma memória desaparecida, marcada por ausências e perguntas sem resposta, nova possibilidade de memória, revelando como atribuímos significado às imagens e aos objetos que sobrevivem ao tempo.</p>
       <div class="page5-camera-control">
@@ -156,14 +194,15 @@ function buildSection() {
         <button class="page5-shutter" type="button" aria-label="Gerar fotografia pelo disparador" aria-describedby="page5-camera-hint" aria-controls="page5-revealed-photos" title="Gerar fotografia"></button>
       </div>
       <p id="page5-camera-hint" class="page5-camera-hint">gerar fotografia</p>
-      <p class="page5-camera-status" role="status" aria-live="polite" aria-atomic="true">Clique no disparador da câmera para revelar fotografias do acervo em formas diferentes.</p>
+      <p class="page5-photo-duration">cada imagem dura 5 segundos</p>
+      <p class="page5-camera-status" role="status" aria-live="polite" aria-atomic="true">Clique no disparador da câmera para revelar fotografias do acervo em formas diferentes, visíveis por cinco segundos.</p>
     </div>
     <div class="page5-right">
       <img class="page5-colagem" src="/images/vestigios/colagem.webp" alt="Colagem de fotografias em preto e branco com recorte laranja" loading="lazy" />
       <img class="page5-filme" src="/images/vestigios/filme.webp" alt="Duas mulheres com rostos cobertos por círculos vermelhos, sob uma tira de filme com carta manuscrita" loading="lazy" />
-      <div id="page5-revealed-photos" class="page5-revealed-photos" role="group" aria-label="Fotografias reveladas"></div>
       <p class="page5-brand" aria-hidden="true">Hipocampo</p>
-    </div>`
+    </div>
+    <div id="page5-revealed-photos" class="page5-revealed-photos" role="group" aria-label="Fotografias reveladas"></div>`
   return s
 }
 
@@ -173,6 +212,7 @@ function init() {
   if (document.querySelector('#vestigios')) return true
   sobre.after(buildSection())
   mountCamera(document.querySelector('#vestigios'))
+  mountStoryPalette(sobre, document.querySelector('#vestigios'))
   window.dispatchEvent(new Event('resize'))
   return true
 }

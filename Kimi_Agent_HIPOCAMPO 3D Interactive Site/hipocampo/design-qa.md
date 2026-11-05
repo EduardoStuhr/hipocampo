@@ -163,6 +163,8 @@ alteração teve verificação focada no comportamento afetado.
 
 final result: passed
 
+
+
 ## Revisão adicional — câmera e recortes geométricos (5/11/2026)
 
 Escopo desta entrega: somente o disparador da câmera na seção Vestígios.
@@ -221,5 +223,75 @@ composição mantém o layout anterior; não se trata de clonar toda a prévia.
   repetir uma forma após completar sua rodada, sempre evitando repetir a anterior.
 - Build, sintaxe e comparação visual aprovados. Prévias reais em
   `docs/camera-photos-preview.webp` e `docs/camera-photos-mobile.webp`.
+
+final result: passed
+
+## Revisão adicional — paleta e fotografias passageiras (5/11/2026)
+
+O usuário aprovou a última prévia colorida, pediu que o texto marrom da
+apresentação continuasse igual e autorizou espalhar mais as fotografias da câmera,
+removendo cada uma após cinco segundos. O escopo mantém as fontes, o texto principal,
+o envelope e os controles existentes. A distribuição das fotos é adaptativa;
+não há obrigação de copiar as coordenadas fixas do conceito gerado.
+
+### Evidência desta revisão
+
+- Conceito aprovado: `docs/color-story-concept.webp`, 921×1707 px, derivado de
+  `/workspace/generated_images/exec-57194bf0-b182-4a67-ae01-ead318b7b7c2.png`.
+- Estado anterior: `artifacts/color-story/before-sobre-1366.png` e
+  `before-vestigios-1366.png`, composição branca anterior à entrega.
+- Capturas reais: `artifacts/color-story/after-sobre-1366.png` e
+  `after-vestigios-1366.png`, viewport CSS 1366×900 e deviceScaleFactor 1.
+  Foram combinadas verticalmente em `docs/color-story-preview.webp`, 1366×1800.
+- Mobile: viewport 390×844 para apresentação, cores e toque; captura da câmera
+  em contexto novo de 375×667 em `docs/color-story-mobile.webp`. Desktop adicional
+  de 1600×900 para overflow. Capturas sem moldura de aparelho e com escala 1.
+- Comparação conjunta aberta e inspecionada em `artifacts/color-story/comparison.png`.
+  Conceito e capturas foram reduzidos proporcionalmente, sem esticar para alinhar.
+  As capturas finais registram o viewport real: expandir a janela para fotografar
+  a seção inteira alterava o estado do ScrollTrigger e foi descartado como evidência.
+- A faixa azul foi confirmada também no pixel da captura: RGB 40,40,251, próximo
+  de 38,38,252, com a textura visual existente. A câmera foi capturada após três
+  cliques e o celular após toque no disparador real.
+
+### Cinco superfícies de fidelidade
+
+- **Tipografia:** AquilineTwo e SquidBoy locais preservadas, incluindo a marca,
+  os títulos e os textos existentes. A nova duração usa a fonte de apoio do site.
+- **Composição:** apresentação mantém a hierarquia e recebe a faixa azul atrás
+  das fotos. Câmera usa campos marrom/amarelo em 42/58 no desktop e verticais no
+  celular. As fotos geradas procuram espaço livre sem cobrir texto, câmera,
+  instruções ou marca; não interceptam ponteiros nem criam altura no documento.
+- **Cores:** amarelo `#f0d756`, azul `#2626fc` e marrom de fundo `#6b311c`.
+  O texto original da apresentação permanece `#7a2a17`, conforme a correção do
+  usuário. O cabeçalho adapta seu contraste por entrada/saída das seções.
+- **Imagens:** câmera, envelope e nove fotografias do acervo local mantidos.
+  A paisagem da apresentação passa a usar `images/trail/photo-3.webp`, já no
+  projeto, para evitar o fundo branco da montagem antiga sobre a paleta.
+- **Conteúdo e movimento:** texto principal intacto, indicação adicional
+  “cada imagem dura 5 segundos”. Oito recortes alternados, prazos independentes,
+  dissolução nos últimos 450 ms e remoção do elemento aos 5.000 ms. Com movimento
+  reduzido, sem voo ou dissolução. A faixa acompanha a rolagem nos dois sentidos.
+
+### Histórico e resultado
+
+- [P2 resolvido] A montagem anterior de montanhas deixava um entorno branco;
+  foi substituída pela fotografia enquadrada existente, conferida na captura final.
+- [P2 resolvido] A legenda de duração ficava perto demais dos descendentes da
+  cursiva; a margem foi ajustada e conferida no desktop e no celular.
+- Passaram **27 verificações da câmera**, incluindo oito recortes, separação,
+  prazos observados, Enter/Espaço, toque, cliques rápidos, limpeza de animações,
+  falha/recuperação, movimento reduzido, rolagem e acesso à próxima seção.
+- Passaram **23 verificações da paleta**, incluindo cores computadas, pixel azul,
+  faixa 0→0,5→1→0, contraste do cabeçalho, envelope, regiões protegidas, saída
+  amarela da casa, resize, ausência de overflow e retorno à abertura.
+- Passaram **17 verificações da primeira visita**, com cache desabilitado no
+  desktop e no mobile com CPU limitada. Nenhuma reversão inesperada de rolagem.
+  O teste usa Chromium/SwiftShader; não equivale a teste em telefone físico.
+- **67 verificações aprovadas.** Nenhuma exceção JavaScript ou falha de recurso
+  local nas visitas normais. Build e sintaxe aprovados. Não há P0/P1/P2 pendente
+  dentro deste escopo. As posições das fotografias variam de forma intencional.
+- Backup remoto anterior: `backup/antes-paleta-fotos-efemeras-2026-11-05`,
+  apontando para `6c1f822`. Instruções de restauração em `docs/color-story.md`.
 
 final result: passed

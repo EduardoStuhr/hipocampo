@@ -11,6 +11,11 @@ URL = os.environ.get('HIPOCAMPO_QA_URL', 'http://127.0.0.1:4173/')
 results = {'checks': [], 'errors': [], 'assets': []}
 
 
+def capture_section(page,path):
+    page.mouse.move(-5,-5)
+    page.screenshot(path=str(path))
+
+
 def check(name, passed, details=None):
     value = {'name': name, 'passed': bool(passed)}
     if details is not None:
@@ -32,6 +37,13 @@ def open_page(browser, width, height, mobile=False, reduced=False, block_photos=
     page.evaluate('document.fonts.ready')
     page.locator('.page5-shutter').scroll_into_view_if_needed()
     page.wait_for_function('document.querySelector(".page5-camera").complete&&document.querySelector(".page5-camera").naturalWidth>0')
+    page.evaluate('''()=>{
+      window.__cameraLives=[];const living=new Map();
+      new MutationObserver(records=>records.forEach(r=>{
+        r.addedNodes.forEach(el=>{if(el.nodeType===1&&el.matches('.page5-generated-photo'))living.set(el,{number:el.dataset.photoNumber,start:performance.now()})});
+        r.removedNodes.forEach(el=>{const entry=living.get(el);if(entry){entry.duration=performance.now()-entry.start;__cameraLives.push(entry);living.delete(el)}});
+      })).observe(document.querySelector('.page5-revealed-photos'),{childList:true});
+    }''')
     return context, page
 
 
@@ -40,8 +52,8 @@ def wait_photo(page, number):
       const el=document.querySelector(`.page5-generated-photo[data-photo-number="${n}"]`);
       const image=el?.querySelector('img');
       if(!el||!image?.complete||!image.naturalWidth)return false;
-      const style=getComputedStyle(el),matrix=new DOMMatrix(style.transform==='none'?undefined:style.transform);
-      return style.opacity>.99&&getComputedStyle(image).opacity>.99&&Math.abs(matrix.m41)<.1&&Math.abs(matrix.m42)<.1;
+      const style=getComputedStyle(el);
+      return el.dataset.state==='visible'&&style.opacity>.99&&getComputedStyle(image).opacity>.99;
     }''', arg=number)
     return page.locator('.page5-generated-photo').last.evaluate('el=>({shape:el.dataset.shape,clip:getComputedStyle(el.querySelector(".page5-photo-paper")).clipPath,src:el.querySelector("img").getAttribute("src")})')
 
@@ -64,11 +76,15 @@ def desktop(browser):
         button.click()
         shots.append(wait_photo(page,i))
         if i in [1,3]:
-            page.locator('#vestigios').screenshot(path=str(OUT/f'after-desktop-{i}.png'))
+            capture_section(page,OUT/f'after-desktop-{i}.png')
+        if i == 3:
+            positions=page.locator('.page5-generated-photo').evaluate_all('els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,w:r.width}})')
+            check('fotografias ocupam pontos separados em vez de uma pilha',len(positions)==3 and all(((a['x']-b['x'])**2+(a['y']-b['y'])**2)**.5>min(a['w'],b['w'])*.6 for i,a in enumerate(positions) for b in positions[i+1:]),positions)
     check('cada clique muda a forma e não repete a foto anterior', all(a['shape']!=b['shape'] and a['clip']!=b['clip'] and a['src']!=b['src'] for a,b in zip(shots,shots[1:])), shots)
     check('oito recortes geométricos aparecem antes de repetir', len({s['shape'] for s in shots[:8]}) == 8)
     check('somente fotografias locais existentes são utilizadas', all(s['src'].startswith('/images/trail/photo-') and (ROOT/'public'/s['src'].lstrip('/')).is_file() for s in shots))
-    check('colagem mantém somente três fotos geradas', page.locator('.page5-generated-photo').count() == 3)
+    lives=page.evaluate('window.__cameraLives')
+    check('fotos anteriores são removidas após cinco segundos',len(lives)>0 and all(4700<=entry['duration']<=5800 for entry in lives),lives)
     button.focus()
     button.press('Enter');wait_photo(page,11)
     y = page.evaluate('scrollY')
@@ -78,7 +94,9 @@ def desktop(browser):
     for _ in range(12):
         button.click()
     wait_photo(page,24)
-    check('cliques rápidos preservam a sequência e limitam as camadas', page.locator('.page5-generated-photo').count()==3 and button.get_attribute('aria-busy')=='false')
+    check('cliques rápidos preservam a sequência sem acumular pendências', page.locator('.page5-generated-photo[data-photo-number="24"]').count()==1 and button.get_attribute('aria-busy')=='false')
+    page.wait_for_function('document.querySelectorAll(".page5-generated-photo").length===0',timeout=6500)
+    check('todas as fotos rápidas também expiram e liberam o DOM',True)
     page.wait_for_function('''async()=>{
       const {n:gsap}=await import('/assets/index-BXEErpTi.js?v=perf-1');
       return gsap.getTweensOf([...document.querySelectorAll('.page5-generated-photo,.page5-generated-photo img,.page5-shutter')]).length===0;
@@ -92,7 +110,7 @@ def desktop(browser):
     page.wait_for_function('''()=>{const el=document.querySelector('#instalacao');return Math.abs(el.getBoundingClientRect().top-(parseFloat(getComputedStyle(el).scrollMarginTop)||0))<3}''')
     check('próxima seção continua acessível sem trava de scroll', page.locator('#instalacao').count()==1 and page.evaluate('document.body.style.overflow')!='hidden')
     page.evaluate('window.__hipocampoLenis.scrollTo(document.querySelector("#vestigios"),{immediate:true})')
-    check('retorno conserva as fotos geradas', page.locator('.page5-generated-photo').count()==3)
+    check('retorno não ressuscita fotos expiradas', page.locator('.page5-generated-photo').count()==0)
     context.close()
 
 
@@ -109,7 +127,7 @@ def mobile(browser):
         page.set_viewport_size({'width':w,'height':h})
         page.wait_for_timeout(250)
         check(f'{w}: sem overflow horizontal',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
-    page.locator('#vestigios').screenshot(path=str(OUT/'after-mobile.png'))
+    capture_section(page,OUT/'after-mobile.png')
     context.close()
 
 
@@ -119,6 +137,8 @@ def reduced_and_failure(browser):
     button.click();wait_photo(page,1)
     moving=page.evaluate('''async()=>{const {n:gsap}=await import('/assets/index-BXEErpTi.js?v=perf-1');return gsap.getTweensOf([...document.querySelectorAll('.page5-generated-photo,.page5-generated-photo img,.page5-shutter')]).length}''')
     check('movimento reduzido revela a fotografia sem voo ou pulso',moving==0)
+    page.wait_for_function('document.querySelectorAll(".page5-generated-photo").length===0',timeout=6500)
+    check('movimento reduzido mantém a duração de cinco segundos',True)
     context.close()
     context,page=open_page(browser,1366,900,reduced=True,block_photos=True)
     page.locator('.page5-shutter').click()

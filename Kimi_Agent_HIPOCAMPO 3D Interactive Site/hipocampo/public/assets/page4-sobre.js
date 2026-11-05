@@ -4,7 +4,7 @@ const FRAMES = [1, 2, 3, 4].map((i) => `/images/sobre/gif-${i}.webp`)
 const PHOTOS = [
   ['retrato', 'Retrato antigo de uma mulher em moldura oval'],
   ['envelope', 'Envelope antigo com fotografias'],
-  ['montanha', 'Fotografia antiga de montanhas'],
+  ['montanha', 'Fotografia antiga de montanhas', '/images/trail/photo-3.webp'],
 ]
 
 function buildSection() {
@@ -13,6 +13,7 @@ function buildSection() {
   s.className = 'hipocampo-page4'
   s.setAttribute('aria-label', 'Sobre o Hipocampo')
   s.innerHTML = `
+    <div class="page4-color-band" aria-hidden="true"></div>
     <h2 class="page4-title"><small>o</small>Hipocampo</h2>
     <div class="page4-text">
       <p>Hipocampo é uma instalação e oficina experimental que investiga as relações entre memória, imagem e narrativa.</p>
@@ -20,9 +21,9 @@ function buildSection() {
       <p>Sem respostas definitivas, cada narrativa criada revela uma nova forma de compreender o passado, transformando a memória em uma experiência coletiva de imaginação e descoberta.</p>
     </div>
     <div class="page4-photos">
-      ${PHOTOS.map(([n, alt]) => `
+      ${PHOTOS.map(([n, alt, source]) => `
         <figure class="page4-photo page4-photo--${n}" ${n === 'envelope' ? 'tabindex="0" aria-label="Envelope com fotografias: mova o mouse ou use as setas para explorar"' : ''}>
-          <img src="/images/sobre/${n}.webp" alt="${alt}" loading="lazy" />
+          <img src="${source || `/images/sobre/${n}.webp`}" alt="${alt}" loading="lazy" />
           ${n === 'envelope' ? `<span class="page4-envelope-window" aria-hidden="true"><img class="page4-envelope-photo" src="${FRAMES[0]}" alt="" /></span>` : ''}
         </figure>`).join('')}
     </div>`
