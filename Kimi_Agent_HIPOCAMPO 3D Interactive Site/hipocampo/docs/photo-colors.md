@@ -1,5 +1,8 @@
 # Cores naturais das fotografias — 5 de novembro de 2026
 
+Revisão posterior: [recorte transparente do filme e restauração da montanha](image-refinement.md).
+Ela substitui o filtro SVG descrito neste registro por imagens com transparência própria.
+
 O envelope, a montagem de montanhas e o filme deixaram de usar
 `mix-blend-mode: multiply`. Essa mistura com o fundo amarelo tornava o papel e
 as fotografias amarelados. O fundo, as medidas, posições, textos e interações

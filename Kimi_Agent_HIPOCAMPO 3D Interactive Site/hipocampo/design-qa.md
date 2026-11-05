@@ -378,3 +378,42 @@ fontes, fundos e interações permanecem na composição restaurada.
   Documentação atual em `docs/photo-colors.md`. Sem P0/P1/P2 pendente neste escopo.
 
 final result: passed
+
+## Refinamento — recorte do filme e definição da montanha (5/11/2026)
+
+O usuário pediu corrigir a primeira colagem e tentar melhorar a qualidade da
+montanha da segunda captura. A intervenção se limita às duas imagens e ao seu
+tratamento; os fundos e a composição restaurada permanecem.
+
+- **Referências:** os dois prints do usuário e os arquivos originais
+  `images/vestigios/filme.webp` e `images/sobre/montanha.webp`, mantidos intactos.
+  Image Gen produziu derivados transparentes a partir desses arquivos, com
+  instruções de preservar tema, composição, cores e textura do papel.
+- **Evidência:** capturas antes/depois em `artifacts/image-refinement/`, viewports
+  CSS reais 1600×900 e 390×844, escala 1. Comparação conjunta em `comparison.png`,
+  com redução proporcional. Prévias reais combinadas em
+  `docs/image-refinement-preview.webp`, 1600×1800, sem esticar as capturas.
+- **Tipografia e geometria:** fontes, entrelinhas, título, texto, retrato,
+  envelope, câmera, colagem e marca mantidos. As quatro comparações com a
+  composição de `6c1f822` passaram, sem diferenças acima de 0,75 px em 1600×900,
+  1366×768, 390×844 e 375×667. O filme reserva a proporção original 960/688.
+- **Cores:** mantidos fundo amarelo, campo marrom, texto e marca azul. As amostras
+  de envelope, montanha e filme sobre amarelo/branco continuam equivalentes.
+- **Imagens:** filme recortado, sem retângulo claro, com transparência real.
+  Montanha restaurada de 576×547 para 1287×1222, com rochas laterais opacas e
+  contorno contínuo. Removidos filtro de luminosidade e máscara radial antigos.
+  Os dois WebPs RGBA totalizam 645.238 bytes e continuam lazy. O restauro assistido
+  melhora definição aparente; não constitui recuperação de informação original.
+- **Conteúdo/interação:** nenhum texto novo no produto. Troca de fotos do
+  envelope e sequência da câmera preservadas. Sem alteração nos prazos de cinco
+  segundos ou nos comandos 3D.
+- **Validação:** 23 verificações de imagem/renderização e 32 de composição/fundos,
+  **55 aprovadas**. Cobrem resolução, transparência, opacidade, cores, medidas,
+  teclado, toque, resize, rolagem, próxima seção e ausência de overflow. Sem
+  exceções JavaScript ou recursos locais indisponíveis. Build e sintaxe aprovados.
+  Chromium/SwiftShader emulado; sem teste físico de aparelhos nesta revisão.
+- Backup: `backup/antes-recorte-nitidez-2026-11-05` → `8690275`.
+  Restauração e procedência em `docs/image-refinement.md`. Sem P0/P1/P2 pendente
+  dentro deste escopo.
+
+final result: passed

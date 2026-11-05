@@ -87,7 +87,10 @@ def original_layout(browser):
                     if abs(actual-value)>.75:differences.append([selector,key,value,actual])
                 elif actual!=value:differences.append([selector,key,value,actual])
         check(f'{w}×{h}: tamanhos, posições e tipografia correspondem à versão anterior à paleta',not differences,differences)
-        check(f'{w}×{h}: fotografias originais restauradas',before['photos']==after['photos'],after['photos'])
+        treated={'/images/sobre/montanha.webp':'/images/sobre/montanha-restaurada-v1.webp',
+                 '/images/vestigios/filme.webp':'/images/vestigios/filme-recortado-v1.webp'}
+        check(f'{w}×{h}: somente filme e montanha recebem as versões tratadas',
+              [treated.get(src,src)for src in before['photos']]==after['photos'],after['photos'])
         (OUT/f'geometry-{w}.json').write_text(json.dumps({'original':before,'restored':after},ensure_ascii=False,indent=2))
 
 def colours(page,label):

@@ -6,7 +6,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'artifacts' / 'photo-colors'
+OUT = ROOT / 'artifacts' / 'image-refinement'
 OUT.mkdir(parents=True, exist_ok=True)
 URL = os.environ.get('HIPOCAMPO_QA_URL', 'http://127.0.0.1:4173/')
 results = {'checks': [], 'errors': [], 'assets': []}
@@ -27,6 +27,29 @@ def patch(image, x, y):
                  for c in range(3))
 
 
+def treated_assets():
+    mountain=Image.open(ROOT/'public/images/sobre/montanha-restaurada-v1.webp')
+    film=Image.open(ROOT/'public/images/vestigios/filme-recortado-v1.webp')
+    original=Image.open(ROOT/'public/images/sobre/montanha.webp')
+    check('montanha restaurada tem mais que o dobro da resolução em cada eixo',
+          mountain.width>=original.width*2 and mountain.height>=original.height*2,
+          {'original':original.size,'restored':mountain.size})
+    for name,image in [('montanha',mountain),('filme',film)]:
+        check(f'{name}: transparência real no arquivo, com conteúdo opaco',
+              image.mode=='RGBA' and image.getchannel('A').getextrema()==(0,255))
+        points=[(0,0),(image.width-1,0),(0,image.height-1),(image.width-1,image.height-1)]
+        check(f'{name}: os quatro cantos são transparentes',
+              all(image.getpixel(p)[3]==0 for p in points))
+    rocks=[mountain.getpixel((round(mountain.width*u),round(mountain.height*v)))[3]
+           for u,v in [(.17,.51),(.84,.5),(.5,.5)]]
+    check('rochas laterais e foto central permanecem opacas, sem perfuração pela luminosidade',
+          all(a>=250 for a in rocks),rocks)
+    surroundings=[film.getpixel((round(film.width*u),round(film.height*v)))[3]
+                  for u,v in [(.05,.04),(.8,.85),(.95,.95)]]
+    check('filme não conserva o retângulo de papel no entorno',
+          all(a==0 for a in surroundings),surroundings)
+
+
 def visit(browser, width, height):
     context = browser.new_context(viewport={'width': width, 'height': height},
                                   device_scale_factor=1,
@@ -44,7 +67,7 @@ def visit(browser, width, height):
         ('sobre', '.page4-photos', [
             ('envelope', '.page4-photo--envelope', .45, .7),
             ('montanha', '.page4-photo--montanha', .5, .5)]),
-        ('vestigios', '.page5-filme', [
+        ('vestigios', '.page5-colagem', [
             ('filme', '.page5-filme', .45, .3)]),
     ]:
         page.evaluate('''selector=>{const el=document.querySelector(selector);
@@ -89,6 +112,7 @@ def visit(browser, width, height):
 
 
 try:
+    treated_assets()
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=os.environ.get('HIPOCAMPO_CHROME', '/usr/bin/chromium'),
                                     headless=True, args=['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])

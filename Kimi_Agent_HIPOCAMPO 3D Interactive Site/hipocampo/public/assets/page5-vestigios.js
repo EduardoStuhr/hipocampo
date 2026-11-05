@@ -198,7 +198,7 @@ function buildSection() {
     </div>
     <div class="page5-right">
       <img class="page5-colagem" src="/images/vestigios/colagem.webp" alt="Colagem de fotografias em preto e branco com recorte laranja" loading="lazy" />
-      <img class="page5-filme" src="/images/vestigios/filme.webp" alt="Duas mulheres com rostos cobertos por círculos vermelhos, sob uma tira de filme com carta manuscrita" loading="lazy" />
+      <img class="page5-filme" src="/images/vestigios/filme-recortado-v1.webp" width="960" height="688" alt="Duas mulheres com rostos cobertos por círculos vermelhos, sob uma tira de filme com carta manuscrita" loading="lazy" />
       <p class="page5-brand" aria-hidden="true">Hipocampo</p>
     </div>
     <div id="page5-revealed-photos" class="page5-revealed-photos" role="group" aria-label="Fotografias reveladas"></div>`
