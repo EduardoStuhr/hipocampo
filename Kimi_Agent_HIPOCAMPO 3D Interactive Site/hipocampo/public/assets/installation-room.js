@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=zoom-top-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=client-1'
 
 const React = requireReact() // Reuse the application's React singleton.
 const h = React.createElement
@@ -14,7 +14,11 @@ export default function Installation() {
   const [selected, setSelected] = React.useState(null)
   const [fridgeOpen, setFridgeOpen] = React.useState(true)
   const [navigating, setNavigating] = React.useState(false)
-  const [message, setMessage] = React.useState('Cada objeto guarda uma memória. Aproxime os fragmentos na mesa de luz.')
+  const [query, setQuery] = React.useState('')
+  const [placed, setPlaced] = React.useState([])
+  const [message, setMessage] = React.useState('A mesa de luz começa vazia. Escolha objetos do acervo e aproxime-os para criar relações.')
+  const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const matching = FRAGMENTS.filter(fragment => normalize(`${fragment.number || ''} ${fragment.label} ${fragment.islandLabel} ${(fragment.members || []).join(' ')}`).includes(normalize(query)))
 
   React.useEffect(() => {
     let disposed = false
@@ -30,6 +34,7 @@ export default function Installation() {
         const instance = await createInstallationRoom(element, {
           onSelect(fragment, atTable) {
             setSelected(fragment.id)
+            setPlaced(previous => atTable ? [...new Set([...previous, fragment.id])] : previous.filter(id => id !== fragment.id))
             setMessage(fragment.memory + (atTable ? ' O fragmento agora faz parte da mesa de luz.' : ''))
           },
           onFridgeChange(open) { setFridgeOpen(open) },
@@ -65,14 +70,16 @@ export default function Installation() {
     if (!room.current) {
       const fragment = FRAGMENTS.find(item => item.id === id)
       setSelected(id)
-      setMessage(fragment.memory)
+      setPlaced(previous => [...new Set([...previous, id])])
+      setMessage(fragment.memory + ' O objeto foi incluído na sua seleção.')
     }
   }
   const reset = () => {
     room.current?.reset()
     setSelected(null)
     setFridgeOpen(true)
-    setMessage('A sala foi recomposta. Cada fragmento voltou à sua ilha.')
+    setPlaced([])
+    setMessage('A mesa de luz está vazia. Todos os objetos voltaram aos seus lugares.')
   }
 
   return h('section', { id: 'instalacao', ref: root, className: 'installation', 'aria-labelledby': 'installation-title' },
@@ -81,7 +88,7 @@ export default function Installation() {
         h('p', { className: 'installation-kicker' }, '03 — instalação virtual'),
         h('h2', { id: 'installation-title' }, 'uma sala, muitas vidas.'),
       ),
-      h('p', { className: 'installation-intro' }, 'Quatro ilhas, um lugar de encontro. Leve as memórias até a mesa de luz e invente outras relações.'),
+      h('p', { className: 'installation-intro' }, 'Escolha os objetos, leve-os até a mesa de luz e invente outras relações.'),
     ),
     h('div', { className: 'installation-toolbar', role: 'group', 'aria-label': 'Controles da sala' },
       h('p', null, 'arraste os objetos para a mesa de luz'),
@@ -96,11 +103,6 @@ export default function Installation() {
       h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Distância da câmera' },
         h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
         h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
-      ),
-      h('div', { className: 'installation-labels', 'aria-hidden': true },
-        ...['passado', 'presente', 'futuros', 'temporalidade'].map(island =>
-          h('span', { className: 'installation-island', 'data-island': island, key: island }, island === 'futuros' ? 'ilha dos futuros' : island === 'temporalidade' ? 'ilha da temporalidade' : `ilha do ${island}`),
-        ),
       ),
       h('div', { className: 'installation-hit-targets' },
         ...FRAGMENTS.map(fragment => h('button', {
@@ -123,7 +125,7 @@ export default function Installation() {
       h('p', null, 'fotografias, matéria e tempo'),
     ),
     h('div', { className: 'installation-memory' },
-      h('p', { className: 'installation-memory-label' }, selected ? 'fragmento selecionado' : 'entre vestígios'),
+      h('p', { className: 'installation-memory-label' }, placed.length ? `${placed.length} ${placed.length === 1 ? 'objeto na mesa de luz' : 'objetos na mesa de luz'}` : 'mesa de luz vazia'),
       h('p', { role: 'status', 'aria-live': 'polite', 'aria-atomic': true, className: 'installation-memory-text' }, message),
       selected && h('div', { className: 'installation-memory-actions' },
         h('button', { type: 'button', onClick: () => move(selected) }, 'levar à mesa de luz'),
@@ -133,9 +135,12 @@ export default function Installation() {
     h('details', { className: 'installation-accessible' },
       h('summary', null, 'explorar sem arrastar'),
       h('p', null, 'Escolha um fragmento para ler sua memória e levá-lo à mesa central. Nos objetos da cena, Enter leva à mesa, as setas deslocam e Escape devolve à ilha.'),
-      h('ul', null, ...FRAGMENTS.map(fragment => h('li', { key: fragment.id },
+      h('label', { className: 'installation-search-label', htmlFor: 'installation-search' }, 'buscar no acervo'),
+      h('input', { id: 'installation-search', className: 'installation-search', type: 'search', value: query, onChange: event => setQuery(event.target.value), placeholder: 'objeto, número ou conjunto' }),
+      h('p', { className: 'installation-search-count', role: 'status' }, `${matching.length} ${matching.length === 1 ? 'objeto' : 'objetos'}`),
+      h('ul', null, ...matching.map(fragment => h('li', { key: fragment.id },
         h('button', { type: 'button', onClick: () => move(fragment.id), 'aria-pressed': selected === fragment.id }, fragment.label),
-        h('span', null, fragment.islandLabel),
+        h('span', null, fragment.number ? `${String(fragment.number).padStart(2, '0')} · ${fragment.islandLabel}` : fragment.islandLabel),
       ))),
     ),
   )

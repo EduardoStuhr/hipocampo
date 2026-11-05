@@ -1,15 +1,7 @@
 import * as THREE from './vendor/three.module.min.js'
-
-export const FRAGMENTS = [
-  { id: 'retrato', label: 'Fotografia de família', island: 'past', islandLabel: 'ilha do passado', kind: 'photo', photo: 1, position: [-.23, 1.43, .04], angle: -.18, memory: 'Ninguém escreveu os nomes no verso. Ainda assim, alguém se lembra do gesto.' },
-  { id: 'paisagem', label: 'Fotografia de uma paisagem', island: 'past', islandLabel: 'ilha do passado', kind: 'photo', photo: 2, position: [.22, 1.44, -.12], angle: .22, memory: 'Um cartão-postal de um lugar que talvez só exista na memória de quem partiu.' },
-  { id: 'montanha', label: 'Fotografia da montanha', island: 'present', islandLabel: 'ilha do presente', kind: 'photo', photo: 3, position: [.62, 1.57, .12], angle: -.14, memory: 'A montanha permaneceu no mesmo lugar. Quem a fotografou já era outra pessoa.' },
-  { id: 'frasco-ambar', label: 'Frasco de revelador', island: 'present', islandLabel: 'ilha do presente', kind: 'bottle', position: [-.8, 1.57, -.12], color: '#653115', size: .8, memory: 'No vidro âmbar, a promessa de uma imagem que ainda não apareceu.' },
-  { id: 'frasco-claro', label: 'Frasco de fixador', island: 'present', islandLabel: 'ilha do presente', kind: 'bottle', position: [-.24, 1.57, .04], color: '#8eafa8', size: .62, memory: 'Fixar uma imagem não impede que a lembrança continue mudando.' },
-  { id: 'negativo', label: 'Tira de negativos', island: 'future', islandLabel: 'ilha dos futuros', kind: 'film', position: [.58, 1.64, .16], angle: -.12, memory: 'Doze fotogramas de uma tarde que ninguém conseguiu datar. Que história você enxerga aqui?' },
-  { id: 'aves', label: 'Fotografia das aves', island: 'future', islandLabel: 'ilha dos futuros', kind: 'photo', photo: 4, position: [-.65, 1.64, .15], angle: .16, memory: 'Talvez seja uma despedida. Talvez seja apenas o começo de um voo.' },
-  { id: 'filme', label: 'Rolo de filme guardado', island: 'fridge', islandLabel: 'ilha da temporalidade', kind: 'canister', position: [.22, .49, .26], memory: 'O frio conserva a matéria. O que conserva o tempo vivido?' },
-]
+import { FRAGMENTS } from './installation-collection.js?v=client-1'
+import { createCollectionBuilder } from './installation-props.js?v=client-1'
+export { FRAGMENTS } from './installation-collection.js?v=client-1'
 
 const clamp = THREE.MathUtils.clamp
 const BASE_LAYOUT = {
@@ -28,7 +20,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   scene.background = new THREE.Color('#000000')
   scene.fog = new THREE.Fog('#000000', 25, 55)
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = 1.05
@@ -264,7 +256,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   pastTable.position.set(.65, 0, .22)
   groups.past.add(pastTable)
   table(pastTable, 1.32, .94, 1.42)
-  box(pastTable, .55, .018, .38, material({ color: '#9c7847', roughness: .96 }), [.06, 1.435, -.05]).rotation.y = -.15
   const rack = new THREE.Group()
   rack.position.set(-.78, 0, -.1)
   groups.past.add(rack)
@@ -340,16 +331,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   }
   box(groups.present, 2.24, .065, .38, wood, [0, 2.78, -.42], .015)
   for (const x of [-.82, .82]) tube(groups.present, [[x, 2.79, -.54], [x, 2.51, -.54], [x, 2.78, -.27]], .018, brass)
-  const bookColors = ['#283f4b', '#50392b', '#3b3428', '#293f47']
-  bookColors.forEach((color, i) => {
-    const x = -.69 + i * .19, height = [.52, .62, .44, .57][i]
-    const cover = material({ color, roughness: .95 })
-    box(groups.present, .14, height, .29, paper, [x, 2.82 + height / 2, -.42], .004)
-    box(groups.present, .036, height + .025, .315, cover, [x - .072, 2.82 + height / 2, -.42], .005)
-    box(groups.present, .036, height + .025, .315, cover, [x + .072, 2.82 + height / 2, -.42], .005)
-    box(groups.present, .17, height + .02, .035, cover, [x, 2.82 + height / 2, -.25], .008)
-    for (const f of [.18, .77]) box(groups.present, .14, .011, .008, brass, [x, 2.82 + height * f, -.227])
-  })
   await buildYield()
 
   // Future: luminous opal glass set into a thick, bevelled wooden light table.
@@ -424,65 +405,54 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     box(parent, .2 * size, .2 * size, .006, paper, [0, .25 * size, .161 * size], .002)
     for (const y of [.2, .25, .29]) box(parent, .12 * size, .006 * size, .004, darkWood, [0, y * size, .166 * size])
   }
-  function canister(parent) {
-    mesh(parent, new THREE.CylinderGeometry(.15, .15, .32, 24), black, [0, .16, 0])
-    mesh(parent, new THREE.CylinderGeometry(.165, .165, .035, 24), chrome, [0, .332, 0])
-    box(parent, .19, .15, .012, magnetGold, [0, .15, .144], .003)
+  const buildCollectionObject = createCollectionBuilder({ mesh, box, tube, material, textures, loadTexture, photo, bottle, photoTextures, wood, darkWood, brass, chrome, black, paper })
+  function localBounds(object) {
+    object.updateWorldMatrix(true, true)
+    const inverse = object.matrixWorld.clone().invert(), bounds = new THREE.Box3()
+    object.traverse(child => {
+      if (!child.isMesh) return
+      child.geometry.computeBoundingBox()
+      bounds.union(child.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, child.matrixWorld)))
+    })
+    return bounds
   }
-  function film(parent) {
-    const frame = material({ color: '#53301a', roughness: .32, metalness: .1, side: THREE.DoubleSide })
-    // Sprocket perforations are gaps between narrow connecting strips.
-    for (let i = 0; i < 4; i++) {
-      const x = -.48 + i * .32
-      const image = mesh(parent, new THREE.PlaneGeometry(.27, .21), material({ map: photoTextures[i % 3], color: '#8a6130', roughness: .45 }), [x, .02, 0])
-      image.rotation.x = -Math.PI / 2
-      for (const z of [-.126, .126]) box(parent, .32, .012, .035, frame, [x, .014, z])
-      box(parent, .035, .012, .25, frame, [x + .157, .014, 0])
-    }
-    for (const z of [-.18, .18]) {
-      box(parent, 1.3, .012, .018, frame, [0, .014, z])
-      for (let i = 0; i <= 22; i++) box(parent, .024, .012, .055, frame, [-.64 + i * .058, .014, z * .9])
-    }
-  }
+  if (FRAGMENTS.find(item => item.number === 1)?.image) coat.removeFromParent()
   for (const definition of FRAGMENTS) {
-    const object = new THREE.Group()
+    const onRack = definition.number === 1 && !definition.image
+    const object = onRack ? coat : new THREE.Group()
     object.name = definition.id
     object.userData.fragmentId = definition.id
-    object.rotation.y = definition.angle || 0
-    if (definition.kind === 'photo') photo(object, definition.photo)
-    if (definition.kind === 'bottle') bottle(object, definition.color, definition.size)
-    if (definition.kind === 'film') film(object)
-    if (definition.kind === 'canister') canister(object)
-    const position = [...definition.position]
-    if (definition.island === 'past') position[0] += .65
-    object.position.set(...position)
-    groups[definition.island].add(object)
+    buildCollectionObject(definition, object)
+    if (!onRack) {
+      const sourceRotation = definition.image ? (definition.position[1] > 2.7 ? [Math.PI / 2, 0, 0] : [0, definition.angle || 0, 0]) : (definition.sourceRotation || [0, definition.angle || 0, 0])
+      object.rotation.set(...sourceRotation)
+      object.scale.setScalar(definition.sourceScale || 1)
+      object.updateMatrixWorld(true)
+      const bounds = new THREE.Box3().setFromObject(object)
+      object.position.set(definition.position[0], definition.position[1] - bounds.min.y, definition.position[2])
+      groups[definition.island].add(object)
+    }
     object.userData.home = object.position.clone()
     object.userData.homeRotation = object.rotation.clone()
+    object.userData.homeScale = object.scale.clone()
     object.userData.homeParent = object.parent
     const button = root.querySelector(`[data-object="${definition.id}"]`)
-    objects.set(definition.id, { object, button, definition, atTable: definition.island === 'future' })
-    object.traverse(child => { if (child.isMesh) pickables.push(child) })
-    await buildYield()
+    const bounds = localBounds(object), center = bounds.getCenter(new THREE.Vector3())
+    const tableRotation = new THREE.Euler(...(definition.image ? [0, definition.angle || 0, 0] : (definition.tableRotation || [0, 0, 0])))
+    tableRotation.y += definition.image ? 0 : (definition.angle || 0)
+    const tableBounds = bounds.clone().applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(tableRotation))
+    const size = tableBounds.getSize(new THREE.Vector3()), tableScale = Math.min(1, .86 / Math.max(size.x, size.z))
+    tableBounds.min.multiplyScalar(tableScale); tableBounds.max.multiplyScalar(tableScale)
+    const tableCenter = tableBounds.getCenter(new THREE.Vector3())
+    objects.set(definition.id, { object, button, definition, center, tableRotation, tableScale, tableSize: tableBounds.getSize(new THREE.Vector3()), tableOffset: new THREE.Vector3(-tableCenter.x, -tableBounds.min.y + .006, -tableCenter.z), atTable: false, tableSlot: null, tablePosition: null })
+    object.traverse(child => {
+      if (!child.isMesh) return
+      child.userData.sourceShadow = onRack
+      child.castShadow = onRack
+      pickables.push(child)
+    })
+    if (objects.size % 4 === 0) await buildYield()
   }
-  for (const x of [-.36, .02, .37]) {
-    const object = new THREE.Group()
-    object.position.set(x, 1.1, .06)
-    bottle(object, '#69271b', .65)
-    fridge.add(object)
-  }
-  const storedBottle = new THREE.Group()
-  storedBottle.position.set(-.26, .48, .08)
-  bottle(storedBottle, '#918f7c', .58)
-  fridge.add(storedBottle)
-
-  const labelPoints = {
-    passado: { parent: groups.past, point: new THREE.Vector3(0, 0, 1.25) },
-    presente: { parent: groups.present, point: new THREE.Vector3(0, 0, 1.02) },
-    futuros: { parent: groups.future, point: new THREE.Vector3(0, 0, 1.65) },
-    temporalidade: { parent: fridge, point: new THREE.Vector3(0, 0, 1.1) },
-  }
-  const labels = Object.entries(labelPoints).map(([id, value]) => ({ ...value, element: root.querySelector(`[data-island="${id}"]`) }))
   const fridgeButton = root.querySelector('.installation-fridge-hit')
 
   function invalidate(withShadows = true) {
@@ -515,22 +485,14 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   }
   function updateOverlays() {
     scene.updateMatrixWorld(true)
-    for (const label of labels) {
-      worldPosition.copy(label.point)
-      // On narrow screens the side furniture sits just behind the light table.
-      // Put those two labels above it so the script never crosses bright glass.
-      if (mobile && (label.parent === groups.past || label.parent === groups.present)) worldPosition.set(0, 4.8, .3)
-      place(label.element, label.parent.localToWorld(worldPosition))
-    }
     for (const entry of objects.values()) {
-      entry.object.getWorldPosition(worldPosition)
-      const inFridge = entry.object.parent === fridge
+      entry.object.localToWorld(worldPosition.copy(entry.center))
+      const inFridge = entry.definition.island === 'fridge' && !entry.atTable
       if (inFridge && doorAngle < .55) {
         entry.button.style.visibility = 'hidden'
         entry.button.tabIndex = -1
         continue
       }
-      worldPosition.y += entry.definition.kind === 'bottle' ? .23 : .035
       entry.button.tabIndex = place(entry.button, worldPosition) ? 0 : -1
     }
     place(fridgeButton, door.localToWorld(worldPosition.set(-.71, .05, .1)))
@@ -642,33 +604,52 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   function animateObject(entry, parent, target) {
     motions.delete(entry.definition.id)
     parent.attach(entry.object)
-    if (reducedMotion.matches) entry.object.position.copy(target)
+    if (reducedMotion.matches || !visible || document.hidden || contextLost) entry.object.position.copy(target)
     else {
       const start = entry.object.position.clone()
       motions.set(entry.definition.id, { object: entry.object, start, end: target.clone(), elapsed: 0 })
     }
     invalidate()
   }
-  function tablePosition(entry, i) {
-    const index = i ?? FRAGMENTS.findIndex(item => item.id === entry.definition.id)
-    return new THREE.Vector3(-1.45 + (index % 4) * .91, 1.64, -.56 + Math.floor(index / 4) * .92)
+  const tableSlots = [[0, 0], [-.88, 0], [.88, 0], [0, -.6], [0, .6], [-.88, -.6], [.88, -.6], [-.88, .6], [.88, .6], [-1.65, 0], [1.65, 0], [-1.65, -.6], [1.65, -.6], [-1.65, .6], [1.65, .6]]
+  function tablePosition(entry) {
+    if (entry.tableSlot === null) {
+      const used = new Set([...objects.values()].filter(e => e !== entry && e.atTable).map(e => e.tableSlot))
+      let slot = 0
+      while (used.has(slot)) slot++
+      entry.tableSlot = slot
+    }
+    const [x, z] = tableSlots[entry.tableSlot % tableSlots.length]
+    return new THREE.Vector3(x, 1.64 + Math.floor(entry.tableSlot / tableSlots.length) * .02, z).add(entry.tableOffset)
+  }
+  function tablePose(entry) {
+    entry.object.rotation.copy(entry.tableRotation)
+    entry.object.scale.setScalar(entry.tableScale)
+    entry.object.traverse(child => { if (child.isMesh) child.castShadow = true })
+  }
+  function homePose(entry) {
+    entry.object.rotation.copy(entry.object.userData.homeRotation)
+    entry.object.scale.copy(entry.object.userData.homeScale)
+    entry.object.traverse(child => { if (child.isMesh) child.castShadow = child.userData.sourceShadow })
   }
   function moveToTable(id) {
     const entry = objects.get(id)
     if (!entry) return
+    if (entry.definition.island === 'fridge' && !fridgeOpen) toggleFridge()
     entry.atTable = true
-    animateObject(entry, groups.future, tablePosition(entry))
-    entry.object.rotation.set(0, entry.definition.angle || 0, 0)
-    entry.object.scale.setScalar(1)
+    const target = entry.tablePosition || tablePosition(entry)
+    entry.tablePosition = target.clone()
+    animateObject(entry, groups.future, target)
+    tablePose(entry)
     select(entry)
   }
   function returnToIsland(id) {
     const entry = objects.get(id)
     if (!entry) return
     animateObject(entry, entry.object.userData.homeParent, entry.object.userData.home)
-    entry.object.rotation.copy(entry.object.userData.homeRotation)
-    entry.object.scale.setScalar(1)
-    entry.atTable = entry.definition.island === 'future'
+    homePose(entry)
+    entry.atTable = false
+    entry.tableSlot = entry.tablePosition = null
     if (entry.definition.island === 'fridge' && !fridgeOpen) toggleFridge()
     select(entry)
   }
@@ -686,23 +667,25 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     // Expanded touch targets can overlap on a small screen. Prefer the actual
     // 3D surface under the finger before falling back to the expanded target.
     const hit = raycaster.intersectObjects(pickables, false)[0]
+    let grabbed = null
     if (hit) {
       let object = hit.object
       while (object && !object.userData.fragmentId) object = object.parent
       const candidate = object && objects.get(object.userData.fragmentId)
-      if (candidate && (candidate.object.parent !== fridge || doorAngle > .55)) entry = candidate
+      if (candidate && (candidate.object.parent !== fridge || doorAngle > .55)) { entry = candidate; grabbed = hit.point.clone() }
     }
     motions.delete(entry.definition.id)
     scene.updateMatrixWorld(true)
     entry.object.getWorldPosition(worldPosition)
+    grabbed ||= entry.object.localToWorld(entry.center.clone())
+    const bottom = new THREE.Box3().setFromObject(entry.object).min.y
+    const tableTop = groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0)).y
     scene.attach(entry.object)
-    plane.constant = -Math.max(worldPosition.y + .12, mobile ? 1.45 : 1.8)
-    setRay(event)
-    raycaster.ray.intersectPlane(plane, intersection)
+    plane.constant = -Math.max(grabbed.y + .12, tableTop + .08 + grabbed.y - bottom)
     drag = {
       entry, pointerId: event.pointerId, target: event.currentTarget,
       startX: event.clientX, startY: event.clientY, moved: false,
-      offset: entry.object.position.clone().sub(intersection),
+      offset: entry.object.position.clone().sub(grabbed),
       startParent: entry.object.userData.homeParent,
     }
     select(entry)
@@ -747,7 +730,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         drag.entry.object.position.copy(intersection).add(drag.offset)
         drag.entry.object.position.x = clamp(drag.entry.object.position.x, mobile ? -4.5 : -7, mobile ? 4.5 : 7)
         drag.entry.object.position.z = clamp(drag.entry.object.position.z, -5, 6.3)
-        drag.entry.object.position.y = -plane.constant
         invalidate()
       }
       return
@@ -781,15 +763,24 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       drag = null
       if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId)
       canvas.classList.remove('is-dragging')
-      const local = groups.future.worldToLocal(position.clone())
-      if (!cancelled && moved && Math.abs(local.x) < 2.7 && Math.abs(local.z) < 1.8) {
+      // Drop against the actual light-table surface, independently of the
+      // source's height and the temporary plane used to hold the object.
+      let onTable = false
+      if (!cancelled && moved) {
+        setRay(event)
+        const top = groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0)).y
+        onTable = !!raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -top), position)
+      }
+      const local = groups.future.worldToLocal(position)
+      if (!cancelled && moved && onTable && Math.abs(local.x) < 2.35 && Math.abs(local.z) < 1.38) {
         entry.atTable = true
-        local.x = clamp(local.x, -1.75, 1.75)
-        local.y = 1.64
-        local.z = clamp(local.z, -.9, .9)
+        tablePosition(entry)
+        local.x = clamp(local.x, -2.05 + entry.tableSize.x / 2, 2.05 - entry.tableSize.x / 2) + entry.tableOffset.x
+        local.y = 1.64 + entry.tableOffset.y
+        local.z = clamp(local.z, -1.04 + entry.tableSize.z / 2, 1.04 - entry.tableSize.z / 2) + entry.tableOffset.z
+        entry.tablePosition = local.clone()
         animateObject(entry, groups.future, local)
-        entry.object.scale.setScalar(1)
-        entry.object.rotation.set(0, entry.definition.angle || 0, 0)
+        tablePose(entry)
         select(entry)
       } else if (moved || cancelled) {
         if (entry.atTable) moveToTable(entry.definition.id)
@@ -856,6 +847,13 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         const object = entry.object
         object.position.x = clamp(object.position.x + (event.key === 'ArrowLeft' ? -.12 : event.key === 'ArrowRight' ? .12 : 0), entry.atTable ? -1.8 : -1, entry.atTable ? 1.8 : 1)
         object.position.z = clamp(object.position.z + (event.key === 'ArrowUp' ? -.12 : event.key === 'ArrowDown' ? .12 : 0), -.9, .9)
+        if (entry.atTable) {
+          const cx = clamp(object.position.x - entry.tableOffset.x, -2.05 + entry.tableSize.x / 2, 2.05 - entry.tableSize.x / 2)
+          const cz = clamp(object.position.z - entry.tableOffset.z, -1.04 + entry.tableSize.z / 2, 1.04 - entry.tableSize.z / 2)
+          object.position.x = cx + entry.tableOffset.x
+          object.position.z = cz + entry.tableOffset.z
+          entry.tablePosition = object.position.clone()
+        }
         select(entry)
         invalidate()
       }
@@ -978,9 +976,9 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     for (const entry of objects.values()) {
       entry.object.userData.homeParent.add(entry.object)
       entry.object.position.copy(entry.object.userData.home)
-      entry.object.rotation.copy(entry.object.userData.homeRotation)
-      entry.object.scale.setScalar(1)
-      entry.atTable = entry.definition.island === 'future'
+      homePose(entry)
+      entry.atTable = false
+      entry.tableSlot = entry.tablePosition = null
     }
     selectedId = null
     fridgeOpen = true
@@ -1057,7 +1055,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       return {
         renderer: 'WebGL', prepared, preparationMs, visible, contextLost, framePending: !!raf, fridgeOpen, doorAngle, redLightIntensity: redLight.intensity, redSpillIntensity: redSpill.intensity,
         camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
-        objects: [...objects.values()].map(entry => ({ id: entry.definition.id, parent: entry.object.parent.name, position: entry.object.position.toArray(), atTable: entry.atTable })),
+        lightTable: toScreen(groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))),
+        objects: [...objects.values()].map(entry => ({ id: entry.definition.id, number: entry.definition.number || null, island: entry.definition.island, kind: entry.definition.kind, parent: entry.object.parent.name, position: entry.object.position.toArray(), scale: entry.object.scale.toArray(), atTable: entry.atTable, footprint: entry.atTable ? { x: entry.object.position.x - entry.tableOffset.x, z: entry.object.position.z - entry.tableOffset.z, width: entry.tableSize.x, depth: entry.tableSize.z } : null })),
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       }
     },

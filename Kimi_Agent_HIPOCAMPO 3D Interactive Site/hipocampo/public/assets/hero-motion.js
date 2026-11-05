@@ -72,7 +72,7 @@ function initializeHeroMotion() {
   let pointerInside = false
   let transitionActive = false
   let heroPinFinished = false
-  let heroIntroComplete = false
+  const heroIntroComplete = true
 
   const canUsePointerEffect = () => (
     finePointer.matches
@@ -245,14 +245,8 @@ function initializeHeroMotion() {
     })
   }
   const ctx = gsap.context(() => {
-    gsap.from(chars, {
-      opacity: 0,
-      y: 40,
-      stagger: { each: 0.004, from: 'random' },
-      duration: 1.4,
-      ease: 'expo.out',
-      onComplete: () => { heroIntroComplete = true },
-    })
+    // Immediate type on entry; pointer motion and the scroll/circle remain.
+    gsap.set(chars, { opacity: 1, y: 0 })
 
     transitionTimeline = gsap.timeline({
       defaults: { overwrite: 'auto' },

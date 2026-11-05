@@ -42,6 +42,12 @@ def center(locator):
     return box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
 
 
+def table_center(page):
+    box = page.locator('.installation-stage').bounding_box()
+    point = state(page)['lightTable']
+    return box['x'] + point['x'], box['y'] + point['y']
+
+
 def open_room(browser, width=1592, height=1132, mobile=False, reduced=False):
     context = browser.new_context(
         viewport={"width": width, "height": height}, device_scale_factor=1,
@@ -70,7 +76,7 @@ def open_room(browser, width=1592, height=1132, mobile=False, reduced=False):
 def desktop_checks(browser):
     context, page = open_room(browser)
     initial = state(page)
-    check("WebGL real, quatro ilhas e oito fragmentos", initial["renderer"] == "WebGL" and len(initial["objects"]) == 8 and page.locator(".installation-island:visible").count() == 4)
+    check("WebGL real, acervo completo e mesa inicialmente vazia", initial["renderer"] == "WebGL" and len(initial["objects"]) == 79 and not any(o["atTable"] for o in initial["objects"]) and page.locator(".installation-island").count() == 0)
     check("cena ociosa não mantém animação contínua", not initial["framePending"])
     check("seções originais preservadas", page.locator("section").evaluate_all("els => els.map(el => el.id)") == ["abertura", "projeto", "casa", "sobre", "vestigios", "oficina", "instalacao", "fragmentos", "fotofilmes", "informacoes"])
     check("uma única instalação", page.locator("#instalacao").count() == 1)
@@ -81,7 +87,7 @@ def desktop_checks(browser):
     source = page.locator('[data-object="frasco-ambar"]')
     source.scroll_into_view_if_needed()
     sx, sy = center(source)
-    dx, dy = center(page.locator('[data-object="aves"]'))
+    dx, dy = table_center(page)
     page.mouse.move(sx, sy)
     page.mouse.down()
     page.mouse.move(dx + 24, dy, steps=18)
@@ -89,30 +95,30 @@ def desktop_checks(browser):
     settle(page)
     check("arrastar entre ilhas leva frasco à mesa", fragment(page, "frasco-ambar")["parent"] == "future", fragment(page, "frasco-ambar"))
     check("arrastar objeto não gira câmera", state(page)["camera"] == initial["camera"])
-    check("memória acompanha a seleção", "promessa de uma imagem" in page.locator(".installation-memory-text").inner_text())
+    check("memória acompanha a seleção", "Químico em frasco âmbar" in page.locator(".installation-memory-text").inner_text())
     page.locator(".installation-stage").screenshot(path=str(ARTIFACTS / "desktop-dragged.png"))
     page.locator('[data-action="reset"]').click()
     settle(page)
     check("recompor restaura posições, ilhas e câmera", state(page)["objects"] == initial["objects"] and state(page)["camera"] == initial["camera"])
 
-    target = page.locator('[data-object="retrato"]')
+    target = page.locator('[data-object="objeto-69"]')
     target.focus()
     target.press("Enter")
     settle(page)
-    check("Enter leva fotografia à mesa", fragment(page, "retrato")["parent"] == "future")
-    old_x = fragment(page, "retrato")["position"][0]
+    check("Enter leva o par de sapatos à mesa", fragment(page, "objeto-69")["parent"] == "future")
+    old_x = fragment(page, "objeto-69")["position"][0]
     target.press("ArrowRight")
     settle(page)
-    check("setas deslocam o objeto", fragment(page, "retrato")["position"][0] > old_x)
+    check("setas deslocam o objeto", fragment(page, "objeto-69")["position"][0] > old_x)
     target.press("Escape")
     settle(page)
-    check("Escape devolve à ilha original", fragment(page, "retrato")["parent"] == "past")
+    check("Escape devolve à ilha original", fragment(page, "objeto-69")["parent"] == "past")
 
     page.locator('[data-action="fridge"]').click()
     settle(page)
     closed = state(page)
     check("porta fecha e luz vermelha apaga", not closed["fridgeOpen"] and closed["doorAngle"] == 0 and closed["redLightIntensity"] == 0 and closed["redSpillIntensity"] == 0)
-    check("objeto interno não recebe foco com porta fechada", page.locator('[data-object="filme"]').get_attribute("tabindex") == "-1")
+    check("objeto interno não recebe foco com porta fechada", page.locator('[data-object="frasco-ambar"]').get_attribute("tabindex") == "-1")
     page.locator(".installation-stage").screenshot(path=str(ARTIFACTS / "desktop-closed.png"))
     page.locator('[data-action="fridge"]').click()
     settle(page)
@@ -132,9 +138,9 @@ def desktop_checks(browser):
     check("visão inicial recompõe somente câmera", state(page)["camera"] == initial["camera"])
 
     page.locator(".installation-accessible summary").click()
-    page.locator(".installation-accessible").get_by_role("button", name="Rolo de filme guardado", exact=True).click()
+    page.locator(".installation-accessible").get_by_role("button", name="Químico em frasco âmbar", exact=True).click()
     settle(page)
-    check("explorar sem arrastar funciona para objeto da geladeira", fragment(page, "filme")["parent"] == "future" and "conserva" in page.locator(".installation-memory-text").inner_text())
+    check("explorar sem arrastar funciona para objeto da geladeira", fragment(page, "frasco-ambar")["parent"] == "future" and "processamento fotográfico" in page.locator(".installation-memory-text").inner_text())
     page.locator('[data-action="reset"]').click()
     settle(page)
     check("reset também recompõe geladeira e fragmento interno", state(page)["objects"] == initial["objects"] and state(page)["fridgeOpen"])
@@ -154,24 +160,24 @@ def desktop_checks(browser):
 
 def mobile_checks(browser):
     context, page = open_room(browser, 390, 844, mobile=True)
-    check("composição mobile e quatro ilhas", state(page)["mobile"] and page.locator(".installation-island:visible").count() == 4)
+    check("composição mobile sem nomes flutuantes", state(page)["mobile"] and page.locator(".installation-island").count() == 0)
     check("sem overflow em 390×844", page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
     page.locator(".installation-stage").screenshot(path=str(ARTIFACTS / "mobile-stage.png"))
     page.locator("#instalacao").screenshot(path=str(ARTIFACTS / "mobile-section.png"))
     source = page.locator('[data-object="frasco-ambar"]')
     source.scroll_into_view_if_needed()
     sx, sy = center(source)
-    dx, dy = center(page.locator('[data-object="aves"]'))
+    dx, dy = table_center(page)
     session = context.new_cdp_session(page)
     session.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": sx, "y": sy}]})
     for step in range(1, 13):
         session.send("Input.dispatchTouchEvent", {"type": "touchMove", "touchPoints": [{"x": sx + (dx - sx) * step / 12, "y": sy + (dy - sy) * step / 12}]})
     session.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
     settle(page)
-    check("gesto touch nativo transfere objeto para mesa", fragment(page, "frasco-ambar")["parent"] == "future", state(page)["objects"])
+    check("gesto touch nativo transfere objeto para mesa", fragment(page, "frasco-ambar")["parent"] == "future", fragment(page, "frasco-ambar"))
     page.locator('[data-action="reset"]').tap()
     settle(page)
-    check("reset por toque devolve objeto à escrivaninha", fragment(page, "frasco-ambar")["parent"] == "present")
+    check("reset por toque devolve químico à geladeira", fragment(page, "frasco-ambar")["parent"] == "fridge")
     page.set_viewport_size({"width": 375, "height": 667})
     settle(page)
     check("sem overflow em 375×667", page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
@@ -193,8 +199,9 @@ def fallback_checks(playwright):
     page.locator("#instalacao").scroll_into_view_if_needed()
     page.locator(".installation-fallback").wait_for(state="visible")
     page.locator(".installation-accessible summary").click()
-    page.locator(".installation-accessible").get_by_role("button", name="Fotografia de família", exact=True).click()
-    check("fallback sem WebGL mantém leitura das memórias", "Ninguém escreveu" in page.locator(".installation-memory-text").inner_text())
+    page.locator(".installation-accessible").get_by_role("button", name="Par de sapatos de criança", exact=True).click()
+    page.wait_for_function("document.querySelector('.installation-memory-text').innerText.includes('sapatos de criança')")
+    check("fallback sem WebGL mantém leitura das memórias", "sapatos de criança" in page.locator(".installation-memory-text").inner_text())
     browser.close()
 
 

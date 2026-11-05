@@ -17,10 +17,10 @@
 .installation-canvas.is-dragging { cursor: grabbing; }
 .installation-stage.is-exploring .installation-canvas { touch-action: none; }
 .installation-canvas:focus-visible { outline: 1px solid #b99a56; outline-offset: -2px; }
-.installation-labels, .installation-hit-targets { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.installation-island { position: absolute; top: 0; left: 0; color: #edc267; font: 400 clamp(1.15rem, 1.75vw, 1.8rem)/1.25 "AquilineTwo", cursive; white-space: nowrap; transform: translate(-50%, 0); opacity: 0; text-shadow: 0 1px 8px #000; }
+.installation-hit-targets { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .installation-object, .installation-fridge-hit { position: absolute; left: 0; top: 0; border: 1px solid transparent; background: transparent; width: 44px; height: 44px; padding: 0; pointer-events: auto; touch-action: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; }
-.installation-object:focus-visible, .installation-object:hover { border-color: #f0c765; outline-offset: 3px; }
+.installation-object { z-index: 1; }
+.installation-object:focus-visible, .installation-object:hover, .installation-object[aria-pressed="true"] { border-color: #f0c765; outline-offset: 3px; }
 .installation-object-caption { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); color: #e4c78f; background: #080706ed; padding: .45rem .65rem; font-size: .72rem; white-space: nowrap; pointer-events: none; }
 .installation-object:focus-visible .installation-object-caption, .installation-object:hover .installation-object-caption { display: block; }
 .installation-fridge-hit { width: 66px; height: 110px; border-radius: 8px; touch-action: pan-y; }
@@ -43,6 +43,10 @@
 .installation-accessible li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-top: 1px solid #262015; }
 .installation-accessible li button { background: none; border: none; color: #e0c48b; text-align: left; padding: .8rem 0; min-height: 44px; }
 .installation-accessible li span { color: #a8a39a; font-size: .7rem; }
+.installation-search-label { display: block; margin: 1.3rem 0 .5rem; color: #c6ac7b; }
+.installation-search { display: block; box-sizing: border-box; width: 100%; min-height: 44px; border: 1px solid #62513a; border-radius: 0; background: #080706; color: #e8dfcb; padding: .7rem .8rem; font: inherit; }
+.installation-search:focus-visible { outline: 2px solid #f0c765; outline-offset: 3px; }
+.installation-search-count { color: #a8a39a; font-size: .7rem; }
 @media (max-width: 700px) {
   #instalacao.installation { padding: 4rem 1.1rem 3rem; }
   .installation-heading { display: block; margin-bottom: 1.8rem; }
@@ -52,7 +56,6 @@
   .installation-actions { justify-content: start; gap: 1.1rem; width: 100%; }
   .installation-actions button { font-size: .6rem; }
   .installation-stage { height: 670px; }
-  .installation-island { font-size: 1.03rem; }
   .installation-caption { display: block; }
   .installation-caption p:last-child { margin-top: .6rem; }
   .installation-memory { min-height: 9rem; }

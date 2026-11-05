@@ -14,7 +14,7 @@ const copyLines = [
   'Uma fotografia pode despertar uma lembrança.',
   'Um objeto pode alterar completamente a interpretação de uma imagem.',
   'Uma história pode preencher uma lacuna ou',
-  'criar outra.As conexões construídas entre esses fragmentos revelam',
+  'criar outra. As conexões construídas entre esses fragmentos revelam',
   'menos uma verdade definitiva e mais as maneiras pelas',
   'quais atribuímos significado às nossas próprias experiências.',
   'Cada participante encontra uma narrativa diferente.',
@@ -31,15 +31,14 @@ function createPage2Markup() {
   const inner = document.createElement('div')
   inner.className = 'hipocampo-page2-inner'
 
-  const accessibleCopy = copyLines.join(' ')
   inner.innerHTML = `
     <h2 id="hipocampo-page2-title" class="hipocampo-page2-title" aria-label="${titleText}">
       ${titleMarkup(titleText)}
     </h2>
-    <p class="hipocampo-page2-copy" aria-label="${accessibleCopy}">
-      ${copyLines.map((line) => `<span class="page2-copy-line" aria-hidden="true">${line}</span>`).join('')}
-    </p>
-    <div class="hipocampo-memory-map" data-memory-map role="img" aria-label="Mapa de memória formado por fragmentos conectados a uma casa central"></div>
+    <div class="hipocampo-page2-copy">
+      ${[copyLines.slice(0, 3), copyLines.slice(3, 6), copyLines.slice(6, 13), copyLines.slice(13)].map(lines => `<p class="page2-copy-paragraph">${lines.map(line => `<span class="page2-copy-line">${line}</span>`).join(' ')}</p>`).join('')}
+    </div>
+    <div class="page2-map-stage"><div class="hipocampo-memory-map" data-memory-map role="img" aria-label="Mapa de memória formado por fragmentos conectados a uma casa central"></div></div>
   `
 
   return inner
