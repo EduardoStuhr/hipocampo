@@ -73,9 +73,40 @@ def pointer_handoff_check(page,w,h):
     check(f'{w}: entrada e retorno contínuos com mouse fora do centro', jump<.025 and turn<.002 and return_jump<.025 and return_turn<.002, {'distance':jump,'rotation':turn,'return_distance':return_jump,'return_rotation':return_turn})
 
 
+def fitted_door_check(page,w):
+    go(page,.37)
+    projection=page.evaluate('''()=>{
+      const {scene,camera,THREE,renderer}=window.__houseQA;
+      let facade;
+      scene.traverse(o=>{if(o.isMesh&&o.material.map?.image?.width===1712&&o.material.map.image.height===1408)facade=o;});
+      const portal=scene.getObjectByName('house-door-portal');
+      const vertices=portal.geometry.attributes.position;
+      const actual=Array.from({length:vertices.count},(_,i)=>portal.localToWorld(new THREE.Vector3().fromBufferAttribute(vertices,i)).project(camera));
+      const {width,height}=facade.geometry.parameters;
+      const reference=[[462,1038],[571,1045],[553,1345],[447,1343]].map(([x,y])=>facade.localToWorld(new THREE.Vector3((x/1712-.5)*width,(.5-y/1408)*height,0)).project(camera));
+      const residuals=reference.map(p=>Math.min(...actual.map(q=>Math.hypot((p.x-q.x)*renderer.domElement.width/2,(p.y-q.y)*renderer.domElement.height/2))));
+      return {maximumPixelError:Math.max(...residuals),corners:actual.length};
+    }''')
+    check(f'{w}: abertura encaixada nos quatro cantos da fotografia',projection['corners']==4 and projection['maximumPixelError']<1,projection)
+    check(f'{w}: legenda libera a porta no enquadramento fechado',float(page.locator('.page3-caption--b').evaluate('el=>getComputedStyle(el).opacity'))<.01)
+    go(page,.29)
+    closed=page.evaluate('''()=>{
+      const {scene,THREE}=window.__houseQA;
+      return ['house-door-left','house-door-right'].map(name=>{const box=new THREE.Box3().setFromObject(scene.getObjectByName(name));return {front:box.max.z,back:box.min.z,depth:box.max.z-box.min.z};});
+    }''')
+    check(f'{w}: folhas têm volume e ficam recuadas na fachada',all(leaf['depth']>.07 and leaf['front']<-.025 for leaf in closed),closed)
+    go(page,.48)
+    opened=page.evaluate('''()=>{
+      const {scene,THREE}=window.__houseQA;
+      return ['house-door-left','house-door-right'].map(name=>new THREE.Box3().setFromObject(scene.getObjectByName(name)).min.z);
+    }''')
+    check(f'{w}: dobradiças abrem as duas folhas em profundidade',all(z<-.4 for z in opened),opened)
+
+
 def doorway_and_mouse_checks(page, w, h):
     go(page, .2)
     page.wait_for_function('window.__houseQA != null')
+    fitted_door_check(page,w)
     for progress in [.2,.29,.32,.37,.42,.48]:
         go(page, progress)
         pixels=page.evaluate('''()=>{

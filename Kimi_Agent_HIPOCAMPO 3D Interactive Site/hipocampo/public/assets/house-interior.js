@@ -1,11 +1,12 @@
 import * as THREE from './vendor/three.module.min.js'
+import { buildHouseDoorway } from './house-doorway.js?v=door-fit-1'
 
 // The archive is built in metres, at the same scale as the photographed door.
 // The camera traverses its threshold and exit; no screen-space opening is used.
-export function createHouseInterior({ scene, door, facade, houseData, unit, pieces, loadTexture }) {
+export function createHouseInterior({ scene, door, facade, doorway, unit, pieces, loadTexture }) {
   const width = 5.8, height = 3.65, depth = 14
-  const doorW = .94, doorH = 2.3
-  const floorY = door.y - doorH / 2
+  const doorW = doorway.width, doorH = doorway.height
+  const floorY = doorway.floorY
   const root = new THREE.Group()
   root.name = 'house-archive'
   root.position.set(door.x, floorY, 0)
@@ -35,12 +36,6 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
     portalMaterials.add(m)
     return m
   }
-  const unmasked = material => {
-    const m = material.clone()
-    m.stencilWrite = false
-    surfaces.add(m)
-    return m
-  }
 
   // Before crossing the threshold, the archive may only be seen through the
   // doorway. A stencil aperture also hides walls beyond the photo's silhouette.
@@ -50,7 +45,10 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
     stencilZPass: THREE.ReplaceStencilOp,
   })
   surfaces.add(portalMaterial)
-  const portal = mesh(root, new THREE.PlaneGeometry(doorW, doorH), portalMaterial, [0, doorH / 2, 0], false)
+  const portalOutline = new THREE.Shape()
+  doorway.localCorners.forEach((p, i) => i ? portalOutline.lineTo(p.x, p.y) : portalOutline.moveTo(p.x, p.y))
+  portalOutline.closePath()
+  const portal = mesh(root, new THREE.ShapeGeometry(portalOutline), portalMaterial, [0, 0, 0], false)
   portal.name = 'house-door-portal'
   portal.renderOrder = -30
   let portalActive = true
@@ -155,39 +153,22 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
   root.add(thresholdLight)
 
   // The photographic door has a fixed architectural opening in world space.
-  const aperture = new THREE.Vector4(door.x, floorY + doorH / 2, doorW / 2, doorH / 2)
   facade.onBeforeCompile = shader => {
-    shader.uniforms.houseDoor = { value: aperture }
+    shader.uniforms.houseEdges = { value: doorway.edges }
     shader.vertexShader = 'varying vec2 houseWorldXY;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nhouseWorldXY = (modelMatrix * vec4(transformed, 1.0)).xy;')
-    shader.fragmentShader = 'varying vec2 houseWorldXY;\nuniform vec4 houseDoor;\n' + shader.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nvec2 opening = abs(houseWorldXY - houseDoor.xy) - houseDoor.zw;\nif (max(opening.x, opening.y) < 0.0) discard;')
+    shader.fragmentShader = 'varying vec2 houseWorldXY;\nuniform vec3 houseEdges[4];\n' + shader.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nbool houseInside = true;\nfor (int i = 0; i < 4; i++) { houseInside = houseInside && dot(houseEdges[i], vec3(houseWorldXY, 1.0)) > 0.0; }\nif (houseInside) discard;')
   }
-  facade.customProgramCacheKey = () => 'house-physical-door-v2'
+  facade.customProgramCacheKey = () => 'house-calibrated-door-v1'
   const entrance = new THREE.Group()
+  entrance.name = 'house-entrance'
+  entrance.matrixAutoUpdate = false
+  entrance.matrix.copy(doorway.matrix)
   root.add(entrance)
   const sideW = (width - doorW) / 2
   const frontPanels = [-1, 1].map(side => box(entrance, [sideW, height, .2], plaster, [side * (doorW / 2 + sideW / 2), height / 2, -.18], false))
   box(entrance, [doorW, height - doorH, .2], plaster, [0, doorH + (height - doorH) / 2, -.18], false)
-  const entranceWood = unmasked(darkWood), entranceBrass = unmasked(brass), entranceStone = unmasked(stone)
-  for (const x of [-doorW / 2 - .035, doorW / 2 + .035]) box(entrance, [.07, doorH + .08, .48], entranceWood, [x, (doorH + .08) / 2, -.13])
-  box(entrance, [doorW + .14, .075, .48], entranceWood, [0, doorH + .025, -.13])
-  box(entrance, [doorW + .2, .055, .6], entranceStone, [0, .015, -.12])
-  const doors = []
-  const u0 = (277 - doorW * unit / 2 - houseData.x) / houseData.w
-  const v0 = 1 - (527 + doorH * unit / 2 - houseData.y) / houseData.h
-  for (const side of [-1, 1]) {
-    const pivot = new THREE.Group()
-    pivot.position.set(side * doorW / 2, doorH / 2, .025)
-    entrance.add(pivot)
-    const doorTexture = facade.map.clone()
-    doorTexture.offset.set(u0 + (side > 0 ? doorW * unit / (2 * houseData.w) : 0), v0)
-    doorTexture.repeat.set(doorW * unit / (2 * houseData.w), doorH * unit / houseData.h)
-    doorTexture.needsUpdate = true
-    textures.add(doorTexture)
-    const face = mat({ map: doorTexture, roughness: .84, stencilWrite: false })
-    const panel = box(pivot, [doorW / 2, doorH, .065], [entranceWood, entranceWood, entranceWood, entranceWood, face, entranceWood], [-side * doorW / 4, 0, -.02])
-    box(pivot, [.023, .14, .045], entranceBrass, [-side * (doorW / 2 - .07), -.06, .04])
-    doors.push({ pivot, side, panel })
-  }
+  const entryModel = buildHouseDoorway({ parent: entrance, profile: doorway, mesh, box, mat, woodMap, plasterMap, textures })
+  const doors = entryModel.doors
 
   // A table and suspended prints create near/middle/far parallax in the archive.
   const table = new THREE.Group()
@@ -260,7 +241,7 @@ export function createHouseInterior({ scene, door, facade, houseData, unit, piec
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
       })
     },
-    inspect: () => ({ portalActive, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
+    inspect: () => ({ portalActive, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
     update(open, time, motion, pointer, dt, camera) {
       // Switch only after the aperture fills the view, before its near plane
       // can be clipped. The same rule applies when scrolling backwards.

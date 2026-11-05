@@ -11,7 +11,27 @@ com espessura, piso de madeira, paredes, teto, trilhos de luz, quadros com supor
 fotografias penduradas e mesa com uma impressão. A abertura em tela do shader
 `paper-transition.js` não é utilizada.
 
-![Fachada, porta e balanço: capturas reais dos ajustes no Three.js](house-journey-preview.webp)
+![Encaixe, abertura e passagem: capturas reais da porta no Three.js](house-journey-preview.webp)
+
+## Encaixe e construção da entrada
+
+A abertura acompanha os quatro cantos da porta na fotografia original
+`peca-16-hd.webp` (1712×1408). Essa calibração orienta o recorte da fachada,
+o stencil e a posição da entrada, preservando a pedra já presente na imagem.
+O centro e o nível do piso também vêm dessa abertura. Ao substituir a foto,
+atualize os pontos de referência em `house-doorway.js`.
+
+O conjunto de madeira acompanha os eixos da abertura. O batente fica recuado
+na pedra, com o eixo das dobradiças a 11,5 cm da fachada. Cada folha possui
+estrutura com cerca de 5,6 cm de espessura, montantes, travessas, três painéis
+rebaixados, bordas chanfradas, dobradiças e puxadores volumétricos. A textura
+de nogueira existente recebe acabamento escuro, relevo e luz; a fotografia da
+fachada não é mais esticada sobre as folhas.
+
+O revestimento interno é estreito e permanece atrás do plano da foto para
+evitar sobreposição. Uma soleira baixa em pedra escura integra o piso à entrada.
+Uma luz suave ilumina a frente das folhas enquanto abrem. A legenda de entrada
+desaparece entre 30% e 36% do percurso, antes do enquadramento fechado do batente.
 
 ## Balanço e oclusão da porta
 
@@ -21,7 +41,7 @@ quadros e 14,3° nas imagens livres. O movimento desacelera ao parar o mouse, se
 arrastar a página; o touch continua dedicado ao scroll. A integração usa o
 tempo entre frames e pequenos passos para manter o balanço estável.
 
-Enquanto a câmera está fora, um stencil restringe a sala ao retângulo da porta.
+Enquanto a câmera está fora, um stencil restringe a sala ao quadrilátero da porta.
 Isso impede que paredes, piso e fundo apareçam nas partes transparentes da foto
 ou além da lateral da casa. O recorte é desativado somente quando já preenche a
 tela, antes de alcançar o near plane, e volta a funcionar no scroll reverso.
@@ -60,11 +80,13 @@ instalação interativa mais abaixo na página.
 
 - `public/assets/page3-house.js`: mapa, câmera contínua, progresso, exposição,
   visibilidade, preferência de movimento e fallback.
-- `public/assets/house-interior.js`: arquitetura, porta, piso, coleção, luzes,
+- `public/assets/house-interior.js`: arquitetura, stencil, piso, coleção, luzes,
   adaptação da largura ao celular e descarte dos recursos.
+- `public/assets/house-doorway.js`: calibração dos quatro cantos na foto,
+  batente recuado, folhas articuladas, painéis, ferragens e luz da entrada.
 - `public/assets/page3-house.css`: altura do percurso, viewport sticky, legendas
   e união com a próxima seção.
-- `index.html`: módulo `?v=door-sway-1` e estilo `?v=depth-1` para invalidar o cache.
+- `index.html`: módulos `?v=door-fit-1` e estilo `?v=depth-1` para invalidar o cache.
 
 Usa o Three.js local, os recortes do mapa e as texturas/fotografias já existentes
 no projeto. Nenhuma dependência de runtime foi adicionada. Apenas uma cena é
@@ -95,12 +117,16 @@ no navegador. O QA compara pixels com/sem a sala para detectar qualquer vazament
 fora da abertura em seis pontos da aproximação, verifica dois frames parados
 da porta e usa movimentos reais do mouse para testar o balanço dos dois tipos
 de imagem.
+Também compara a projeção dos quatro cantos da abertura com os pontos da foto,
+verifica o volume e o recuo das folhas fechadas, a profundidade da abertura
+nas dobradiças e a retirada da legenda do enquadramento fechado.
 
-A validação em Chromium passou em 62 verificações, com viewports de 1366×768 e
+A validação em Chromium passou em 70 verificações, com viewports de 1366×768 e
 390×844: passagem física, continuidade da câmera com o mouse fora do centro,
-reversão, ausência de vazamento lateral, estabilidade da porta, balanço com o
-mouse, resize, próxima seção, movimento reduzido, perda de contexto, ausência
-de WebGL e assets locais.
+reversão, alinhamento com a fotografia, volume e recuo das folhas, dobradiças,
+ausência de vazamento lateral, estabilidade da porta, balanço com o mouse,
+resize, próxima seção, movimento reduzido, perda de contexto, ausência de WebGL
+e assets locais.
 Esses resultados verificam comportamento e renderização; não medem FPS em
 aparelhos reais.
 
@@ -111,8 +137,10 @@ aparelhos reais.
 - Antes dos ajustes da porta e do balanço: `7b6fe74`, tag
   `backup/casa-antes-ajustes-porta-2026-11-04`.
 - Ajustes da porta e do balanço: tag `release/casa-balanco-porta-2026-11-04`.
+- Antes do novo encaixe: `4ecb628`, tag `backup/casa-antes-encaixe-2026-11-05`.
+- Porta alinhada e remodelada: tag `release/casa-porta-perspectiva-2026-11-05`.
 
 Para desfazer apenas estes ajustes, use
-`git revert release/casa-balanco-porta-2026-11-04` e faça um push normal.
+`git revert release/casa-porta-perspectiva-2026-11-05` e faça um push normal.
 Não é necessário alterar as correções anteriores da sala
 interativa ou da posição dos botões.

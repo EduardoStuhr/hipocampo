@@ -1,14 +1,14 @@
 // A continuous camera passes through a physical doorway, crosses the archive
 // and leaves through its far opening. The original memory map stays aligned.
 import * as THREE from './vendor/three.module.min.js'
-import { createHouseInterior } from './house-interior.js?v=door-sway-1'
+import { createHouseInterior } from './house-interior.js?v=door-fit-1'
+import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const MANIFEST_URL = '/images/map/manifest.json'
 const UNIT = 16 // the photographed doorway is approximately 1 × 2.3 metres
-const DOOR_PX = { x: 277, y: 527 } // porta da casa (coordenadas da imagem fonte)
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t) }
 const lerp = (a, b, t) => a + (b - a) * t
@@ -106,8 +106,9 @@ async function mount(section) {
   const lineMat = new THREE.LineBasicMaterial({ color: manifest.lineColor, transparent: true, toneMapped: false })
   scene.add(new THREE.LineSegments(lineGeo, lineMat))
 
-  const door = toWorld(DOOR_PX.x, DOOR_PX.y)
-  const archive = createHouseInterior({ scene, door, facade: housePiece.mat, houseData: housePiece.d, unit: UNIT, pieces: others, loadTexture })
+  const doorway = fitHouseDoorway(housePiece.d, UNIT, toWorld)
+  const door = doorway.center
+  const archive = createHouseInterior({ scene, door, facade: housePiece.mat, doorway, unit: UNIT, pieces: others, loadTexture })
 
   // ---------- câmera ----------
   const mapH = manifest.height / UNIT
@@ -305,7 +306,7 @@ async function mount(section) {
     renderer.setClearColor(0xffffff, reduced ? 1 : smooth(0.0, 0.05, p))
 
     capA.style.opacity = String(reduced ? 0 : smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
-    capB.style.opacity = String(reduced ? 0 : smooth(.22, .29, p) * (1 - smooth(.37, .43, p)))
+    capB.style.opacity = String(reduced ? 0 : smooth(.22, .29, p) * (1 - smooth(.30, .36, p)))
     renderer.toneMappingExposure = lerp(.95, 1.35, leave)
     if (!reduced && p >= .995) {
       renderer.setClearColor(exitPaper, 1)
