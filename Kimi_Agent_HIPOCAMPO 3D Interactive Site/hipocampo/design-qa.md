@@ -417,3 +417,31 @@ tratamento; os fundos e a composição restaurada permanecem.
   dentro deste escopo.
 
 final result: passed
+
+## Retorno aos fundos brancos (6/11/2026)
+
+Pedido do usuário: voltar ao fundo branco. Sobre e Vestígios passam a `#fff`;
+removidos painel lateral marrom e seu equivalente móvel. As imagens tratadas,
+medidas, posições, conteúdo, fontes e prazos das fotografias foram preservados.
+
+- Capturas antes/depois em `artifacts/white-backgrounds/`, viewports reais
+  1600×900 e 390×844, escala 1; comparação proporcional em `comparison.png`.
+  Prévia atual em `docs/white-backgrounds-preview.webp`, duas capturas de
+  1366×900 combinadas verticalmente, sem esticamento.
+- Texto marrom original `#7a2a17`; disparador, foco e indicação em azul `#2626fc`.
+  Cabeçalho marrom por toda a região branca, sem alterar suas dimensões. Seu
+  estado é removido ao sair. Pixels da divisa confirmam branco nos dois lados.
+- A transição da casa consulta o fundo seguinte e agora termina em `#ffffff`;
+  comportamento medido no renderer real, sem mudar a implementação da casa.
+- Nenhum arquivo de imagem foi alterado. Filme transparente e montanha
+  restaurada continuam ativos. Troca do envelope, disparador e dispersão mantidos.
+- **55 verificações aprovadas:** 32 de composição/fundos e 23 de imagens.
+  Comparação de medidas/fontes em 1600×900, 1366×768, 390×844 e 375×667, sem
+  diferenças acima de 0,75 px. Cores das imagens, contraste, resize, retorno,
+  movimento reduzido e ausência de overflow aprovados. Sem exceções JavaScript
+  ou falhas de recursos locais. Build e sintaxe aprovados.
+- Revisão visual feita em Chromium/SwiftShader emulado. Sem aparelho físico nesta
+  revisão. Nenhum P0/P1/P2 pendente no escopo solicitado.
+- Backup remoto: `backup/antes-fundos-brancos-2026-11-06` → `13cc1ec`.
+
+final result: passed

@@ -1,5 +1,18 @@
 # Recorte do filme e definição da montanha — 5 de novembro de 2026
 
+**Atualização de 6/11/2026:** os fundos de Sobre e Vestígios voltaram a `#fff`,
+por solicitação do usuário. Texto marrom `#7a2a17`, controles azuis `#2626fc` e
+cabeçalho marrom mantêm a leitura sobre o branco. As imagens tratadas, suas
+medidas, posições e a dispersão com duração de cinco segundos foram preservadas.
+[Prévia real atual](white-backgrounds-preview.webp).
+
+Passaram 55 verificações da revisão branca (32 de composição e 23 de imagens),
+incluindo a saída branca da casa, pixels da divisa, contraste e ausência de
+overflow. Build e sintaxe aprovados. Resultados em `artifacts/white-backgrounds/`.
+Backup: `backup/antes-fundos-brancos-2026-11-06` → `13cc1ec`.
+Entrega: `release/fundos-brancos-2026-11-06`; para desfazer somente a volta ao
+branco, use `git revert release/fundos-brancos-2026-11-06`.
+
 O filme recebe um recorte transparente que acompanha a fotografia circular e a
 tira de negativo, eliminando o retângulo claro. A montagem da montanha recebe
 uma versão restaurada com maior resolução e contorno contínuo, preservando o

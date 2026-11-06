@@ -1,4 +1,4 @@
-"""Rendered photo colours on yellow vs. the same pixels on neutral white."""
+"""Rendered photo colours on the current background vs. a contrasting field."""
 import json
 import os
 from pathlib import Path
@@ -6,7 +6,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'artifacts' / 'image-refinement'
+OUT = ROOT / 'artifacts' / 'white-backgrounds'
 OUT.mkdir(parents=True, exist_ok=True)
 URL = os.environ.get('HIPOCAMPO_QA_URL', 'http://127.0.0.1:4173/')
 results = {'checks': [], 'errors': [], 'assets': []}
@@ -75,31 +75,33 @@ def visit(browser, width, height):
           {immediate:true})}''', anchor)
         page.mouse.move(-5, -5)
         page.wait_for_timeout(350)
-        path = OUT / f'after-{section}-{width}.png'
+        path = OUT / f'after-photo-{section}-{width}.png'
         page.screenshot(path=str(path))
         image = Image.open(path).convert('RGB')
         boxes = {name: page.locator(selector).bounding_box()
                  for name, selector, _, _ in samples}
-        white = page.add_style_tag(content='#sobre,#vestigios{background:#fff !important}')
+        background=page.locator(f'#{section}').evaluate('el=>getComputedStyle(el).backgroundColor.match(/[0-9]+/g).slice(0,3).map(Number)')
+        contrast='#f0d756' if background==[255,255,255] else '#fff'
+        field = page.add_style_tag(content=f'#sobre,#vestigios{{background:{contrast} !important}}')
         page.wait_for_timeout(100)
-        reference_path = OUT / f'neutral-reference-{section}-{width}.png'
+        reference_path = OUT / f'contrast-reference-{section}-{width}.png'
         page.screenshot(path=str(reference_path))
         reference = Image.open(reference_path).convert('RGB')
-        white.evaluate('el=>el.remove()')
+        field.evaluate('el=>el.remove()')
         for name, _, u, v in samples:
             r = boxes[name]
             x, y = round(r['x']+r['width']*u), round(r['y']+r['height']*v)
             actual, expected = patch(image, x, y), patch(reference, x, y)
-            check(f'{width}: {name} mantém os tons naturais sobre o amarelo',
+            check(f'{width}: {name} mantém os tons naturais entre fundos diferentes',
                   max(abs(a-b) for a, b in zip(actual, expected)) < 8,
-                  {'onYellow': actual, 'onWhite': expected})
+                  {'background':background,'onCurrent': actual, 'onContrast': expected})
         if section == 'sobre':
             r = boxes['montanha']
             corners = [patch(image, round(r['x']+r['width']*u),
                              round(r['y']+r['height']*v))
                        for u, v in [(.04, .04), (.96, .04), (.04, .96), (.96, .96)]]
             check(f'{width}: montagem da montanha não deixa uma placa cinza nos cantos',
-                  all(max(abs(a-b) for a, b in zip(pixel, (240, 215, 86))) < 8
+                  all(max(abs(a-b) for a, b in zip(pixel, background)) < 8
                       for pixel in corners), corners)
             envelope = page.locator('.page4-photo--envelope')
             before = page.locator('.page4-envelope-photo').get_attribute('src')

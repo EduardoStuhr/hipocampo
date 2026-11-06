@@ -1,6 +1,6 @@
 // Página 5 — "vestígios": entra logo após a página 4 (#sobre).
 import { n as gsap } from './index-BXEErpTi.js?v=perf-1'
-import { mountStoryPalette } from './story-palette.js?v=layout-restore-1'
+import { mountStoryPalette } from './story-palette.js?v=white-backgrounds-1'
 import { measurePhotoLayout, positionPhoto } from './camera-photo-layout.js?v=layout-restore-1'
 
 const PHOTO_LIFETIME = 5000
@@ -186,7 +186,6 @@ function buildSection() {
   s.className = 'hipocampo-page5'
   s.setAttribute('aria-label', 'A memória desaparecida')
   s.innerHTML = `
-    <div class="page5-color-panel" aria-hidden="true"></div>
     <div class="page5-left">
       <p class="page5-text">Ao chegar ao Hipocampo, cada participante recebe uma sinopse que apresenta os primeiros vestígios de uma memória desaparecida, marcada por ausências e perguntas sem resposta, nova possibilidade de memória, revelando como atribuímos significado às imagens e aos objetos que sobrevivem ao tempo.</p>
       <div class="page5-camera-control">

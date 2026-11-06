@@ -7,7 +7,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'artifacts'/'layout-restoration'
+OUT=ROOT/'artifacts'/'white-backgrounds'
 OUT.mkdir(parents=True,exist_ok=True)
 URL=os.environ.get('HIPOCAMPO_QA_URL','http://127.0.0.1:4173/')
 results={'checks':[],'errors':[],'assets':[]}
@@ -97,12 +97,12 @@ def colours(page,label):
     data=page.evaluate('''()=>{
       const css=s=>getComputedStyle(document.querySelector(s));
       return {about:css('#sobre').backgroundColor,ink:css('.page4-text').color,title:css('.page4-title').color,border:css('#vestigios').borderTopWidth,
-        camera:css('#vestigios').backgroundColor,brown:css('.page5-color-panel').backgroundColor,text:css('.page5-text').color,brand:css('.page5-brand').color,
+        camera:css('#vestigios').backgroundColor,text:css('.page5-text').color,brand:css('.page5-brand').color,
         hero:css('#abertura').backgroundColor,project:css('#projeto').backgroundColor};
     }''')
-    check(f'{label}: apresentação amarela preserva o marrom original',data['about']=='rgb(240, 215, 86)' and data['ink']=='rgb(122, 42, 23)' and data['title']==data['ink'],data)
-    check(f'{label}: câmera mantém os dois campos de cor',data['camera']=='rgb(240, 215, 86)' and data['brown']=='rgb(107, 49, 28)' and data['text']=='rgb(240, 215, 86)' and data['brand']=='rgb(38, 38, 252)')
-    check(f'{label}: sem faixa azul ou borda extra na passagem',data['border']=='0px' and page.locator('.page4-color-band').count()==0)
+    check(f'{label}: apresentação branca preserva o marrom original',data['about']=='rgb(255, 255, 255)' and data['ink']=='rgb(122, 42, 23)' and data['title']==data['ink'],data)
+    check(f'{label}: câmera branca com texto marrom e marca azul',data['camera']=='rgb(255, 255, 255)' and data['text']=='rgb(122, 42, 23)' and data['brand']=='rgb(38, 38, 252)')
+    check(f'{label}: sem painéis coloridos ou borda extra na passagem',data['border']=='0px' and page.locator('.page4-color-band,.page5-color-panel').count()==0)
     check(f'{label}: abertura e Projeto mantêm as cores existentes',data['hero']=='rgb(23, 41, 255)' and data['project']=='rgb(255, 255, 255)')
 
 def desktop(browser):
@@ -110,16 +110,16 @@ def desktop(browser):
     colours(page,'desktop')
     page.wait_for_function('document.querySelector("#casa")?.houseJourney!=null')
     page.evaluate('''async()=>{const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');window.__hipocampoLenis.scrollTo(ST.getById('hipocampo-house').end-1,{immediate:true});ST.update()}''')
-    page.wait_for_function('window.__paletteHouse.renderer.getClearColor(new window.__paletteHouse.THREE.Color()).getHexString()==="f0d756"')
-    check('saída da casa termina no amarelo da apresentação',True)
+    page.wait_for_function('window.__paletteHouse.renderer.getClearColor(new window.__paletteHouse.THREE.Color()).getHexString()==="ffffff"')
+    check('saída da casa termina no branco da apresentação',True)
     anchor(page,'sobre')
     capture_section(page,'sobre',OUT/'after-sobre-1366.png')
     page.evaluate("()=>{const s=document.getElementById('vestigios');__hipocampoLenis.scrollTo(s.getBoundingClientRect().top+scrollY-innerHeight*.4,{immediate:true})}")
     page.wait_for_timeout(300);page.screenshot(path=str(OUT/'after-seam-1366.png'))
     seam=page.locator('#vestigios').bounding_box()['y'];image=Image.open(OUT/'after-seam-1366.png').convert('RGB')
-    probes=[(400,int(seam)-12,(240,215,86)),(400,int(seam)+12,(107,49,28)),(1350,int(seam)-12,(240,215,86)),(1350,int(seam)+12,(240,215,86))]
+    probes=[(400,int(seam)-12,(255,255,255)),(400,int(seam)+12,(255,255,255)),(1350,int(seam)-12,(255,255,255)),(1350,int(seam)+12,(255,255,255))]
     pixels=[image.getpixel((x,y)) for x,y,_ in probes]
-    check('divisa pintada usa somente amarelo e marrom, sem terceira faixa',all(max(abs(a-b)for a,b in zip(pixel,expected))<8 for pixel,(_,_,expected)in zip(pixels,probes)),pixels)
+    check('divisa realmente pintada de branco nos dois lados, sem faixas',all(max(abs(a-b)for a,b in zip(pixel,expected))<8 for pixel,(_,_,expected)in zip(pixels,probes)),pixels)
     portrait=page.locator('.page4-photo--retrato').bounding_box()
     check('retrato conserva a travessia da divisa original',portrait['y']<seam<portrait['y']+portrait['height'],portrait)
     envelope=page.locator('.page4-photo--envelope');envelope.focus()
@@ -128,10 +128,10 @@ def desktop(browser):
     anchor(page,'sobre');page.wait_for_timeout(100)
     check('cabeçalho conserva contraste sobre a apresentação',page.locator('header').get_attribute('data-story-tone')=='paper' and page.locator('header > a').evaluate('el=>getComputedStyle(el).color')=='rgb(107, 49, 28)')
     anchor(page,'vestigios');page.mouse.move(10,700);page.mouse.wheel(0,150)
-    page.wait_for_function('document.querySelector("header").dataset.storyTone==="split"')
+    page.wait_for_function('document.querySelector("header").dataset.storyTone==="paper"')
     page.wait_for_function('getComputedStyle(document.querySelector("header nav a")).color==="rgb(107, 49, 28)"')
     header=page.locator('header').evaluate('el=>({tone:el.dataset.storyTone,logo:getComputedStyle(el.querySelector(":scope > a")).color,link:getComputedStyle(el.querySelector("nav a")).color,logoStyle:el.querySelector(":scope > a").getAttribute("style"),linkStyle:el.querySelector("nav a").getAttribute("style")})')
-    check('cabeçalho usa amarelo à esquerda e marrom à direita na câmera',header['tone']=='split' and header['logo']=='rgb(240, 215, 86)' and header['link']=='rgb(107, 49, 28)',header)
+    check('cabeçalho usa marrom legível sobre a câmera branca',header['tone']=='paper' and header['logo']=='rgb(107, 49, 28)' and header['link']=='rgb(107, 49, 28)',header)
     for _ in range(3):
         page.locator('.page5-shutter').click();page.wait_for_timeout(850)
     boxes=page.evaluate('''()=>{
@@ -152,7 +152,7 @@ def mobile(browser):
     colours(page,'mobile');anchor(page,'sobre')
     capture_section(page,'sobre',OUT/'after-sobre-390.png')
     anchor(page,'vestigios');page.locator('.page5-shutter').scroll_into_view_if_needed();page.wait_for_timeout(100)
-    check('mobile: fundo marrom cobre o bloco do texto e câmera',page.locator('.page5-left').evaluate('el=>getComputedStyle(el,"::before").backgroundColor')=='rgb(107, 49, 28)')
+    check('mobile: texto e câmera não recebem painel marrom',page.locator('.page5-left').evaluate('el=>getComputedStyle(el,"::before").content')=='none')
     page.locator('.page5-shutter').tap();page.wait_for_function('document.querySelector(".page5-generated-photo")?.dataset.state==="visible"')
     photo=page.locator('.page5-generated-photo').bounding_box()
     check('mobile: foto aparece no trecho visível sem scroll automático',photo['y']<844 and photo['y']+photo['height']>0,photo)
