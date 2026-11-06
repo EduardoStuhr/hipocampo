@@ -95,9 +95,11 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const wallPositions = [-3.4, -7.3, -11.15]
   const chosen = [3, 14, 23, 9, 19, 25].map(i => pieces[i % pieces.length])
   const framedSources = chosen.slice()
-  // Client photographs occupy the first frame on each wall; the remaining
+  framedSources[0] = chosen[2]
+  framedSources[3] = chosen[5]
+  // Client photographs occupy the last frame on each wall; the remaining
   // archive pieces and the frame motion keep their existing behaviour.
-  for (const [slot, number, w, h] of [[0, 1, 1600, 900], [3, 2, 900, 1600]]) {
+  for (const [slot, number, w, h] of [[2, 1, 1600, 900], [5, 2, 900, 1600]]) {
     const map = loadTexture(`/images/client-2026-11/foto-${number}.webp`)
     map.name = `house-client-photo-${number}`
     map.colorSpace = THREE.SRGBColorSpace

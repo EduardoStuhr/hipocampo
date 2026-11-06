@@ -6,8 +6,8 @@ sem recortar, redimensionar ou modificar as cores. Arquivos de produção em
 
 | Arquivo do ZIP | Uso |
 | --- | --- |
-| imagem-1.jpeg | Primeira moldura da parede esquerda da casa |
-| imagem-2.jpeg | Primeira moldura da parede direita da casa |
+| imagem-1.jpeg | Última moldura da parede esquerda da casa |
+| imagem-2.jpeg | Última moldura da parede direita da casa |
 | imagem-3.jpeg | Acrescentada ao rastro do mouse, recorte de papel |
 | imagem-4.jpeg | Acrescentada ao rastro do mouse, recorte oval |
 | imagem-5.jpeg | Acrescentada ao rastro do mouse, recorte em arco |
@@ -31,3 +31,10 @@ Entrega: `release/fotos-cliente-2026-11-06`. Para desfazer somente esta entrega:
 Resultado: 16 verificações aprovadas, sem erros JavaScript ou recursos locais
 faltando. Build e sintaxe aprovados. A validação percorreu a casa nos dois
 sentidos; não houve alteração dos pendentes ou das quatro outras molduras.
+
+Revisão: as duas fotografias passaram para as últimas molduras, em z = -11,15 m.
+As peças que ocupavam esses lugares foram movidas para as primeiras molduras,
+preservando o acervo. Backup: `backup/antes-ultimas-molduras-2026-11-06`.
+As 18 verificações da revisão passaram, incluindo a posição mundial das duas
+fotos nas últimas molduras, além de entrada, retorno e sequência do mouse.
+Entrega da mudança de posição: `release/ultimas-molduras-2026-11-06`.

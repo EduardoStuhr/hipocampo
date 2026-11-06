@@ -463,3 +463,18 @@ fundos e movimento existentes preservados. Documentação em `docs/client-photos
 Backup remoto: `backup/antes-fotos-cliente-2026-11-06` → `ffb73dd`.
 
 final result: passed
+
+## Fotos nas últimas molduras — 6/11/2026
+
+As duas fotografias da cliente foram movidas para o último par de molduras,
+uma em cada parede, em z = -11,15 m, próximo à saída. As peças anteriormente
+nessas posições passaram às primeiras molduras. Acervo, pendentes, dimensões,
+iluminação, fontes, fundos e rastro do mouse preservados. Captura real da galeria
+em `artifacts/client-photos/house-1600-0.72.png` aberta para inspeção.
+
+Build e 18 verificações focadas aprovados em 1600×900 e 390×844, incluindo as
+posições mundiais das duas texturas, proporções, entrada/retorno e próxima seção.
+Sem erros JavaScript ou recursos locais faltando. Emulação Chromium/SwiftShader.
+Backup remoto: `backup/antes-ultimas-molduras-2026-11-06` → `81bdfdc`.
+
+final result: passed
