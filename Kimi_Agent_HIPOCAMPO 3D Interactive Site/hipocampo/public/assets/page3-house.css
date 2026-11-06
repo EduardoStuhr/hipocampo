@@ -43,3 +43,20 @@
 #casa.is-reduced-motion { height: 100svh; margin-top: 0; }
 #casa.is-reduced-motion .page3-stage { position: relative; }
 #casa[hidden] { display: none; }
+
+/* Interaction is scoped to the visible interior; the page remains scrollable. */
+#casa.has-house-look .page3-canvas { pointer-events: auto; cursor: grab; touch-action: pan-y; }
+#casa.is-house-looking .page3-canvas { touch-action: none; }
+#casa.is-house-dragging .page3-canvas { cursor: grabbing; }
+.page3-look-controls {
+  position: absolute; left: 50%; bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 2; pointer-events: auto;
+  width: max-content; max-width: calc(100% - 2rem); padding: .55rem 1rem;
+  background: #17130fe6; color: #f4f0e7; border: 1px solid #f4f0e733;
+  text-align: center; font: 400 1rem/1.4 'SquidBoy', sans-serif;
+}
+.page3-look-controls[hidden], .page3-look-controls [hidden] { display: none; }
+.page3-look-controls button { min-height: 44px; padding: .35rem .65rem; text-decoration: underline; text-underline-offset: .22em; }
+.page3-look-controls button:focus-visible { outline: 2px solid #f0d756; outline-offset: 2px; }
+.page3-look-controls button[aria-pressed='true'] { color: #f0d756; }
+.page3-look-controls p { margin: .1rem 0 .2rem; font-size: .85rem; }

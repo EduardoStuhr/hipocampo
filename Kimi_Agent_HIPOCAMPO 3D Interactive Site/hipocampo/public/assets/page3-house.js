@@ -3,6 +3,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { createHouseInterior } from './house-interior.js?v=client-frame-fit-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
+import { createHouseLook } from './house-look.js?v=house-look-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
 
@@ -180,6 +181,11 @@ async function mount(section) {
 
   let target = 0, progress = 0, visible = false, raf = 0, lastFrame = 0
   let page3Intersecting = false, staticDirty = true, prepared = false
+  const look = createHouseLook({ THREE, section, stage, canvas, camera, invalidate: () => {
+    staticDirty = true
+    if (visible && !raf) raf = requestAnimationFrame(frame)
+  } })
+  window.addEventListener('pagehide', () => look.dispose(), { once: true })
   const heroFinished = () => (ScrollTrigger.getById('hipocampo-page1-page2')?.progress ?? 1) >= .999
   const scroll = ScrollTrigger.create({
     id: 'hipocampo-house',
@@ -313,6 +319,7 @@ async function mount(section) {
     const glance = (viewportW < 760 ? .95 : .68) * Math.sin(enter * Math.PI * 2 + .4) * smooth(.12, .3, enter) * (1 - smooth(.76, .92, enter))
     lookAt.set(p < .34 ? camPos.x : door.x + glance + pointer.sx * .025 * interiorMotion, camPos.y - smooth(.38, .6, p) * .065, camPos.z - 3.4)
     camera.lookAt(lookAt)
+    look.update({ progress: p, visible, reduced, dt })
     camera.updateMatrixWorld()
     if (archive.update(open, t, interiorMotion, pointer, dt, camera)) renderer.shadowMap.needsUpdate = true
     pointer.dx = pointer.dy = 0
@@ -348,6 +355,7 @@ async function mount(section) {
     resize()
     prepared = true
   } catch (error) {
+    look.dispose()
     scroll.kill()
     resizeObserver.disconnect()
     archive.dispose()
@@ -366,6 +374,7 @@ async function mount(section) {
     }
     if (visible && !raf) raf = requestAnimationFrame(frame)
     if (!visible && raf) { cancelAnimationFrame(raf); raf = 0 }
+    if (!visible) look.suspend()
     if (!visible || reduced) setMapCovered(false)
   }
   const page3Observer = new IntersectionObserver((entries) => {
@@ -378,6 +387,7 @@ async function mount(section) {
   motionPreference.addEventListener('change', () => {
     if (contextLost) return
     reduced = motionPreference.matches
+    look.suspend()
     section.classList.toggle('is-reduced-motion', reduced)
     staticDirty = true
     setPointerListening(visible && !reduced)
@@ -393,6 +403,7 @@ async function mount(section) {
     cancelAnimationFrame(raf)
     raf = 0
     setPointerListening(false)
+    look.suspend()
     page3Observer.disconnect()
     resizeObserver.disconnect()
     scroll.kill()
@@ -405,7 +416,7 @@ async function mount(section) {
   // here used to force layout in the middle of the first scroll.
   ScrollTrigger.update()
   section.houseJourney = {
-    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
 }
 

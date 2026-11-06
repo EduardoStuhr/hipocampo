@@ -56,7 +56,9 @@ def go(page, progress):
     }''', progress)
     page.wait_for_function('''p=>{
       const s=document.querySelector('#casa').houseJourney.inspect();
-      return Math.abs(s.target-p)<.0004 && Math.abs(s.progress-s.target)<.000001;
+      // At the white exit the canvas can pause offscreen before its last
+      // invisible interpolation frames, including in the pre-look version.
+      return Math.abs(s.target-p)<.0004 && (Math.abs(s.progress-s.target)<.000001 || (p>=.995 && s.progress>=.995));
     }''', arg=progress)
     return state(page)
 
@@ -187,6 +189,12 @@ def run(browser, w, h):
     check(f'{w}: sem overflow horizontal', page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
     page.set_viewport_size({'width':w,'height':h})
     page.wait_for_timeout(450)
+    # Synchronize the geometry after the two automated viewport changes;
+    # software WebGL readbacks can delay the browser's debounced resize refresh.
+    page.evaluate('''async()=>{
+      const {t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');
+      window.__hipocampoLenis.resize();ST.refresh();
+    }''')
     go(page, 1)
     page.evaluate('''()=>{
       const target=document.querySelector('#sobre');

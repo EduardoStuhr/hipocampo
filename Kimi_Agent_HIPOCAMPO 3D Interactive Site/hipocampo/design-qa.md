@@ -495,3 +495,38 @@ JavaScript, recursos faltando ou overflow. Build e sintaxe aprovados. Teste em
 Chromium/SwiftShader emulado. Backup: `backup/antes-encaixe-molduras-2026-11-06`.
 
 final result: passed
+
+## Olhar em 360° dentro da casa — 6/11/2026
+
+Adicionada orientação livre da câmera por arraste na parte interna. Giro
+horizontal ilimitado, inclinação limitada, botão de recentrar, Escape/Home e
+setas. No celular o modo de olhar é ativado explicitamente; voltar ao percurso
+libera o gesto vertical. O mouse continua avançando pelo scroll. As capturas e
+os controles são encerrados antes da fachada/saída e ao sair da página.
+
+Tipografia e dimensões existentes, fotografias, molduras, fontes e cores da sala
+preservadas. Apenas um grupo de comandos aparece sobre o piso da sala. Direção
+manual aplicada por quaternion após a direção original, sem mover a câmera do
+trajeto. Balanço e preparação assíncrona existentes preservados; nenhum novo loop
+ou controle global de scroll. Movimento reduzido responde por quadro sob demanda.
+
+Captura anterior em `artifacts/house-look/before.png`. Estado atual olhando para
+a parede em `docs/house-look-preview.webp` (1600×900); toque em
+`docs/house-look-mobile.webp` (390×844). As capturas mostram direções diferentes
+intencionais da mesma cena, não uma comparação de pixels da vista frontal.
+
+**93 verificações aprovadas:** 23 dos comandos e 70 de regressão da casa.
+Verificada direção da câmera real por vetor, giro além de 360°, pitch, reset,
+teclado, toque, captura, rolagem e saída em desktop/celular. Regressão inclui
+porta sem piscadas, fachada sem vazamentos, continuidade, balanço, resize,
+movimento reduzido, perda de contexto e fallback sem WebGL. A rotina ampla
+sincroniza o refresh depois de duas mudanças de viewport e considera o final
+branco já invisível, evitando aguardar quadros fora da tela. Comparação com a
+versão anterior registrada em `artifacts/house-look/resize-probe.log`.
+
+Build e sintaxe aprovados; sem exceções JavaScript, erros de shader ou recursos
+locais indisponíveis. Emulação Chromium/SwiftShader; não foi testado em telefone
+físico. Sem P0/P1/P2 pendente no escopo. Uso em `docs/house-look.md`.
+Backup remoto: `backup/antes-olhar-360-casa-2026-11-06` → `d967a93`.
+
+final result: passed
