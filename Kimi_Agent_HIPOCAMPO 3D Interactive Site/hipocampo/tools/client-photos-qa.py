@@ -24,9 +24,10 @@ with sync_playwright() as p:
    check('rastro não intercepta cliques',page.locator('.hipocampo-photo-trail').evaluate('e=>getComputedStyle(e).pointerEvents')=='none')
    page.screenshot(path=str(OUT/'hero-1600.png'))
   page.wait_for_function('document.querySelector("#casa")?.houseJourney?.inspect().prepared',timeout=60000)
-  textures=page.evaluate('''()=>{const a=[];__clientQA.scene.traverse(o=>{const map=o.material?.map;if(o.isMesh&&map?.name?.startsWith('house-client-photo-'))a.push({src:map.name,ratio:o.geometry.parameters.width/o.geometry.parameters.height,loaded:map.image.width>0,z:o.getWorldPosition(o.position.clone()).z})});return a}''')
+  textures=page.evaluate('''()=>{const a=[];__clientQA.scene.traverse(o=>{const map=o.material?.map;if(o.isMesh&&map?.name?.startsWith('house-client-photo-'))a.push({src:map.name,ratio:o.geometry.parameters.width/o.geometry.parameters.height,loaded:map.image.width>0,z:o.getWorldPosition(o.position.clone()).z,paper:o.parent.children.filter(c=>c.geometry?.parameters.depth===.025).map(c=>({w:c.geometry.parameters.width,h:c.geometry.parameters.height}))[0],image:{w:o.geometry.parameters.width,h:o.geometry.parameters.height}})});return a}''')
   check(f'{w}: duas fotos carregadas em duas molduras',len(textures)==2 and all(t['loaded']for t in textures),textures)
   check(f'{w}: duas fotos nas últimas molduras, perto da saída',all(abs(t['z']+11.15)<.001 for t in textures),textures)
+  check(f'{w}: bordas uniformes de oito centímetros nas duas fotos',all(abs((t['paper']['w']-t['image']['w'])/2-.08)<.0001 and abs((t['paper']['h']-t['image']['h'])/2-.08)<.0001 for t in textures),textures)
   check(f'{w}: fotos sem distorção de proporção',all(abs(t['ratio']-(1600/900 if t['src']=='house-client-photo-1'else 900/1600))<.001 for t in textures))
   check(f'{w}: seis molduras e dois pendentes mantêm o balanço',page.locator('#casa').evaluate('e=>e.houseJourney.inspect().interior.swings.length')==8)
   for progress in [.2,.51,.6,.72,.97,.5,.2]:

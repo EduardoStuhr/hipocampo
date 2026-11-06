@@ -38,3 +38,17 @@ preservando o acervo. Backup: `backup/antes-ultimas-molduras-2026-11-06`.
 As 18 verificações da revisão passaram, incluindo a posição mundial das duas
 fotos nas últimas molduras, além de entrada, retorno e sequência do mouse.
 Entrega da mudança de posição: `release/ultimas-molduras-2026-11-06`.
+
+## Encaixe das duas fotografias
+
+As duas últimas molduras acompanham a proporção das fotos, com margem interna
+uniforme de 8 cm no espaço 3D. A fotografia horizontal recebe moldura horizontal;
+a vertical recebe uma moldura mais estreita. O conteúdo fica inteiro, sem corte
+ou distorção, e os centros continuam nas mesmas posições perto da saída. As
+outras molduras e os pendentes mantêm as dimensões anteriores.
+
+Backup: `backup/antes-encaixe-molduras-2026-11-06` → `4878ab2`.
+Entrega: `release/encaixe-molduras-2026-11-06`.
+
+Build e 20 verificações da revisão aprovados, incluindo margens medidas no
+renderer em desktop e celular. [Captura real do encaixe](client-frame-fit-preview.webp).

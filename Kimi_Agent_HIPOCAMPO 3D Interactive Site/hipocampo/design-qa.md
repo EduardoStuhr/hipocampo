@@ -478,3 +478,20 @@ Sem erros JavaScript ou recursos locais faltando. Emulação Chromium/SwiftShade
 Backup remoto: `backup/antes-ultimas-molduras-2026-11-06` → `81bdfdc`.
 
 final result: passed
+
+## Encaixe das duas últimas molduras — 6/11/2026
+
+Molduras da cliente ajustadas à proporção original das fotos, com margem uniforme
+de 8 cm em cada direção. A primeira passa a horizontal; a segunda fica vertical
+mais estreita. Os centros continuam nos mesmos lugares próximos à saída, sem
+cortar ou distorcer as fotografias. Outras molduras e pendentes preservados.
+
+Captura anterior em `artifacts/client-fit/before.png`, atual em
+`docs/client-frame-fit-preview.webp`, ambas 1600×900. Comparação proporcional em
+`artifacts/client-fit/comparison.png`. Conferência visual e 20 verificações
+aprovadas em 1600×900 e 390×844: margens medidas no renderer, posições, proporções,
+carregamento, passagem/retorno, rastro de doze imagens e seção seguinte. Sem erros
+JavaScript, recursos faltando ou overflow. Build e sintaxe aprovados. Teste em
+Chromium/SwiftShader emulado. Backup: `backup/antes-encaixe-molduras-2026-11-06`.
+
+final result: passed

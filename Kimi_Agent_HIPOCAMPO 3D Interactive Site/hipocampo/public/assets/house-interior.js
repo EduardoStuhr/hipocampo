@@ -105,10 +105,13 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     map.colorSpace = THREE.SRGBColorSpace
     map.anisotropy = pieces[0]?.mat.map.anisotropy || 1
     textures.add(map)
-    framedSources[slot] = { d: { w, h, tipo: 'fotografia' }, mat: { map } }
+    framedSources[slot] = { d: { w, h, tipo: 'fotografia' }, mat: { map }, fitFrame: true }
   }
   function framedMemory(parent, source, x, y, z, rotation) {
-    const w = source.d.tipo === 'mao' ? 1.02 : 1.22, h = 1.62
+    const ratio = source.d.w / source.d.h
+    const imageHeight = Math.min(1.46, 1.06 / ratio)
+    const w = source.fitFrame ? imageHeight * ratio + .16 : source.d.tipo === 'mao' ? 1.02 : 1.22
+    const h = source.fitFrame ? imageHeight + .16 : 1.62
     const pivot = new THREE.Group()
     pivot.position.set(x, y + h / 2 + .065, z)
     pivot.rotation.y = rotation
@@ -119,7 +122,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     pendulums.push({ pivot, angle: 0, velocity: 0, limit: .075, gain: .62, direction: rotation > 0 ? 1 : -1, phase: pendulums.length * 1.7, free: false })
     box(frame, [w + .13, h + .13, .075], darkWood, [0, 0, 0], false)
     box(frame, [w, h, .025], card, [0, 0, .055], false)
-    const scale = Math.min((w - .21) / (source.d.w / unit), (h - .24) / (source.d.h / unit))
+    const scale = Math.min((w - (source.fitFrame ? .16 : .21)) / (source.d.w / unit), (h - (source.fitFrame ? .16 : .24)) / (source.d.h / unit))
     const material = mat({ map: source.mat.map, transparent: true, alphaTest: .05, roughness: .93, side: THREE.DoubleSide })
     mesh(frame, new THREE.PlaneGeometry(source.d.w / unit * scale, source.d.h / unit * scale), material, [0, 0, .075], false)
     // A small brass archive marker belongs to the object, not the page UI.
