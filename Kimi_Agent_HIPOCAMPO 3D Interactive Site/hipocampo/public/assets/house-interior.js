@@ -94,6 +94,17 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const pendulums = []
   const wallPositions = [-3.4, -7.3, -11.15]
   const chosen = [3, 14, 23, 9, 19, 25].map(i => pieces[i % pieces.length])
+  const framedSources = chosen.slice()
+  // Client photographs occupy the first frame on each wall; the remaining
+  // archive pieces and the frame motion keep their existing behaviour.
+  for (const [slot, number, w, h] of [[0, 1, 1600, 900], [3, 2, 900, 1600]]) {
+    const map = loadTexture(`/images/client-2026-11/foto-${number}.webp`)
+    map.name = `house-client-photo-${number}`
+    map.colorSpace = THREE.SRGBColorSpace
+    map.anisotropy = pieces[0]?.mat.map.anisotropy || 1
+    textures.add(map)
+    framedSources[slot] = { d: { w, h, tipo: 'fotografia' }, mat: { map } }
+  }
   function framedMemory(parent, source, x, y, z, rotation) {
     const w = source.d.tipo === 'mao' ? 1.02 : 1.22, h = 1.62
     const pivot = new THREE.Group()
@@ -122,7 +133,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     box(wall, [.055, .14, depth], darkWood, [-side * .04, .07, -depth / 2], false)
     for (let i = 0; i < 3; i++) {
       const z = wallPositions[i]
-      framedMemory(wall, chosen[i + (side > 0 ? 3 : 0)], -side * .07, 1.9, z, -side * Math.PI / 2)
+      framedMemory(wall, framedSources[i + (side > 0 ? 3 : 0)], -side * .07, 1.9, z, -side * Math.PI / 2)
       const light = new THREE.SpotLight('#ffe6b7', 11, 7, .55, .66, 2)
       light.position.set(-side * .95, 3.35, z + .4)
       light.target.position.set(-side * .08, 1.85, z)

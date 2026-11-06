@@ -445,3 +445,21 @@ medidas, posições, conteúdo, fontes e prazos das fotografias foram preservado
 - Backup remoto: `backup/antes-fundos-brancos-2026-11-06` → `13cc1ec`.
 
 final result: passed
+
+## Fotos enviadas pela cliente — 6/11/2026
+
+Aplicadas as cinco fotografias de `imagens.zip`, sem mudanças de cor ou corte.
+As duas primeiras ocupam a primeira moldura de cada parede, ajustadas por
+proporção dentro das molduras existentes. Os dois pendentes e as quatro outras
+molduras preservam seu acervo. As três seguintes foram acrescentadas ao rastro:
+a sequência real passou de nove para doze, sem retirar nenhuma imagem anterior.
+
+Build, sintaxe e 16 verificações focadas aprovados: sequência do mouse, ponteiros,
+duas texturas carregadas no renderer, proporções, seis molduras/dois pendentes,
+entrada/retorno, seção branca seguinte, overflow, console e recursos. Viewports
+1600×900 e 390×844 em Chromium/SwiftShader, sem teste em aparelho físico. Capturas
+em `artifacts/client-photos/` abertas para conferência. Texto, fontes, dimensões,
+fundos e movimento existentes preservados. Documentação em `docs/client-photos.md`.
+Backup remoto: `backup/antes-fotos-cliente-2026-11-06` → `ffb73dd`.
+
+final result: passed

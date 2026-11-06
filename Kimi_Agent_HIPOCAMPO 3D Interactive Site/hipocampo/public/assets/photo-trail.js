@@ -9,6 +9,9 @@ const photoSources = [
   { src: '/images/trail/photo-7.webp', shape: 'film' },
   { src: '/images/trail/photo-8.webp', shape: 'torn' },
   { src: '/images/trail/photo-9.webp', shape: 'oval' },
+  { src: '/images/client-2026-11/foto-3.webp', shape: 'torn' },
+  { src: '/images/client-2026-11/foto-4.webp', shape: 'oval' },
+  { src: '/images/client-2026-11/foto-5.webp', shape: 'arch' },
 ]
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 const style = document.createElement('style')

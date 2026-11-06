@@ -1,7 +1,7 @@
 // A continuous camera passes through a physical doorway, crosses the archive
 // and leaves through its far opening. The original memory map stays aligned.
 import * as THREE from './vendor/three.module.min.js'
-import { createHouseInterior } from './house-interior.js?v=door-fit-1'
+import { createHouseInterior } from './house-interior.js?v=client-photos-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
