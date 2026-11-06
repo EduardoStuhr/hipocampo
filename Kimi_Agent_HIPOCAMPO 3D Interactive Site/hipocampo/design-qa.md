@@ -530,3 +530,24 @@ físico. Sem P0/P1/P2 pendente no escopo. Uso em `docs/house-look.md`.
 Backup remoto: `backup/antes-olhar-360-casa-2026-11-06` → `d967a93`.
 
 final result: passed
+
+## Parede da entrada vista de dentro — 6/11/2026
+
+A parede frontal foi retirada da transformação inclinada da porta e passou a
+seguir a estrutura reta da sala. Geometria sólida com abertura calibrada e
+sobreposição junto ao piso, teto e laterais; largura adaptada ao desktop/celular.
+Porta, quadros, balanço, fotos, fontes, iluminação e rotação 360° preservados.
+
+Capturas de referência e resultado em `artifacts/house-wall/before-1366.png` e
+`after-1366.png`, mesmo viewport 1366×768 e mesma direção da câmera. O navegador
+anterior recebeu o módulo de `14304d3` somente para comparação. Imagens abertas
+para conferir fresta fechada e alinhamento. Comparação proporcional em
+`comparison.png`; captura final em `docs/house-wall-preview.webp`.
+
+16 verificações aprovadas em desktop e viewport 390×844: limites geométricos,
+raios na base/teto/cantos, abertura livre, calibração idêntica, proteção da fachada,
+rotação e próxima seção branca. Sem erros JavaScript ou recursos faltando. Build
+e sintaxe aprovados. Chromium/SwiftShader emulado, sem teste em aparelho físico.
+Backup: `backup/antes-parede-entrada-2026-11-06` → `14304d3`.
+
+final result: passed

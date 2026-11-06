@@ -180,9 +180,26 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   entrance.matrixAutoUpdate = false
   entrance.matrix.copy(doorway.matrix)
   root.add(entrance)
-  const sideW = (width - doorW) / 2
-  const frontPanels = [-1, 1].map(side => box(entrance, [sideW, height, .2], plaster, [side * (doorW / 2 + sideW / 2), height / 2, -.18], false))
-  box(entrance, [doorW, height - doorH, .2], plaster, [0, doorH + (height - doorH) / 2, -.18], false)
+  // Only the doorway follows the photographed perspective. The room closure
+  // stays square to its floor, ceiling and side walls, including when viewed
+  // from behind. A notch keeps the calibrated aperture unobstructed.
+  function entranceWallGeometry(roomWidth) {
+    const [tl, tr, br, bl] = doorway.localCorners
+    const left = -roomWidth / 2 - .04, right = roomWidth / 2 + .04
+    const bottom = Math.min(-.08, bl.y - .02, br.y - .02), top = height + .04
+    const outline = new THREE.Shape()
+    outline.moveTo(left, bottom)
+    outline.lineTo(bl.x, bottom); outline.lineTo(bl.x, bl.y)
+    outline.lineTo(tl.x, tl.y); outline.lineTo(tr.x, tr.y)
+    outline.lineTo(br.x, br.y); outline.lineTo(br.x, bottom)
+    outline.lineTo(right, bottom); outline.lineTo(right, top)
+    outline.lineTo(left, top); outline.closePath()
+    const geometry = new THREE.ExtrudeGeometry(outline, { depth: .2, steps: 1, bevelEnabled: false })
+    geometry.translate(0, 0, -.28)
+    return geometry
+  }
+  const frontWall = mesh(root, entranceWallGeometry(width), plaster, [0, 0, 0], false)
+  frontWall.name = 'house-front-wall'
   const entryModel = buildHouseDoorway({ parent: entrance, profile: doorway, mesh, box, mat, woodMap, plasterMap, textures })
   const doors = entryModel.doors
 
@@ -241,17 +258,19 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     root, floorY, eyeY: floorY + 1.55, depth,
     setPaper(color) { exitMaterial.color.copy(color) },
     resize(aspect) {
-      currentWidth = aspect < .8 ? 3.65 : width
+      const nextWidth = aspect < .8 ? 3.65 : width
+      if (nextWidth !== currentWidth) {
+        shapes.delete(frontWall.geometry)
+        frontWall.geometry.dispose()
+        frontWall.geometry = entranceWallGeometry(nextWidth)
+        shapes.add(frontWall.geometry)
+      }
+      currentWidth = nextWidth
       const scale = currentWidth / width
       walls.forEach(({ group, side }) => { group.position.x = side * currentWidth / 2 })
       ground.scale.x = ceiling.scale.x = floorSeams.scale.x = scale
       beams.forEach(beam => { beam.scale.x = scale })
       table.position.x = aspect < .8 ? .54 : .8
-      frontPanels.forEach((m, i) => {
-        const w = (currentWidth - doorW) / 2
-        m.scale.x = w / sideW
-        m.position.x = (i ? 1 : -1) * (doorW / 2 + w / 2)
-      })
       backPanels.forEach((m, i) => {
         m.scale.x = (currentWidth - exitW) / (width - exitW)
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
