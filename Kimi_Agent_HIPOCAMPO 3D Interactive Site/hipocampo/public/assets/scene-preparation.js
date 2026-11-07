@@ -45,6 +45,7 @@ export function yieldScenePreparation(signal, { allowDuringScroll = false } = {}
 }
 
 export async function prepareSceneMaterials(renderer, scene, camera, textures, signal, options) {
+  signal?.throwIfAborted()
   // Upload images and compile one material at a time. compileAsync(scene)
   // still submits every shader synchronously before its first asynchronous wait.
   const uploads = new Set(textures)
@@ -61,6 +62,7 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
     sliceStarted = performance.now()
   }
   for (const texture of uploads) {
+    signal?.throwIfAborted()
     const image = texture.image
     if (image instanceof HTMLImageElement) {
       // Decode off the upload path. texImage2D(HTMLImageElement) can otherwise
@@ -80,6 +82,7 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
       }
     }
     await yieldBudget()
+    signal?.throwIfAborted()
     renderer.initTexture(texture)
   }
   const objects = [], materials = new Set()
@@ -93,6 +96,7 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
   })
   for (const object of objects) {
     await yieldBudget()
+    signal?.throwIfAborted()
     await renderer.compileAsync(object, camera, scene)
   }
 }
@@ -105,8 +109,12 @@ export async function waitForSceneGPU(renderer, signal) {
   try {
     await new Promise((resolve, reject) => {
       const poll = () => {
-        if (signal?.aborted || gl.isContextLost()) {
-          reject(new DOMException('Preparação cancelada', 'AbortError'))
+        if (signal?.aborted) {
+          reject(signal.reason || new DOMException('Preparação cancelada', 'AbortError'))
+          return
+        }
+        if (gl.isContextLost()) {
+          reject(new Error('A conexão gráfica da casa foi interrompida'))
           return
         }
         const status = gl.clientWaitSync(fence, 0, 0)
@@ -165,7 +173,7 @@ export async function warmScene(renderer, scene, camera, signal, options) {
       entry.object.frustumCulled = entry.frustumCulled
     })
     scene.overrideMaterial = override
-    renderer.setSize(size.x, size.y, false)
+    if (!signal?.aborted) renderer.setSize(size.x, size.y, false)
     simple.dispose()
   }
 }

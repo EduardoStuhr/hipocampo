@@ -5,7 +5,7 @@ import { createHouseInterior } from './house-interior.js?v=front-wall-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { createHouseLook } from './house-look.js?v=house-look-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
-import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
+import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=startup-recovery-1'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -23,6 +23,13 @@ function buildSection() {
   section.innerHTML = `
     <div class="page3-stage">
       <canvas class="page3-canvas" aria-hidden="true"></canvas>
+      <div class="page3-status" role="status" aria-live="polite">
+        <p data-house-status>Preparando a casa da memória…</p>
+        <div class="page3-status-actions">
+          <button type="button" data-house-retry hidden>Tentar novamente</button>
+          <a href="#sobre">Continuar a leitura</a>
+        </div>
+      </div>
       <p class="page3-caption page3-caption--a">cada fragmento aponta para um lugar</p>
       <p class="page3-caption page3-caption--b">entre na casa</p>
       <p class="page3-description">Uma passagem tridimensional pela casa da memória: atravesse a porta, percorra a galeria de fotografias e siga a luz até a próxima seção. O caminho se recompõe ao rolar de volta.</p>
@@ -30,17 +37,51 @@ function buildSection() {
   return section
 }
 
-async function mount(section) {
-  const controller = new AbortController()
-  const abortPreparation = () => controller.abort()
-  window.addEventListener('pagehide', abortPreparation, { once: true })
-  const manifest = await (await fetch(MANIFEST_URL, { signal: controller.signal })).json()
+function untilAborted(promise, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(signal.reason)
+    if (signal.aborted) return abort()
+    signal.addEventListener('abort', abort, { once: true })
+    Promise.resolve(promise).then(resolve, reject).finally(() => signal.removeEventListener('abort', abort))
+  })
+}
+
+async function mount(section, controller, onFailure) {
+  const disposers = []
+  let disposed = false, ready = false
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    disposers.reverse().forEach(cleanup => cleanup())
+    delete section.houseJourney
+  }
+  const cancelled = () => {
+    // A lost context is an error even though cancellation stops the pending work.
+    dispose()
+    if (ready && controller.signal.reason?.name !== 'AbortError') onFailure(controller.signal.reason)
+  }
+  controller.signal.addEventListener('abort', cancelled, { once: true })
+  try {
+  const response = await fetch(MANIFEST_URL, { signal: controller.signal })
+  if (!response.ok) throw new Error('Não foi possível carregar o mapa da casa')
+  const manifest = await response.json()
   await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
   const canvas = section.querySelector('.page3-canvas')
   const stage = section.querySelector('.page3-stage')
   const capA = section.querySelector('.page3-caption--a')
   const capB = section.querySelector('.page3-caption--b')
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, premultipliedAlpha: false })
+  // Install recovery before textures, shaders or GPU warm-up can fail.
+  const contextLost = event => {
+    event.preventDefault()
+    controller.abort(new Error('A conexão gráfica da casa foi interrompida'))
+  }
+  canvas.addEventListener('webglcontextlost', contextLost)
+  disposers.push(() => {
+    canvas.removeEventListener('webglcontextlost', contextLost)
+    renderer.dispose()
+    renderer.forceContextLoss()
+  })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -49,6 +90,19 @@ async function mount(section) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false
   const scene = new THREE.Scene()
+  disposers.push(() => {
+    const resources = new Set()
+    scene.traverse(object => {
+      if (object.geometry) resources.add(object.geometry)
+      const materials = Array.isArray(object.material) ? object.material : [object.material]
+      materials.filter(Boolean).forEach(material => {
+        resources.add(material)
+        Object.values(material).forEach(value => { if (value?.isTexture) resources.add(value) })
+      })
+      if (object.isLight) object.dispose?.()
+    })
+    resources.forEach(resource => resource.dispose())
+  })
   const paper = new THREE.Color('#ffffff')
   scene.fog = new THREE.Fog(paper, 100, 200)
   const camera = new THREE.PerspectiveCamera(42, 1, .025, 300)
@@ -64,7 +118,10 @@ async function mount(section) {
   const loadTexture = (url) => {
     let texture
     textureReady.push(new Promise((resolve, reject) => {
-      texture = loader.load(url, resolve, undefined, reject)
+      texture = loader.load(url, () => {
+        if (disposed) texture.dispose()
+        resolve(texture)
+      }, undefined, () => reject(new Error(`Não foi possível carregar a imagem ${url}`)))
     }))
     return texture
   }
@@ -165,6 +222,7 @@ async function mount(section) {
     archive.setPaper(exitPaper)
   }
   const resize = () => {
+    if (disposed) return
     measureStart()
     viewportW = Math.max(1, stage.clientWidth)
     viewportH = Math.max(1, stage.clientHeight)
@@ -185,7 +243,7 @@ async function mount(section) {
     staticDirty = true
     if (visible && !raf) raf = requestAnimationFrame(frame)
   } })
-  window.addEventListener('pagehide', () => look.dispose(), { once: true })
+  disposers.push(() => { look.dispose(); section.classList.remove('has-house-look', 'is-house-looking', 'is-house-dragging') })
   const heroFinished = () => (ScrollTrigger.getById('hipocampo-page1-page2')?.progress ?? 1) >= .999
   const scroll = ScrollTrigger.create({
     id: 'hipocampo-house',
@@ -203,10 +261,12 @@ async function mount(section) {
       updatePaperColor()
     },
   })
+  disposers.push(() => { scroll.kill(); cancelAnimationFrame(raf); setMapCovered(false) })
   target = progress = scroll.progress
   resize()
   const resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(stage)
+  disposers.push(() => resizeObserver.disconnect())
   const onPointerMove = (e) => {
     if (e.pointerType === 'touch') return
     const x = (e.clientX / window.innerWidth) * 2 - 1
@@ -232,9 +292,11 @@ async function mount(section) {
     }
   }
 
+  disposers.push(() => setPointerListening(false))
   const tmp = new THREE.Vector3()
   canvas.style.opacity = '0'
   const frame = (now) => {
+    if (disposed) return
     raf = visible && !reduced ? requestAnimationFrame(frame) : 0
     const dt = Math.min((now - (lastFrame || now)) / 1000, 0.05)
     lastFrame = now
@@ -340,32 +402,22 @@ async function mount(section) {
     stage.style.backgroundColor = leave > 0 ? exitPaper.getStyle() : 'transparent'
   }
 
-  // Do not replace the DOM map with a frame whose images are still loading.
-  try {
+  // Race all preparation against cancellation, including a hung image or shader.
+  await untilAborted((async () => {
     await Promise.all(textureReady)
     await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true })
     await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
-    // Warm the real drawing-buffer pipeline at a tiny resolution. This also
-    // prepares the doorway/shadow passes before the camera handoff, without
-    // drawing a full-screen 3D frame behind the opening circle.
     camera.position.set(0, 0, fitZ())
     camera.lookAt(0, 0, 0)
     scene.updateMatrixWorld(true)
     await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true })
-    resize()
-    prepared = true
-  } catch (error) {
-    look.dispose()
-    scroll.kill()
-    resizeObserver.disconnect()
-    archive.dispose()
-    renderer.dispose()
-    throw error
-  }
-  let contextLost = false
+  })(), controller.signal)
+  controller.signal.throwIfAborted()
+  resize()
+  prepared = true
   const updateRenderActivity = () => {
     const wasVisible = visible
-    visible = prepared && page3Intersecting && !document.hidden && !contextLost && heroFinished() && (reduced || target > .0005)
+    visible = prepared && page3Intersecting && !document.hidden && heroFinished() && (reduced || target > .0005)
     setPointerListening(visible && !reduced)
     if (visible && !wasVisible) {
       progress = target = scroll.progress
@@ -382,10 +434,12 @@ async function mount(section) {
     updateRenderActivity()
   }, { threshold: 0 })
   page3Observer.observe(section)
+  disposers.push(() => page3Observer.disconnect())
   document.addEventListener('visibilitychange', updateRenderActivity)
+  disposers.push(() => document.removeEventListener('visibilitychange', updateRenderActivity))
   window.addEventListener('hipocampo:hero-pin-state', updateRenderActivity)
-  motionPreference.addEventListener('change', () => {
-    if (contextLost) return
+  disposers.push(() => window.removeEventListener('hipocampo:hero-pin-state', updateRenderActivity))
+  const changeMotion = () => {
     reduced = motionPreference.matches
     look.suspend()
     section.classList.toggle('is-reduced-motion', reduced)
@@ -394,29 +448,21 @@ async function mount(section) {
     setMapCovered(false)
     resize()
     ScrollTrigger.refresh()
-  })
-  // Context loss falls back to ordinary page navigation instead of a blank runway.
-  canvas.addEventListener('webglcontextlost', (event) => {
-    event.preventDefault()
-    contextLost = true
-    visible = false
-    cancelAnimationFrame(raf)
-    raf = 0
-    setPointerListening(false)
-    look.suspend()
-    page3Observer.disconnect()
-    resizeObserver.disconnect()
-    scroll.kill()
-    archive.dispose()
-    setMapCovered(false)
-    section.hidden = true
-    ScrollTrigger.refresh()
-  })
+  }
+  motionPreference.addEventListener('change', changeMotion)
+  disposers.push(() => motionPreference.removeEventListener('change', changeMotion))
   // Preparation changes no document geometry. Refreshing all pinned sections
   // here used to force layout in the middle of the first scroll.
   ScrollTrigger.update()
+  ready = true
+  section.querySelector('.page3-status').hidden = true
+  section.dataset.houseState = 'ready'
   section.houseJourney = {
     inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+  }
+  } catch (error) {
+    dispose()
+    throw controller.signal.aborted ? controller.signal.reason : error
   }
 }
 
@@ -426,14 +472,60 @@ function init() {
   if (document.querySelector('#casa')) return true
   const section = buildSection()
   project.after(section)
-  mount(section).catch((e) => {
-    if (e.name === 'AbortError') return
-    console.error('[hipocampo page3]', e)
-    section.hidden = true
-    const map = document.querySelector('#projeto [data-memory-map]')
-    if (map) map.style.visibility = ''
-    ScrollTrigger.refresh()
+  // Loading/error feedback follows the same runway even when a failed renderer
+  // has been disposed. It must not cover the map or the next chapter.
+  const updateStatusRange = st => section.classList.toggle('is-house-outside', st.progress <= .0005 || st.progress >= .97)
+  let statusScroll
+  const ensureStatusScroll = () => {
+    if (statusScroll) return
+    statusScroll = ScrollTrigger.create({
+      id: 'hipocampo-house-status', trigger: section, start: 'top top', end: 'bottom bottom',
+      onUpdate: updateStatusRange, onRefresh: updateStatusRange,
+    })
+    updateStatusRange(statusScroll)
+  }
+  let active, retryTimer = 0, deadline = 0, attempt = 0, suspended = false
+  const start = () => {
+    window.clearTimeout(retryTimer)
+    window.clearTimeout(deadline)
+    active?.abort()
+    section.innerHTML = buildSection().innerHTML
+    section.dataset.houseState = 'loading'
+    ensureStatusScroll()
+    const controller = active = new AbortController()
+    section.querySelector('[data-house-retry]').addEventListener('click', () => { attempt = 0; start() })
+    // A finite deadline covers stalled fetches, image decoding and shader compilation.
+    deadline = window.setTimeout(() => controller.abort(new Error('O carregamento da casa demorou mais que o esperado')), 45000)
+    let failureHandled = false
+    const failed = error => {
+      if (failureHandled || active !== controller || (controller.signal.aborted && controller.signal.reason?.name === 'AbortError')) return
+      failureHandled = true
+      window.clearTimeout(deadline)
+      controller.abort(error)
+      const status = section.querySelector('.page3-status')
+      status.hidden = false
+      section.querySelector('.page3-canvas').style.opacity = '0'
+      section.dataset.houseState = 'error'
+      section.querySelector('[data-house-status]').textContent = attempt < 1
+        ? 'Reconectando à casa da memória…'
+        : 'A casa não pôde abrir agora. Você pode tentar novamente ou continuar a leitura.'
+      section.querySelector('[data-house-retry]').hidden = attempt < 1
+      if (attempt++ < 1) retryTimer = window.setTimeout(start, 600)
+    }
+    mount(section, controller, failed).then(() => window.clearTimeout(deadline), failed)
+  }
+  window.addEventListener('pagehide', () => {
+    suspended = true
+    window.clearTimeout(retryTimer)
+    window.clearTimeout(deadline)
+    active?.abort()
+    statusScroll?.kill()
+    statusScroll = null
   })
+  window.addEventListener('pageshow', () => {
+    if (suspended) { suspended = false; attempt = 0; start() }
+  })
+  start()
   return true
 }
 

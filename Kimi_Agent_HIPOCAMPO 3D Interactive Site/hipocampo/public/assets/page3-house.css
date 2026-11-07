@@ -60,3 +60,22 @@
 .page3-look-controls button:focus-visible { outline: 2px solid #f0d756; outline-offset: 2px; }
 .page3-look-controls button[aria-pressed='true'] { color: #f0d756; }
 .page3-look-controls p { margin: .1rem 0 .2rem; font-size: .85rem; }
+
+/* Keep feedback inside the existing sticky stage, without changing scroll geometry. */
+.page3-status {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .8rem; padding: 2rem; text-align: center;
+  color: #6b311c; background: #f3f0e7;
+  font: 400 clamp(1rem, 2vw, 1.35rem)/1.5 'SquidBoy', sans-serif;
+}
+.page3-status[hidden], .page3-status button[hidden] { display: none; }
+.page3-status p { max-width: 30rem; margin: 0; }
+.page3-status-actions { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: center; pointer-events: auto; }
+.page3-status-actions :is(button, a) {
+  display: inline-flex; align-items: center; min-height: 44px;
+  color: #2626fc; font: inherit; text-decoration: underline; text-underline-offset: .2em;
+}
+.page3-status-actions :focus-visible { outline: 2px solid #2626fc; outline-offset: 4px; }
+
+#casa.is-house-outside:not(.is-reduced-motion) .page3-status { visibility: hidden; }
