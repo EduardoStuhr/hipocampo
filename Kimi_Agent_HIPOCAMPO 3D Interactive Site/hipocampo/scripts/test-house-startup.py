@@ -36,30 +36,31 @@ async def run(browser,name,mode='',mobile=False,reduced=False,cpu=1):
  await p.goto(os.getenv('HOUSE_TEST_URL','http://127.0.0.1:4173/'),wait_until='domcontentloaded')
  await p.wait_for_function("window.__hipocampoLenis&&document.querySelector('#sobre')&&document.querySelector('#casa')")
  async def go(progress):
-  await p.evaluate('''async progress=>{const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');const st=ST.getById('hipocampo-house')||ST.getById('hipocampo-house-status');if(st){__hipocampoLenis.scrollTo(st.start+progress*(st.end-st.start),{immediate:true,force:true});ST.update()}}''',progress)
+  await p.evaluate('''async progress=>{const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');const st=ST.getById('hipocampo-house')||ST.getById('hipocampo-house-preview');if(st){__hipocampoLenis.scrollTo(st.start+progress*(st.end-st.start),{immediate:true,force:true});ST.update()}}''',progress)
  await p.wait_for_function("window.__renderers.length>0")
  await p.wait_for_timeout(500);await go(.6)
  if mode=='slow':
   await p.wait_for_timeout(1000)
   assert await p.locator('#casa').get_attribute('data-house-state')=='loading'
-  assert await p.locator('.page3-status').is_visible()
+  assert await p.locator('.page3-preview').is_visible()
+  assert await p.locator('.page3-preview-map').evaluate('(el)=>{const r=el.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0&&r.left<innerWidth&&r.right>0}')
   await p.screenshot(path=str(OUT/(name+'-loading.png')))
-  await p.locator('.page3-status a').click()
-  await p.wait_for_timeout(800)
-  assert await p.locator('#sobre').evaluate('(el)=>el.getBoundingClientRect().top<innerHeight')
-  assert await p.locator('.page3-status').is_hidden()
-  await go(.6)
-  await p.wait_for_timeout(100)
-  assert await p.locator('.page3-status').is_visible()
  if mode=='persistent':
-  await p.wait_for_function("document.querySelector('#casa').dataset.houseState==='error'&&!document.querySelector('[data-house-retry]').hidden")
-  assert not await p.locator('#casa').evaluate('(el)=>el.hidden')
-  await p.screenshot(path=str(OUT/(name+'-retry.png')))
-  allow=True
-  await p.locator('[data-house-retry]').click()
+  await p.wait_for_function("__renderers.length>=2&&document.querySelector('#casa').dataset.houseState==='error'")
+  await go(.6)
+  assert await p.locator('.page3-status').count()==0
+  assert await p.locator('.page3-preview').is_visible()
+  assert await p.locator('.page3-preview-map').evaluate('(el)=>{const r=el.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0&&r.left<innerWidth&&r.right>0}')
+  assert await p.locator('.page3-preview img').count()>10
+  await p.screenshot(path=str(OUT/(name+'-fallback.png')))
+  assert not errors,errors
+  result={'name':name,'renderers':await p.evaluate('__renderers.length'),'fallback':True,'errors':errors}
+  (OUT/(name+'.json')).write_text(json.dumps(result,indent=2));print(json.dumps(result),flush=True)
+  await c.close()
+  return
  await p.wait_for_function("document.querySelector('#casa').dataset.houseState==='ready'",timeout=60000)
  await go(.6);await p.wait_for_timeout(500)
- assert await p.locator('.page3-status').is_hidden()
+ assert await p.locator('.page3-status').count()==0
  if mode=='runtime':
   before=await p.evaluate('__renderers.length')
   await p.evaluate("__renderers.at(-1).getContext().getExtension('WEBGL_lose_context').loseContext()")
@@ -87,7 +88,7 @@ async def run(browser,name,mode='',mobile=False,reduced=False,cpu=1):
 async def main():
  async with async_playwright()as pw:
   b=await pw.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-  for name,opts in [('normal',{}),('unexpected-abort',{'mode':'abort-error'}),('timeout',{'mode':'timeout'}),('slow',{'mode':'slow'}),('texture-once',{'mode':'once'}),('persistent-manual',{'mode':'persistent'}),('loss-warmup',{'mode':'loss'}),('loss-runtime',{'mode':'runtime'}),('mobile',{'mobile':True}),('reduced',{'reduced':True}),('cpu4x',{'cpu':4})]:
+  for name,opts in [('normal',{}),('unexpected-abort',{'mode':'abort-error'}),('timeout',{'mode':'timeout'}),('slow',{'mode':'slow'}),('texture-once',{'mode':'once'}),('persistent-fallback',{'mode':'persistent'}),('loss-warmup',{'mode':'loss'}),('loss-runtime',{'mode':'runtime'}),('mobile',{'mobile':True}),('reduced',{'reduced':True}),('cpu4x',{'cpu':4})]:
    if not os.getenv('HOUSE_TEST_CASES') or name in os.environ['HOUSE_TEST_CASES'].split(','): await run(b,name,**opts)
   await b.close()
 asyncio.run(main())

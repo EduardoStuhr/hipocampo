@@ -11,11 +11,12 @@ window.addEventListener('pagehide', () => {
   inputEvents.forEach(event => window.removeEventListener(event, noteInput, inputOptions))
 }, { once: true })
 
-export function yieldScenePreparation(signal, { allowDuringScroll = false } = {}) {
+export function yieldScenePreparation(signal, { allowDuringScroll = false, priority = false } = {}) {
   return new Promise((resolve, reject) => {
-    let idle = 0, timer = 0
+    let idle = 0, timer = 0, frame = 0
     const cancel = () => {
       if (idle) window.cancelIdleCallback(idle)
+      if (frame) cancelAnimationFrame(frame)
       window.clearTimeout(timer)
       signal?.removeEventListener('abort', abort)
     }
@@ -25,7 +26,8 @@ export function yieldScenePreparation(signal, { allowDuringScroll = false } = {}
     }
     const schedule = () => {
       if (signal?.aborted) return abort()
-      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(run, { timeout: 400 })
+      if (priority && !document.hidden) frame = requestAnimationFrame(() => { frame = 0; timer = window.setTimeout(run, 0) })
+      else if ('requestIdleCallback' in window) idle = window.requestIdleCallback(run, { timeout: 400 })
       else timer = window.setTimeout(run, 32)
     }
     const run = deadline => {
@@ -46,8 +48,8 @@ export function yieldScenePreparation(signal, { allowDuringScroll = false } = {}
 
 export async function prepareSceneMaterials(renderer, scene, camera, textures, signal, options) {
   signal?.throwIfAborted()
-  // Upload images and compile one material at a time. compileAsync(scene)
-  // still submits every shader synchronously before its first asynchronous wait.
+  // Upload images and submit shader work in short slices. Bounded batches
+  // overlap asynchronous compilation without submitting the whole scene at once.
   const uploads = new Set(textures)
   scene.traverse(object => {
     const surfaces = Array.isArray(object.material) ? object.material : [object.material]
@@ -94,11 +96,18 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
       surfaces.forEach(material => materials.add(material))
     }
   })
+  const pending = []
+  const batchSize = Math.max(1, options?.compileBatchSize || 1)
   for (const object of objects) {
     await yieldBudget()
     signal?.throwIfAborted()
-    await renderer.compileAsync(object, camera, scene)
+    const compilation = renderer.compileAsync(object, camera, scene)
+    // Attach a handler immediately, including while the next submission yields.
+    compilation.catch(() => {})
+    pending.push(compilation)
+    if (pending.length >= batchSize) await Promise.all(pending.splice(0))
   }
+  await Promise.all(pending)
 }
 
 export async function waitForSceneGPU(renderer, signal) {
@@ -159,14 +168,20 @@ export async function warmScene(renderer, scene, camera, signal, options) {
     scene.overrideMaterial = override
     renderer.shadowMap.needsUpdate = false
     entries.forEach(({ object }) => { object.visible = false })
+    let sliceStarted = -Infinity
     for (const object of samples) {
-      await yieldScenePreparation(signal, options)
+      if (!options?.batchWarmup || performance.now() - sliceStarted >= 4) {
+        await yieldScenePreparation(signal, options)
+        sliceStarted = performance.now()
+      }
+      signal?.throwIfAborted()
       object.visible = true
       object.frustumCulled = false
       renderer.render(scene, camera)
-      await waitForSceneGPU(renderer, signal)
+      if (!options?.batchWarmup) await waitForSceneGPU(renderer, signal)
       object.visible = false
     }
+    if (options?.batchWarmup) await waitForSceneGPU(renderer, signal)
   } finally {
     entries.forEach(entry => {
       entry.object.visible = entry.visible

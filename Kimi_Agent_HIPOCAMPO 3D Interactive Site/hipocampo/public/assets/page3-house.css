@@ -61,21 +61,16 @@
 .page3-look-controls button[aria-pressed='true'] { color: #f0d756; }
 .page3-look-controls p { margin: .1rem 0 .2rem; font-size: .85rem; }
 
-/* Keep feedback inside the existing sticky stage, without changing scroll geometry. */
-.page3-status {
-  position: absolute; inset: 0; z-index: 3;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: .8rem; padding: 2rem; text-align: center;
-  color: #6b311c; background: #f3f0e7;
-  font: 400 clamp(1rem, 2vw, 1.35rem)/1.5 'SquidBoy', sans-serif;
-}
-.page3-status[hidden], .page3-status button[hidden] { display: none; }
-.page3-status p { max-width: 30rem; margin: 0; }
-.page3-status-actions { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: center; pointer-events: auto; }
-.page3-status-actions :is(button, a) {
-  display: inline-flex; align-items: center; min-height: 44px;
-  color: #2626fc; font: inherit; text-decoration: underline; text-underline-offset: .2em;
-}
-.page3-status-actions :focus-visible { outline: 2px solid #2626fc; outline-offset: 4px; }
-
-#casa.is-house-outside:not(.is-reduced-motion) .page3-status { visibility: hidden; }
+/* The original map bridges preparation without exposing a technical screen. */
+.page3-preview, .page3-render { position: absolute; inset: 0; pointer-events: none; }
+.page3-preview { overflow: hidden; background: #fff; opacity: 1; transition: opacity .35s ease; }
+.page3-preview-map { position: absolute; left: 50%; top: 10%; width: min(56svh, 80vw); aspect-ratio: 671 / 960; }
+.page3-preview-map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.page3-preview-map img { position: absolute; object-fit: contain; }
+.page3-render { z-index: 1; opacity: 0; transition: opacity .35s ease; }
+#casa[data-house-state="ready"] .page3-render { opacity: 1; }
+#casa[data-house-state="ready"] .page3-preview { opacity: 0; }
+#casa.is-house-outside:not(.is-reduced-motion) .page3-preview { visibility: hidden; }
+#casa.has-house-look .page3-render { pointer-events: auto; }
+.page3-caption { z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .page3-preview, .page3-render { transition: none; } }

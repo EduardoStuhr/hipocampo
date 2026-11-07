@@ -5,11 +5,20 @@ import { createHouseInterior } from './house-interior.js?v=front-wall-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { createHouseLook } from './house-look.js?v=house-look-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
-import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=startup-recovery-1'
+import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=silent-house-1'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const MANIFEST_URL = '/images/map/manifest.json'
+let manifestRequest
+function loadManifest() {
+  return manifestRequest ||= fetch(MANIFEST_URL).then(response => {
+    if (!response.ok) throw new Error('Não foi possível carregar o mapa da casa')
+    return response.json()
+  }).catch(error => { manifestRequest = null; throw error })
+}
+// Fetch metadata while module dependencies and the opening chapter settle.
+loadManifest().catch(() => {})
 const UNIT = 16 // the photographed doorway is approximately 1 × 2.3 metres
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t) }
@@ -22,14 +31,8 @@ function buildSection() {
   section.setAttribute('aria-label', 'Transição: entrando na casa da memória')
   section.innerHTML = `
     <div class="page3-stage">
-      <canvas class="page3-canvas" aria-hidden="true"></canvas>
-      <div class="page3-status" role="status" aria-live="polite">
-        <p data-house-status>Preparando a casa da memória…</p>
-        <div class="page3-status-actions">
-          <button type="button" data-house-retry hidden>Tentar novamente</button>
-          <a href="#sobre">Continuar a leitura</a>
-        </div>
-      </div>
+      <div class="page3-preview" aria-hidden="true"></div>
+      <div class="page3-render"><canvas class="page3-canvas" aria-hidden="true"></canvas></div>
       <p class="page3-caption page3-caption--a">cada fragmento aponta para um lugar</p>
       <p class="page3-caption page3-caption--b">entre na casa</p>
       <p class="page3-description">Uma passagem tridimensional pela casa da memória: atravesse a porta, percorra a galeria de fotografias e siga a luz até a próxima seção. O caminho se recompõe ao rolar de volta.</p>
@@ -62,9 +65,7 @@ async function mount(section, controller, onFailure) {
   }
   controller.signal.addEventListener('abort', cancelled, { once: true })
   try {
-  const response = await fetch(MANIFEST_URL, { signal: controller.signal })
-  if (!response.ok) throw new Error('Não foi possível carregar o mapa da casa')
-  const manifest = await response.json()
+  const manifest = await untilAborted(loadManifest(), controller.signal)
   await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
   const canvas = section.querySelector('.page3-canvas')
   const stage = section.querySelector('.page3-stage')
@@ -405,12 +406,12 @@ async function mount(section, controller, onFailure) {
   // Race all preparation against cancellation, including a hung image or shader.
   await untilAborted((async () => {
     await Promise.all(textureReady)
-    await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true })
+    await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true, priority: true, compileBatchSize: 4 })
     await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
     camera.position.set(0, 0, fitZ())
     camera.lookAt(0, 0, 0)
     scene.updateMatrixWorld(true)
-    await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true })
+    await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true, priority: true, batchWarmup: true })
   })(), controller.signal)
   controller.signal.throwIfAborted()
   resize()
@@ -455,7 +456,6 @@ async function mount(section, controller, onFailure) {
   // here used to force layout in the middle of the first scroll.
   ScrollTrigger.update()
   ready = true
-  section.querySelector('.page3-status').hidden = true
   section.dataset.houseState = 'ready'
   section.houseJourney = {
     inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
@@ -466,23 +466,82 @@ async function mount(section, controller, onFailure) {
   }
 }
 
+function populatePreview(section, manifest) {
+  const preview = section.querySelector('.page3-preview')
+  const map = document.createElement('div')
+  map.className = 'page3-preview-map'
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', `0 0 ${manifest.width} ${manifest.height}`)
+  svg.setAttribute('preserveAspectRatio', 'none')
+  for (const piece of manifest.pieces) {
+    if (piece.tipo !== 'casa') {
+      const line = document.createElementNS(svg.namespaceURI, 'line')
+      for (const [name, value] of Object.entries({
+        x1: piece.anchorHouse.xPct * manifest.width / 100,
+        y1: piece.anchorHouse.yPct * manifest.height / 100,
+        x2: piece.anchorPiece.xPct * manifest.width / 100,
+        y2: piece.anchorPiece.yPct * manifest.height / 100,
+        stroke: manifest.lineColor, 'stroke-width': manifest.lineWidthPct * manifest.width / 100,
+      })) line.setAttribute(name, String(value))
+      svg.append(line)
+    }
+    const image = document.createElement('img')
+    image.src = piece.src
+    image.alt = ''
+    image.decoding = 'async'
+    image.draggable = false
+    Object.assign(image.style, {
+      left: `${piece.x / manifest.width * 100}%`, top: `${piece.y / manifest.height * 100}%`,
+      width: `${piece.w / manifest.width * 100}%`, height: `${piece.h / manifest.height * 100}%`,
+    })
+    map.append(image)
+  }
+  map.prepend(svg)
+  preview.replaceChildren(map)
+}
+
 function init() {
   const project = document.querySelector('#projeto')
   if (!project || !project.nextElementSibling) return false
   if (document.querySelector('#casa')) return true
   const section = buildSection()
   project.after(section)
-  // Loading/error feedback follows the same runway even when a failed renderer
-  // has been disposed. It must not cover the map or the next chapter.
-  const updateStatusRange = st => section.classList.toggle('is-house-outside', st.progress <= .0005 || st.progress >= .97)
-  let statusScroll
-  const ensureStatusScroll = () => {
-    if (statusScroll) return
-    statusScroll = ScrollTrigger.create({
-      id: 'hipocampo-house-status', trigger: section, start: 'top top', end: 'bottom bottom',
-      onUpdate: updateStatusRange, onRefresh: updateStatusRange,
+  // Keep the existing artwork on screen until WebGL can take over. This layer
+  // uses cached small map images; it never blocks scrolling or adds UI copy.
+  let previewGeometry = null
+  const positionPreview = progress => {
+    const map = section.querySelector('.page3-preview-map')
+    if (!map || !previewGeometry) return
+    const g = previewGeometry, t = smooth(0, .18, progress)
+    const scale = Math.min(innerWidth * .72, innerHeight * .8 * 671 / 960) / g.width
+    map.style.transform = `translate(${(innerWidth / 2 - g.left - g.width / 2) * t}px, ${(innerHeight / 2 - g.top - g.height / 2) * t}px) scale(${lerp(1, scale, t)})`
+  }
+  const measurePreview = () => {
+    const previewMap = section.querySelector('.page3-preview-map')
+    const source = project.querySelector('[data-memory-map]')
+    if (!previewMap || !source) return
+    const r = source.getBoundingClientRect()
+    const height = source.clientHeight || r.height
+    if (!r.width || !height) return
+    const width = source.clientWidth || r.width
+    const left = r.left + (r.width - width) / 2
+    const top = r.top - section.getBoundingClientRect().top + (r.height - height) / 2
+    previewGeometry = { width, height, left, top }
+    Object.assign(previewMap.style, { width: `${width}px`, height: `${height}px`, left: `${left}px`, top: `${top}px` })
+    positionPreview(previewScroll?.progress || 0)
+  }
+  const updatePreviewRange = st => {
+    section.classList.toggle('is-house-outside', st.progress <= .0005 || st.progress >= .97)
+    if (section.dataset.houseState !== 'ready') positionPreview(st.progress)
+  }
+  let previewScroll
+  const ensurePreviewScroll = () => {
+    if (previewScroll) return
+    previewScroll = ScrollTrigger.create({
+      id: 'hipocampo-house-preview', trigger: section, start: 'top top', end: 'bottom bottom',
+      onUpdate: updatePreviewRange, onRefresh: st => { measurePreview(); updatePreviewRange(st) },
     })
-    updateStatusRange(statusScroll)
+    updatePreviewRange(previewScroll)
   }
   let active, retryTimer = 0, deadline = 0, attempt = 0, suspended = false
   const start = () => {
@@ -491,9 +550,13 @@ function init() {
     active?.abort()
     section.innerHTML = buildSection().innerHTML
     section.dataset.houseState = 'loading'
-    ensureStatusScroll()
     const controller = active = new AbortController()
-    section.querySelector('[data-house-retry]').addEventListener('click', () => { attempt = 0; start() })
+    loadManifest().then(manifest => {
+      if (active !== controller || controller.signal.aborted) return
+      populatePreview(section, manifest)
+      measurePreview()
+    }).catch(() => {})
+    ensurePreviewScroll()
     // A finite deadline covers stalled fetches, image decoding and shader compilation.
     deadline = window.setTimeout(() => controller.abort(new Error('O carregamento da casa demorou mais que o esperado')), 45000)
     let failureHandled = false
@@ -502,14 +565,8 @@ function init() {
       failureHandled = true
       window.clearTimeout(deadline)
       controller.abort(error)
-      const status = section.querySelector('.page3-status')
-      status.hidden = false
       section.querySelector('.page3-canvas').style.opacity = '0'
       section.dataset.houseState = 'error'
-      section.querySelector('[data-house-status]').textContent = attempt < 1
-        ? 'Reconectando à casa da memória…'
-        : 'A casa não pôde abrir agora. Você pode tentar novamente ou continuar a leitura.'
-      section.querySelector('[data-house-retry]').hidden = attempt < 1
       if (attempt++ < 1) retryTimer = window.setTimeout(start, 600)
     }
     mount(section, controller, failed).then(() => window.clearTimeout(deadline), failed)
@@ -519,12 +576,13 @@ function init() {
     window.clearTimeout(retryTimer)
     window.clearTimeout(deadline)
     active?.abort()
-    statusScroll?.kill()
-    statusScroll = null
+    previewScroll?.kill()
+    previewScroll = null
   })
   window.addEventListener('pageshow', () => {
     if (suspended) { suspended = false; attempt = 0; start() }
   })
+  window.addEventListener('resize', measurePreview, { passive: true })
   start()
   return true
 }
