@@ -69,6 +69,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   let view = { yaw: 0, pitch: .38, distance: 16.8, panX: 0, panY: 0, panZ: 0 }
   let renderedView = { ...view }
   let navigating = false
+  let topView = false
+  let previousView = null
   const cameraKeys = new Set()
   const cameraRight = new THREE.Vector3()
   const cameraUp = new THREE.Vector3()
@@ -464,6 +466,16 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   }
   function updateCamera() {
     const v = renderedView
+    if (topView) {
+      // Looking straight down needs a stable screen-up vector, not an orbit
+      // clamped just short of the pole. Picking still uses this same camera.
+      camera.up.set(0, 0, -1)
+      camera.position.set(v.panX, v.panY + .8 + v.distance, v.panZ + .2)
+      camera.lookAt(v.panX, v.panY + .8, v.panZ + .2)
+      camera.updateMatrixWorld()
+      return
+    }
+    camera.up.set(0, 1, 0)
     const horizontal = Math.cos(v.pitch) * v.distance
     camera.position.set(v.panX + Math.sin(v.yaw) * horizontal, v.panY + 1.2 + Math.sin(v.pitch) * v.distance, v.panZ + Math.cos(v.yaw) * horizontal)
     camera.lookAt(v.panX, v.panY + (mobile ? 1.2 : .8), v.panZ + .2)
@@ -532,10 +544,42 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     renderer.setSize(width, height, false)
     cacheRect()
     positionControls()
-    if (relayout) { shadowsDirty = true; resetView() }
+    if (relayout) shadowsDirty = true
+    if (topView) frameTableFromAbove()
+    else if (relayout) resetView()
     else invalidate(false)
   }
+  function frameTableFromAbove() {
+    scene.updateMatrixWorld(true)
+    const center = groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))
+    const scale = groups.future.scale.x
+    const distance = Math.max(5.2 * scale / camera.aspect, 3.25 * scale) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))
+    view = { yaw: 0, pitch: Math.PI / 2, distance, panX: center.x, panY: center.y - .8, panZ: center.z - .2 }
+    renderedView = { ...view }
+    updateCamera()
+    invalidate(false)
+  }
+  function setTopView(enabled) {
+    if (!prepared || disposed || contextLost || !!enabled === topView) return
+    setNavigation(false)
+    cancelGestures()
+    topView = !!enabled
+    if (topView) {
+      previousView = { ...view }
+      frameTableFromAbove()
+    } else {
+      view = { ...previousView }
+      renderedView = { ...view }
+      previousView = null
+      updateCamera()
+      invalidate(false)
+    }
+    callbacks.onViewChange?.(topView)
+  }
   function resetView() {
+    topView = false
+    previousView = null
+    callbacks.onViewChange?.(false)
     view = { yaw: 0, pitch: mobile ? .45 : .38, distance: mobile ? 18.5 : 16.8, panX: 0, panY: 0, panZ: 0 }
     renderedView = { ...view }
     updateCamera()
@@ -701,6 +745,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     view.panZ = clamp(start.panZ + gesturePan.z, -12, 12)
   }
   function beginCamera(event, mode = 'orbit') {
+    if (topView) mode = 'pan'
     if (drag || !prepared || contextLost) return
     event.preventDefault()
     cacheRect()
@@ -796,7 +841,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       pinch = null
       if (touchPoints.size === 1) {
         const [id, point] = [...touchPoints.entries()][0]
-        orbit = { target: canvas, pointerId: id, x: point.x, y: point.y, view: { ...view }, mode: 'orbit' }
+        orbit = { target: canvas, pointerId: id, x: point.x, y: point.y, view: { ...view }, mode: topView ? 'pan' : 'orbit' }
       } else orbit = null
       if (!touchPoints.size) canvas.classList.remove('is-dragging')
     } else if (orbit && event.pointerId === orbit.pointerId) {
@@ -968,6 +1013,51 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     callbacks.onFridgeChange(fridgeOpen)
     invalidate()
   }
+  async function photographTable() {
+    if (!prepared || disposed || contextLost) throw new Error('Aguarde a sala ficar pronta para fotografar.')
+    cancelGestures()
+    // An object travelling onto the table belongs to the completed arrangement.
+    for (const [id, motion] of motions) {
+      if (!objects.get(id)?.atTable) continue
+      motion.object.position.copy(motion.end)
+      motions.delete(id)
+    }
+    scene.updateMatrixWorld(true)
+    const center = groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))
+    const scale = groups.future.scale.x
+    const shotCamera = new THREE.OrthographicCamera(-2.6 * scale, 2.6 * scale, 1.625 * scale, -1.625 * scale, .1, 50)
+    shotCamera.up.set(0, 0, -1)
+    shotCamera.position.set(center.x, center.y + 12, center.z)
+    shotCamera.lookAt(center)
+    const photograph = document.createElement('canvas')
+    photograph.width = 1600
+    photograph.height = 1000
+    const context = photograph.getContext('2d')
+    if (!context) throw new Error('Não foi possível preparar a fotografia.')
+    const ratio = renderer.getPixelRatio()
+    const visibility = Object.values(groups).map(group => [group, group.visible])
+    try {
+      // Reuse the warmed renderer for one frame. Copy immediately, before WebGL
+      // clears its drawing buffer; no permanent preserveDrawingBuffer overhead.
+      for (const group of Object.values(groups)) if (group !== groups.future) group.visible = false
+      renderer.setPixelRatio(1)
+      renderer.setSize(1600, 1000, false)
+      renderer.shadowMap.needsUpdate = true
+      renderer.render(scene, shotCamera)
+      context.drawImage(canvas, 0, 0)
+    } finally {
+      for (const [group, wasVisible] of visibility) group.visible = wasVisible
+      renderer.setPixelRatio(ratio)
+      renderer.setSize(width, height, false)
+      renderer.shadowMap.needsUpdate = true
+      renderer.render(scene, camera)
+      invalidate()
+    }
+    return new Promise((resolve, reject) => photograph.toBlob(blob => {
+      if (blob) resolve(blob)
+      else reject(new Error('Não foi possível gerar a fotografia. Tente novamente.'))
+    }, 'image/png'))
+  }
   function reset() {
     cancelGestures()
     motions.clear()
@@ -1015,12 +1105,12 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   // A read-only inspector enables behavioural checks without using the DOM as
   // the source of truth. It also helps diagnose lost WebGL contexts in support.
   api = {
-    moveToTable, returnToIsland, reset, resetView, toggleFridge, setNavigation,
+    moveToTable, returnToIsland, reset, resetView, toggleFridge, setNavigation, setTopView, photographTable,
     zoom(direction) { view.distance = clamp(view.distance * Math.exp(direction * .17), 2.8, 36); invalidate(false) },
     inspect() {
       return {
         renderer: 'WebGL', prepared, preparationMs, visible, contextLost, framePending: !!raf, fridgeOpen, doorAngle, redLightIntensity: redLight.intensity, redSpillIntensity: redSpill.intensity,
-        camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
+        viewMode: topView ? 'table-top' : 'room', cameraPosition: camera.position.toArray(), cameraDirection: camera.getWorldDirection(new THREE.Vector3()).toArray(), camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
         lightTable: toScreen(groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))),
         objects: [...objects.values()].map(entry => ({ id: entry.definition.id, number: entry.definition.number || null, island: entry.definition.island, kind: entry.definition.kind, parent: entry.object.parent.name, position: entry.object.position.toArray(), scale: entry.object.scale.toArray(), atTable: entry.atTable, footprint: entry.atTable ? { x: entry.object.position.x - entry.tableOffset.x, z: entry.object.position.z - entry.tableOffset.z, width: entry.tableSize.x, depth: entry.tableSize.z } : null })),
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,

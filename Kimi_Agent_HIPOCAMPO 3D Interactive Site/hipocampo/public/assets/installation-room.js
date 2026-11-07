@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=scroll-start-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=table-photo-1'
 import { yieldScenePreparation } from './scene-preparation.js?v=scroll-start-1'
 
 const React = requireReact() // Reuse the application's React singleton.
@@ -15,9 +15,13 @@ export default function Installation() {
   const [selected, setSelected] = React.useState(null)
   const [fridgeOpen, setFridgeOpen] = React.useState(true)
   const [navigating, setNavigating] = React.useState(false)
+  const [topView, setTopView] = React.useState(false)
+  const [capturing, setCapturing] = React.useState(false)
+  const [photo, setPhoto] = React.useState(null)
+  const [photoMessage, setPhotoMessage] = React.useState('')
   const [query, setQuery] = React.useState('')
   const [placed, setPlaced] = React.useState([])
-  const [message, setMessage] = React.useState('A mesa de luz começa vazia. Escolha objetos do acervo e aproxime-os para criar relações.')
+  const [message, setMessage] = React.useState('')
   const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const matching = FRAGMENTS.filter(fragment => normalize(`${fragment.number || ''} ${fragment.label} ${fragment.islandLabel} ${(fragment.members || []).join(' ')}`).includes(normalize(query)))
 
@@ -38,6 +42,7 @@ export default function Installation() {
             setMessage(fragment.memory + (atTable ? ' O fragmento agora faz parte da mesa de luz.' : ''))
           },
           onFridgeChange(open) { setFridgeOpen(open) },
+          onViewChange(active) { if (!disposed) setTopView(active) },
           onNavigationChange(active) { if (!disposed) setNavigating(active) },
           onReady() { if (!disposed) setReady(true) },
           onUnavailable() { if (!disposed) setUnavailable(true) },
@@ -68,6 +73,30 @@ export default function Installation() {
     }
   }, [])
 
+  React.useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.url) }, [photo])
+  const takePhoto = async () => {
+    if (!room.current || capturing) return
+    setCapturing(true)
+    setPhotoMessage('Preparando sua fotografia…')
+    try {
+      const blob = await room.current.photographTable()
+      if (!root.current) return
+      const name = `hipocampo-minha-mesa-${new Date().toISOString().replace(/[:.]/g, '-')}.png`
+      const url = URL.createObjectURL(blob)
+      setPhoto({ url, name })
+      const download = document.createElement('a')
+      download.href = url
+      download.download = name
+      document.body.append(download)
+      download.click()
+      download.remove()
+      setPhotoMessage('Foto pronta. O download foi solicitado.')
+    } catch (error) {
+      setPhotoMessage(error.message || 'Não foi possível fotografar agora. Tente novamente.')
+    } finally {
+      setCapturing(false)
+    }
+  }
   const move = (id) => {
     room.current?.moveToTable(id)
     // The accessible path also works when WebGL is unavailable.
@@ -83,7 +112,7 @@ export default function Installation() {
     setSelected(null)
     setFridgeOpen(true)
     setPlaced([])
-    setMessage('A mesa de luz está vazia. Todos os objetos voltaram aos seus lugares.')
+    setMessage('')
   }
 
   return h('section', { id: 'instalacao', ref: root, className: 'installation', 'aria-labelledby': 'installation-title' },
@@ -92,10 +121,8 @@ export default function Installation() {
         h('p', { className: 'installation-kicker' }, '03 — instalação virtual'),
         h('h2', { id: 'installation-title' }, 'uma sala, muitas vidas.'),
       ),
-      h('p', { className: 'installation-intro' }, 'Escolha os objetos, leve-os até a mesa de luz e invente outras relações.'),
     ),
     h('div', { className: 'installation-toolbar', role: 'group', 'aria-label': 'Controles da sala' },
-      h('p', null, 'arraste os objetos para a mesa de luz'),
       h('div', { className: 'installation-actions' },
         h('button', { type: 'button', onClick: () => room.current?.toggleFridge(), 'aria-pressed': fridgeOpen, disabled: !ready || unavailable, 'data-action': 'fridge' }, fridgeOpen ? 'fechar geladeira' : 'abrir geladeira'),
         h('button', { type: 'button', onClick: () => room.current?.resetView(), disabled: !ready || unavailable }, 'visão inicial'),
@@ -104,9 +131,11 @@ export default function Installation() {
     ),
     h('div', { className: `installation-stage${navigating ? ' is-exploring' : ''}`, 'aria-busy': !ready && !unavailable },
       h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. Duplo clique ou Enter ativa a navegação com roda e WASD; Escape libera a rolagem da página.', role: 'group' }),
-      h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Distância da câmera' },
+      h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Câmera e fotografia da mesa' },
         h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
         h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
+        h('button', { type: 'button', onClick: () => room.current?.setTopView(!topView), 'aria-pressed': topView, disabled: !ready || unavailable, 'data-action': 'top-view' }, topView ? 'voltar à sala' : 'visão de cima'),
+        h('button', { type: 'button', onClick: takePhoto, disabled: !ready || unavailable || capturing, 'data-action': 'take-photo' }, capturing ? 'fotografando…' : 'tirar foto'),
       ),
       h('div', { className: 'installation-hit-targets' },
         ...FRAGMENTS.map(fragment => h('button', {
@@ -125,12 +154,15 @@ export default function Installation() {
       ),
     ),
     h('div', { className: 'installation-caption' },
-      h('p', null, 'gire 360° pelo fundo · botão direito ou Shift + arrastar desloca a câmera · toque nos objetos para descobrir memórias'),
       h('p', null, 'fotografias, matéria e tempo'),
+    ),
+    h('div', { className: 'installation-photo-result', role: 'status', 'aria-live': 'polite', 'aria-atomic': true },
+      photoMessage && h('p', null, photoMessage),
+      photo && h('a', { href: photo.url, download: photo.name }, 'baixar foto da mesa'),
     ),
     h('div', { className: 'installation-memory' },
       h('p', { className: 'installation-memory-label' }, placed.length ? `${placed.length} ${placed.length === 1 ? 'objeto na mesa de luz' : 'objetos na mesa de luz'}` : 'mesa de luz vazia'),
-      h('p', { role: 'status', 'aria-live': 'polite', 'aria-atomic': true, className: 'installation-memory-text' }, message),
+      message && h('p', { role: 'status', 'aria-live': 'polite', 'aria-atomic': true, className: 'installation-memory-text' }, message),
       selected && h('div', { className: 'installation-memory-actions' },
         h('button', { type: 'button', onClick: () => move(selected) }, 'levar à mesa de luz'),
         h('button', { type: 'button', onClick: () => room.current?.returnToIsland(selected) }, 'devolver à ilha'),

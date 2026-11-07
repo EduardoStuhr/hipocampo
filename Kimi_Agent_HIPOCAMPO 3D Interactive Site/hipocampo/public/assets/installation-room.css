@@ -65,3 +65,12 @@
   .installation-accessible li span { max-width: 6rem; text-align: right; }
 }
 @media (prefers-reduced-motion: reduce) { .installation *, .installation *::before, .installation *::after { transition: none !important; } }
+
+/* Camera controls remain reachable above the scene on narrow screens. */
+.installation-zoom { flex-wrap: wrap; gap: .1rem 1.25rem; max-width: calc(100% - 1.5rem); box-sizing: border-box; }
+.installation-zoom button[aria-pressed="true"] { color: #f0c765; }
+.installation-photo-result { max-width: 720px; margin: 1rem auto; text-align: center; font-size: .8rem; line-height: 1.6; }
+.installation-photo-result:empty { display: none; }
+.installation-photo-result p { color: #c7bca6; margin: 0 0 .35rem; }
+.installation-photo-result a { display: inline-flex; align-items: center; min-height: 44px; color: #f0c765; text-decoration: underline; text-underline-offset: .3em; }
+.installation-photo-result a:focus-visible { outline: 2px solid #f0c765; outline-offset: 4px; }
