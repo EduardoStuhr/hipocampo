@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js'
 import { buildHouseDoorway } from './house-doorway.js?v=door-fit-1'
+import { batchStaticMeshes } from './static-mesh-batch.js?v=fps-1'
 
 // The archive is built in metres, at the same scale as the photographed door.
 // The camera traverses its threshold and exit; no screen-space opening is used.
@@ -253,6 +254,28 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const outsideLight = new THREE.PointLight('#ffffff', 8, 5, 2)
   outsideLight.position.set(0, 2, -depth - 1.7)
   root.add(outsideLight)
+  // Batch only local geometry that never changes. Responsive architecture and
+  // the stencil aperture retain their own meshes; hinges and swing pivots keep
+  // moving their children together exactly as before.
+  const responsiveMeshes = new Set([ground, ceiling, frontWall, portal, ...beams, ...backPanels])
+  const batching = batchStaticMeshes(root, { exclude: responsiveMeshes })
+  batching.geometries.forEach(geometry => shapes.add(geometry))
+  const retainedShapes = new Set()
+  root.traverse(object => { if (object.geometry) retainedShapes.add(object.geometry) })
+  batching.removed.forEach(object => {
+    if (!retainedShapes.has(object.geometry)) {
+      shapes.delete(object.geometry)
+      object.geometry.dispose()
+    }
+  })
+  batching.removed.length = batching.geometries.length = 0
+  root.traverse(object => {
+    if (!object.isMesh || responsiveMeshes.has(object)) return
+    // Local transforms are final, but world transforms must still follow the
+    // responsive wall groups, door hinges and mouse-driven swing pivots.
+    if (object.matrixAutoUpdate) object.updateMatrix()
+    object.matrixAutoUpdate = false
+  })
   let lastDoorAngle = -1, currentWidth = width
   return {
     root, floorY, eyeY: floorY + 1.55, depth,
@@ -276,7 +299,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
       })
     },
-    inspect: () => ({ portalActive, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
+    inspect: () => ({ portalActive, batchedMeshes: batching.savedMeshes, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
     update(open, time, motion, pointer, dt, camera) {
       // Switch only after the aperture fills the view, before its near plane
       // can be clipped. The same rule applies when scrolling backwards.

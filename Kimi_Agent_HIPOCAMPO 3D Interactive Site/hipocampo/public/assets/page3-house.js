@@ -1,7 +1,8 @@
 // A continuous camera passes through a physical doorway, crosses the archive
 // and leaves through its far opening. The original memory map stays aligned.
 import * as THREE from './vendor/three.module.min.js'
-import { createHouseInterior } from './house-interior.js?v=front-wall-1'
+import { createRenderBudget } from './render-budget.js?v=fps-1'
+import { createHouseInterior } from './house-interior.js?v=fps-1'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { createHouseLook } from './house-look.js?v=house-look-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
@@ -23,6 +24,7 @@ const UNIT = 16 // the photographed doorway is approximately 1 × 2.3 metres
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t) }
 const lerp = (a, b, t) => a + (b - a) * t
+const setOpacity = (element, value) => { const opacity = String(value); if (element.style.opacity !== opacity) element.style.opacity = opacity }
 
 function buildSection() {
   const section = document.createElement('section')
@@ -71,7 +73,7 @@ async function mount(section, controller, onFailure) {
   const stage = section.querySelector('.page3-stage')
   const capA = section.querySelector('.page3-caption--a')
   const capB = section.querySelector('.page3-caption--b')
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, premultipliedAlpha: false })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, premultipliedAlpha: false, powerPreference: 'high-performance' })
   // Install recovery before textures, shaders or GPU warm-up can fail.
   const contextLost = event => {
     event.preventDefault()
@@ -83,7 +85,7 @@ async function mount(section, controller, onFailure) {
     renderer.dispose()
     renderer.forceContextLoss()
   })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
+  const renderBudget = createRenderBudget(renderer)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = .95
@@ -168,7 +170,9 @@ async function mount(section, controller, onFailure) {
   const lineGeo = new THREE.BufferGeometry()
   lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3))
   const lineMat = new THREE.LineBasicMaterial({ color: manifest.lineColor, transparent: true, toneMapped: false })
-  scene.add(new THREE.LineSegments(lineGeo, lineMat))
+  const lines = new THREE.LineSegments(lineGeo, lineMat)
+  lines.frustumCulled = false
+  scene.add(lines)
 
   const doorway = fitHouseDoorway(housePiece.d, UNIT, toWorld)
   const door = doorway.center
@@ -227,8 +231,7 @@ async function mount(section, controller, onFailure) {
     measureStart()
     viewportW = Math.max(1, stage.clientWidth)
     viewportH = Math.max(1, stage.clientHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
-    renderer.setSize(viewportW, viewportH, false)
+    renderBudget.resize(viewportW, viewportH)
     camera.aspect = viewportW / viewportH
     camera.updateProjectionMatrix()
     archive.resize(camera.aspect)
@@ -294,11 +297,13 @@ async function mount(section, controller, onFailure) {
   }
 
   disposers.push(() => setPointerListening(false))
+  let piecesWereVisible = true
   const tmp = new THREE.Vector3()
   canvas.style.opacity = '0'
   const frame = (now) => {
     if (disposed) return
     raf = visible && !reduced ? requestAnimationFrame(frame) : 0
+    if (!reduced && renderBudget.sample(now)) staticDirty = true
     const dt = Math.min((now - (lastFrame || now)) / 1000, 0.05)
     lastFrame = now
     if (reduced && !staticDirty) return
@@ -327,7 +332,8 @@ async function mount(section, controller, onFailure) {
     }
 
     // peças: movimento de respiração original (mantido) + dispersão 3D
-    others.forEach((pc) => {
+    const piecesVisible = vanish < .999
+    if (piecesVisible) others.forEach((pc) => {
       const idleX = Math.sin(t * 0.00042 + pc.phase) * 0.028 * motion
       const idleY = Math.cos(t * 0.00036 + pc.phase * 1.17) * 0.024 * motion
       const idleR = Math.sin(t * 0.00025 + pc.phase) * 0.38 * motion
@@ -340,19 +346,27 @@ async function mount(section, controller, onFailure) {
       pc.group.rotation.z = THREE.MathUtils.degToRad(idleR) + explode * (pc.seed - 0.5) * 0.6
       pc.group.rotation.y = explode * (pc.seed - 0.5) * 0.9
       pc.mat.opacity = 1 - vanish
-      pc.group.visible = vanish < .999
+      pc.group.visible = true
     })
+    else if (piecesWereVisible) others.forEach(pc => { pc.group.visible = false })
+    piecesWereVisible = piecesVisible
     // casa: leve respiração própria
     housePiece.group.position.set(housePos.x, housePos.y + Math.sin(t * 0.0003) * .01 * motion * (1 - smooth(.12, .26, p)), 0)
 
     // fios: da casa até a âncora de cada peça (acompanham o movimento)
+    lineMat.opacity = 1 - smooth(.14, .32, p)
+    lines.visible = lineMat.opacity > .001
+    if (lines.visible) {
     others.forEach((pc, i) => {
       pc.group.updateMatrix(); tmp.copy(pc.anchorLocal).applyMatrix4(pc.group.matrix)
-      linePositions.set([pc.house.x, pc.house.y, 0, tmp.x, tmp.y, tmp.z], i * 6)
+      const offset = i * 6
+      linePositions[offset] = pc.house.x; linePositions[offset + 1] = pc.house.y; linePositions[offset + 2] = 0
+      linePositions[offset + 3] = tmp.x; linePositions[offset + 4] = tmp.y; linePositions[offset + 5] = tmp.z
     })
     lineGeo.attributes.position.needsUpdate = true
-    lineMat.opacity = 1 - smooth(.14, .32, p)
+    }
     glowMat.opacity = 1 - focus
+    glow.visible = glowMat.opacity > .001
 
     scene.fog.near = lerp(500, 5, focus); scene.fog.far = lerp(1200, 24, focus)
 
@@ -383,24 +397,24 @@ async function mount(section, controller, onFailure) {
     lookAt.set(p < .34 ? camPos.x : door.x + glance + pointer.sx * .025 * interiorMotion, camPos.y - smooth(.38, .6, p) * .065, camPos.z - 3.4)
     camera.lookAt(lookAt)
     look.update({ progress: p, visible, reduced, dt })
-    camera.updateMatrixWorld()
     if (archive.update(open, t, interiorMotion, pointer, dt, camera)) renderer.shadowMap.needsUpdate = true
     pointer.dx = pointer.dy = 0
 
     renderer.setClearColor(0xffffff, reduced ? 1 : smooth(0.0, 0.05, p))
 
-    capA.style.opacity = String(reduced ? 0 : smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
-    capB.style.opacity = String(reduced ? 0 : smooth(.22, .29, p) * (1 - smooth(.30, .36, p)))
+    setOpacity(capA, reduced ? 0 : smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
+    setOpacity(capB, reduced ? 0 : smooth(.22, .29, p) * (1 - smooth(.30, .36, p)))
     renderer.toneMappingExposure = lerp(.95, 1.35, leave)
     if (!reduced && p >= .995) {
       renderer.setClearColor(exitPaper, 1)
       renderer.clear()
     } else renderer.render(scene, camera)
     if (reduced || target > 0.0005) {
-      canvas.style.opacity = String(reduced ? 1 : 1 - smooth(.97, 1, p))
+      setOpacity(canvas, reduced ? 1 : 1 - smooth(.97, 1, p))
       if (!reduced) setMapCovered(true)
     }
-    stage.style.backgroundColor = leave > 0 ? exitPaper.getStyle() : 'transparent'
+    const background = leave > 0 ? exitPaper.getStyle() : 'transparent'
+    if (stage.style.backgroundColor !== background) stage.style.backgroundColor = background
   }
 
   // Race all preparation against cancellation, including a hung image or shader.
@@ -423,6 +437,7 @@ async function mount(section, controller, onFailure) {
     if (visible && !wasVisible) {
       progress = target = scroll.progress
       lastFrame = 0
+      renderBudget.reset()
       staticDirty = true
     }
     if (visible && !raf) raf = requestAnimationFrame(frame)
@@ -458,7 +473,7 @@ async function mount(section, controller, onFailure) {
   ready = true
   section.dataset.houseState = 'ready'
   section.houseJourney = {
-    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, renderBudget: renderBudget.inspect(), exteriorActive: piecesWereVisible, linesActive: lines.visible, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
   } catch (error) {
     dispose()

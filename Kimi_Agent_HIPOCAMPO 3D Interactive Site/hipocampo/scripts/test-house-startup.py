@@ -15,7 +15,7 @@ async def run(browser,name,mode='',mobile=False,reduced=False,cpu=1):
  p=await c.new_page();errors=[];p.on('pageerror',lambda e: errors.append(str(e)))
  await p.add_init_script("window.__renderers=[]")
  async def instrument(route):
-  res=await route.fetch();body=(await res.text()).replace('  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))','  window.__renderers.push(renderer);\n  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))',1)
+  res=await route.fetch();body=(await res.text()).replace('  const renderBudget = createRenderBudget(renderer)', '  window.__renderers.push(renderer);\n  const renderBudget = createRenderBudget(renderer)', 1)
   if mode=='abort-error': body=body.replace('    await prepareSceneMaterials(', "    if (!window.__abortOnce) { window.__abortOnce = true; throw new DOMException('Injected preparation abort', 'AbortError') }\n    await prepareSceneMaterials(",1)
   await route.fulfill(response=res,body=body)
  await p.route('**/assets/page3-house.js?*',instrument)

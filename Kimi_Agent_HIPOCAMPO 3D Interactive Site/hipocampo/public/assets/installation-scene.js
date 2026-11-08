@@ -1,6 +1,8 @@
 import * as THREE from './vendor/three.module.min.js'
 import { FRAGMENTS } from './installation-collection.js?v=client-1'
 import { createCollectionBuilder } from './installation-props.js?v=client-1'
+import { createRenderBudget } from './render-budget.js?v=fps-1'
+import { batchStaticMeshes } from './static-mesh-batch.js?v=fps-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
 export { FRAGMENTS } from './installation-collection.js?v=client-1'
 
@@ -20,7 +22,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#000000')
   scene.fog = new THREE.Fog('#000000', 25, 55)
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' })
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -28,6 +30,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false
+  const renderBudget = createRenderBudget(renderer)
 
   const camera = new THREE.PerspectiveCamera(35, 1, .1, 90)
   const raycaster = new THREE.Raycaster()
@@ -48,6 +51,15 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const textures = new Set()
   const materials = new Set()
   const geometries = new Set()
+  const shadowLights = []
+  const shadowObjects = new Map()
+  const dirtyShadowObjects = new Set()
+  const overlayState = new WeakMap()
+  const overlayCameraMatrix = new THREE.Matrix4()
+  const overlayProjectionMatrix = new THREE.Matrix4()
+  let overlayCameraReady = false
+  const performanceStats = { overlayPasses: 0, overlayProjections: 0, overlayWrites: 0, shadowBatches: 0, shadowMapsRequested: 0, lastShadowMaps: 0, staticMeshes: 0, batchedMeshes: 0 }
+  let allShadowsDirty = true
   const textureReady = []
   const motions = new Map()
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -175,6 +187,11 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     light.position.set(...position)
     light.target.position.set(...targetPosition)
     light.castShadow = shadows
+    if (shadows) {
+      light.shadow.autoUpdate = false
+      light.shadow.needsUpdate = true
+      shadowLights.push(light)
+    }
     light.shadow.mapSize.set(1024, 1024)
     light.shadow.bias = -.00015
     light.shadow.normalBias = .018
@@ -445,6 +462,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     tableBounds.min.multiplyScalar(tableScale); tableBounds.max.multiplyScalar(tableScale)
     const tableCenter = tableBounds.getCenter(new THREE.Vector3())
     objects.set(definition.id, { object, button, definition, center, tableRotation, tableScale, tableSize: tableBounds.getSize(new THREE.Vector3()), tableOffset: new THREE.Vector3(-tableCenter.x, -tableBounds.min.y + .006, -tableCenter.z), atTable: false, tableSlot: null, tablePosition: null })
+    trackShadowObject(object, bounds)
     object.traverse(child => {
       if (!child.isMesh) return
       child.userData.sourceShadow = onRack
@@ -453,16 +471,78 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     })
     if (objects.size % 4 === 0) await buildYield()
   }
+  // Merge only immutable siblings with identical material/shadow flags. The
+  // movable Groups and their fragment IDs remain the raycast/pose boundaries.
+  const batching = batchStaticMeshes(scene)
+  performanceStats.batchedMeshes = batching.savedMeshes
+  const usedGeometries = new Set()
+  scene.traverse(object => { if (object.geometry) usedGeometries.add(object.geometry) })
+  for (const shape of geometries) {
+    if (usedGeometries.has(shape)) continue
+    shape.dispose()
+    geometries.delete(shape)
+  }
+  for (const shape of batching.geometries) geometries.add(shape)
+  // Release references to removed meshes/buffers after rebuilding the picker.
+  pickables.length = 0
+  for (const entry of objects.values()) entry.object.traverse(object => { if (object.isMesh) pickables.push(object) })
+  batching.removed.length = batching.geometries.length = 0
   const fridgeButton = root.querySelector('.installation-fridge-hit')
+  trackShadowObject(door, localBounds(door))
+  // Only the object/door Groups move. Their child meshes retain their built
+  // local transforms, avoiding hundreds of redundant matrix compositions.
+  scene.traverse(object => {
+    if (!object.isMesh) return
+    object.updateMatrix()
+    object.matrixAutoUpdate = false
+    performanceStats.staticMeshes++
+  })
 
-  function invalidate(withShadows = true) {
+  function trackShadowObject(object, bounds) {
+    object.updateWorldMatrix(true, false)
+    const local = bounds.getBoundingSphere(new THREE.Sphere())
+    shadowObjects.set(object, { local, current: new THREE.Sphere(), previous: local.clone().applyMatrix4(object.matrixWorld) })
+  }
+  function markShadowsDirty(object = null) {
+    shadowsDirty = true
+    if (object && shadowObjects.has(object)) dirtyShadowObjects.add(object)
+    else allShadowsDirty = true
+  }
+  function prepareShadowUpdates(forceAll = false) {
+    if (!shadowsDirty && !forceAll) return
+    const all = forceAll || allShadowsDirty
+    if (all) shadowLights.forEach(light => { light.shadow.needsUpdate = true })
+    const changed = all ? shadowObjects.keys() : dirtyShadowObjects
+    for (const object of changed) {
+      const tracker = shadowObjects.get(object)
+      object.updateWorldMatrix(true, false)
+      const current = tracker.current.copy(tracker.local).applyMatrix4(object.matrixWorld)
+      if (!all) {
+        for (const light of shadowLights) {
+          // A bounding sphere deliberately overestimates the caster: both its
+          // previous and current footprint must be covered to erase old shadows.
+          const frustum = light.shadow.getFrustum()
+          if (!light.shadow.map || frustum.intersectsSphere(tracker.previous) || frustum.intersectsSphere(current)) light.shadow.needsUpdate = true
+        }
+      }
+      tracker.previous.copy(current)
+    }
+    const requested = shadowLights.filter(light => light.visible && light.shadow.needsUpdate).length
+    renderer.shadowMap.needsUpdate = requested > 0
+    performanceStats.shadowBatches++
+    performanceStats.shadowMapsRequested += requested
+    performanceStats.lastShadowMaps = requested
+    dirtyShadowObjects.clear()
+    allShadowsDirty = shadowsDirty = false
+  }
+  function invalidate(withShadows = true, object = null) {
     if (disposed) return
     dirty = true
-    shadowsDirty ||= withShadows
+    if (withShadows) markShadowsDirty(object)
     requestFrame()
   }
   function requestFrame() {
-    if (prepared && visible && !document.hidden && !contextLost && !raf) raf = requestAnimationFrame(frame)
+    if (prepared && visible && !document.hidden && !contextLost && !raf) { renderBudget.reset(); raf = requestAnimationFrame(frame) }
   }
   function updateCamera() {
     const v = renderedView
@@ -485,27 +565,60 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     projected.copy(position).project(camera)
     return { x: (projected.x * .5 + .5) * width, y: (-projected.y * .5 + .5) * height, inside: projected.z < 1 && projected.z > -1 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1 }
   }
+  function setOverlayVisibility(element, inside) {
+    const state = overlayState.get(element) || {}
+    if (state.inside !== inside) {
+      element.style.opacity = inside ? '1' : '0'
+      element.style.visibility = inside ? 'visible' : 'hidden'
+      performanceStats.overlayWrites += 2
+      state.inside = inside
+    }
+    const tabIndex = inside ? 0 : -1
+    if (state.tabIndex !== tabIndex) {
+      element.tabIndex = tabIndex
+      performanceStats.overlayWrites++
+      state.tabIndex = tabIndex
+    }
+    overlayState.set(element, state)
+    return state
+  }
   function place(element, point) {
     const p = toScreen(point)
-    element.style.left = `${p.x}px`
-    element.style.top = `${p.y}px`
-    element.style.opacity = p.inside ? '1' : '0'
-    element.style.visibility = p.inside ? 'visible' : 'hidden'
+    performanceStats.overlayProjections++
+    const state = setOverlayVisibility(element, p.inside)
+    if (p.inside) {
+      if (state.x !== p.x) { element.style.left = `${p.x}px`; state.x = p.x; performanceStats.overlayWrites++ }
+      if (state.y !== p.y) { element.style.top = `${p.y}px`; state.y = p.y; performanceStats.overlayWrites++ }
+    }
     return p.inside
   }
+  function projectOverlay(element, localPoint, matrix, cameraChanged) {
+    const previous = overlayState.get(element)
+    if (!cameraChanged && !previous?.occluded && previous?.matrix?.equals(matrix)) return
+    place(element, worldPosition.copy(localPoint).applyMatrix4(matrix))
+    const state = overlayState.get(element)
+    state.occluded = false
+    state.matrix ||= new THREE.Matrix4()
+    state.matrix.copy(matrix)
+  }
+  const fridgeOverlayPoint = new THREE.Vector3(-.71, .05, .1)
   function updateOverlays() {
-    scene.updateMatrixWorld(true)
+    // The renderer just updated world matrices; localToWorld would repeatedly
+    // recompute every object's ancestor chain, after another full scene walk.
+    performanceStats.overlayPasses++
+    const cameraChanged = !overlayCameraReady || !overlayCameraMatrix.equals(camera.matrixWorld) || !overlayProjectionMatrix.equals(camera.projectionMatrix)
     for (const entry of objects.values()) {
-      entry.object.localToWorld(worldPosition.copy(entry.center))
       const inFridge = entry.definition.island === 'fridge' && !entry.atTable
       if (inFridge && doorAngle < .55) {
-        entry.button.style.visibility = 'hidden'
-        entry.button.tabIndex = -1
+        setOverlayVisibility(entry.button, false).occluded = true
         continue
       }
-      entry.button.tabIndex = place(entry.button, worldPosition) ? 0 : -1
+      projectOverlay(entry.button, entry.center, entry.object.matrixWorld, cameraChanged)
     }
-    place(fridgeButton, door.localToWorld(worldPosition.set(-.71, .05, .1)))
+    projectOverlay(fridgeButton, fridgeOverlayPoint, door.matrixWorld, cameraChanged)
+    overlayCameraMatrix.copy(camera.matrixWorld)
+    overlayProjectionMatrix.copy(camera.projectionMatrix)
+    overlayCameraReady = true
   }
   function cacheRect() {
     const rect = canvas.getBoundingClientRect()
@@ -529,6 +642,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     const firstSize = width === 1
     width = nextWidth
     height = nextHeight
+    overlayCameraReady = false
     mobile = width < 650
     const relayout = firstSize || mobile !== previousMobile
     if (relayout) {
@@ -541,10 +655,10 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     camera.aspect = width / Math.max(1, height)
     camera.fov = mobile ? 40 : 35
     camera.updateProjectionMatrix()
-    renderer.setSize(width, height, false)
+    renderBudget.resize(width, height)
     cacheRect()
     positionControls()
-    if (relayout) shadowsDirty = true
+    if (relayout) markShadowsDirty()
     if (topView) frameTableFromAbove()
     else if (relayout) resetView()
     else invalidate(false)
@@ -588,6 +702,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   function frame(time) {
     raf = 0
     if (disposed || !visible || document.hidden || contextLost) return
+    if (renderBudget.sample(time)) dirty = true
     const dt = Math.min(.05, (time - (lastFrame || time - 16)) / 1000)
     lastFrame = time
     let moving = false
@@ -616,7 +731,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       redLight.intensity = 5.5 * lightFactor
       redSpill.intensity = 6 * lightFactor
       redBulb.material.emissiveIntensity = 4 * lightFactor
-      dirty = shadowsDirty = true
+      dirty = true
+      markShadowsDirty(door)
       moving = true
     }
     for (const [id, motion] of motions) {
@@ -626,13 +742,13 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       motion.object.position.lerpVectors(motion.start, motion.end, t)
       motion.object.position.y += Math.sin(Math.PI * progress) * .5
       if (progress === 1) motions.delete(id)
-      dirty = shadowsDirty = true
+      dirty = true
+      markShadowsDirty(motion.object)
       moving = true
     }
     if (dirty || moving) {
       updateCamera()
-      scene.updateMatrixWorld(true)
-      if (shadowsDirty) renderer.shadowMap.needsUpdate = true
+      prepareShadowUpdates()
       renderer.render(scene, camera)
       updateOverlays()
       dirty = shadowsDirty = false
@@ -651,7 +767,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       const start = entry.object.position.clone()
       motions.set(entry.definition.id, { object: entry.object, start, end: target.clone(), elapsed: 0 })
     }
-    invalidate()
+    invalidate(true, entry.object)
   }
   const tableSlots = [[0, 0], [-.88, 0], [.88, 0], [0, -.6], [0, .6], [-.88, -.6], [.88, -.6], [-.88, .6], [.88, .6], [-1.65, 0], [1.65, 0], [-1.65, -.6], [1.65, -.6], [-1.65, .6], [1.65, .6]]
   function tablePosition(entry) {
@@ -733,7 +849,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     select(entry)
     event.currentTarget.setPointerCapture(event.pointerId)
     canvas.classList.add('is-dragging')
-    invalidate()
+    invalidate(true, entry.object)
   }
   function panCamera(dx, dy, start) {
     const units = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * start.distance / height
@@ -773,7 +889,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         drag.entry.object.position.copy(intersection).add(drag.offset)
         drag.entry.object.position.x = clamp(drag.entry.object.position.x, mobile ? -4.5 : -7, mobile ? 4.5 : 7)
         drag.entry.object.position.z = clamp(drag.entry.object.position.z, -5, 6.3)
-        invalidate()
+        invalidate(true, drag.entry.object)
       }
       return
     }
@@ -832,7 +948,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         // A simple click reads the memory, leaving the object where it was.
         const parent = entry.atTable ? groups.future : entry.object.userData.homeParent
         parent.attach(entry.object)
-        invalidate()
+        invalidate(false)
       }
     }
     if (touchPoints.has(event.pointerId)) {
@@ -898,7 +1014,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
           entry.tablePosition = object.position.clone()
         }
         select(entry)
-        invalidate()
+        invalidate(true, entry.object)
       }
     })
   }
@@ -1011,7 +1127,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       redBulb.material.emissiveIntensity = fridgeOpen ? 4 : 0
     }
     callbacks.onFridgeChange(fridgeOpen)
-    invalidate()
+    invalidate(true, door)
   }
   async function photographTable() {
     if (!prepared || disposed || contextLost) throw new Error('Aguarde a sala ficar pronta para fotografar.')
@@ -1042,16 +1158,17 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       for (const group of Object.values(groups)) if (group !== groups.future) group.visible = false
       renderer.setPixelRatio(1)
       renderer.setSize(1600, 1000, false)
-      renderer.shadowMap.needsUpdate = true
+      prepareShadowUpdates(true)
       renderer.render(scene, shotCamera)
       context.drawImage(canvas, 0, 0)
     } finally {
       for (const [group, wasVisible] of visibility) group.visible = wasVisible
       renderer.setPixelRatio(ratio)
       renderer.setSize(width, height, false)
-      renderer.shadowMap.needsUpdate = true
+      prepareShadowUpdates(true)
       renderer.render(scene, camera)
-      invalidate()
+      overlayCameraReady = false
+      invalidate(false)
     }
     return new Promise((resolve, reject) => photograph.toBlob(blob => {
       if (blob) resolve(blob)
@@ -1076,6 +1193,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     redSpill.intensity = 6
     redBulb.material.emissiveIntensity = 4
     callbacks.onFridgeChange(true)
+    markShadowsDirty()
     resetView()
   }
   resize()
@@ -1093,7 +1211,9 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     await warmScene(renderer, scene, camera, signal)
     resize()
     dirty = true
-    shadowsDirty = false
+    for (const [object, tracker] of shadowObjects) tracker.previous.copy(tracker.local).applyMatrix4(object.matrixWorld)
+    allShadowsDirty = shadowsDirty = false
+    dirtyShadowObjects.clear()
     await buildYield()
     prepared = true
     preparationMs = Math.round(performance.now() - buildStarted)
@@ -1113,6 +1233,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         viewMode: topView ? 'table-top' : 'room', cameraPosition: camera.position.toArray(), cameraDirection: camera.getWorldDirection(new THREE.Vector3()).toArray(), camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
         lightTable: toScreen(groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))),
         objects: [...objects.values()].map(entry => ({ id: entry.definition.id, number: entry.definition.number || null, island: entry.definition.island, kind: entry.definition.kind, parent: entry.object.parent.name, position: entry.object.position.toArray(), scale: entry.object.scale.toArray(), atTable: entry.atTable, footprint: entry.atTable ? { x: entry.object.position.x - entry.tableOffset.x, z: entry.object.position.z - entry.tableOffset.z, width: entry.tableSize.x, depth: entry.tableSize.z } : null })),
+        performance: { ...performanceStats }, renderBudget: renderBudget.inspect(),
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       }
     },
