@@ -37,6 +37,7 @@ function createPage2Markup() {
     </h2>
     <div class="hipocampo-page2-copy">
       ${[copyLines.slice(0, 3), copyLines.slice(3, 6), copyLines.slice(6, 13), copyLines.slice(13)].map(lines => `<p class="page2-copy-paragraph">${lines.map(line => `<span class="page2-copy-line">${line}</span>`).join(' ')}</p>`).join('')}
+      <div data-house-preparation-slot></div>
     </div>
     <div class="page2-map-stage"><div class="hipocampo-memory-map" data-memory-map role="img" aria-label="Mapa de memória formado por fragmentos conectados a uma casa central"></div></div>
   `

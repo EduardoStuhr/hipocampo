@@ -50,13 +50,24 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
   signal?.throwIfAborted()
   // Upload images and submit shader work in short slices. Bounded batches
   // overlap asynchronous compilation without submitting the whole scene at once.
-  const uploads = new Set(textures)
+  const uploads = new Set(textures), objects = [], materials = new Set()
   scene.traverse(object => {
-    const surfaces = Array.isArray(object.material) ? object.material : [object.material]
-    surfaces.filter(Boolean).forEach(material => {
+    const surfaces = (Array.isArray(object.material) ? object.material : [object.material]).filter(Boolean)
+    surfaces.forEach(material => {
       Object.values(material).forEach(value => { if (value?.isTexture) uploads.add(value) })
     })
+    if (surfaces.some(material => !materials.has(material))) {
+      objects.push(object)
+      surfaces.forEach(material => materials.add(material))
+    }
   })
+  const taskCount = uploads.size + objects.length
+  let completedTasks = 0
+  const reportCompleted = () => {
+    completedTasks++
+    if (!signal?.aborted) options?.onProgress?.('materials', completedTasks, taskCount)
+  }
+  options?.onProgress?.('materials', 0, taskCount)
   let sliceStarted = -Infinity
   const yieldBudget = async () => {
     if (performance.now() - sliceStarted < 4) return
@@ -86,22 +97,14 @@ export async function prepareSceneMaterials(renderer, scene, camera, textures, s
     await yieldBudget()
     signal?.throwIfAborted()
     renderer.initTexture(texture)
+    reportCompleted()
   }
-  const objects = [], materials = new Set()
-  scene.traverse(object => {
-    if (!object.material) return
-    const surfaces = Array.isArray(object.material) ? object.material : [object.material]
-    if (surfaces.some(material => !materials.has(material))) {
-      objects.push(object)
-      surfaces.forEach(material => materials.add(material))
-    }
-  })
   const pending = []
   const batchSize = Math.max(1, options?.compileBatchSize || 1)
   for (const object of objects) {
     await yieldBudget()
     signal?.throwIfAborted()
-    const compilation = renderer.compileAsync(object, camera, scene)
+    const compilation = renderer.compileAsync(object, camera, scene).then(reportCompleted)
     // Attach a handler immediately, including while the next submission yields.
     compilation.catch(() => {})
     pending.push(compilation)
@@ -156,6 +159,15 @@ export async function warmScene(renderer, scene, camera, signal, options) {
     }
   })
   const simple = new THREE.MeshBasicMaterial({ color: '#ffffff' })
+  // Depth pass + one submission per pipeline; batched mode has one final GPU
+  // drain task. Completion of that drain is reported only after its fence.
+  const taskCount = samples.length + (options?.batchWarmup ? 2 : 1)
+  let completedTasks = 0
+  const reportCompleted = () => {
+    completedTasks++
+    if (!signal?.aborted) options?.onProgress?.('warmup', completedTasks, taskCount)
+  }
+  options?.onProgress?.('warmup', 0, taskCount)
   try {
     await yieldScenePreparation(signal, options)
     renderer.setSize(64, 64, false)
@@ -165,6 +177,7 @@ export async function warmScene(renderer, scene, camera, signal, options) {
     renderer.shadowMap.needsUpdate = true
     renderer.render(scene, camera)
     await waitForSceneGPU(renderer, signal)
+    reportCompleted()
     scene.overrideMaterial = override
     renderer.shadowMap.needsUpdate = false
     entries.forEach(({ object }) => { object.visible = false })
@@ -180,8 +193,12 @@ export async function warmScene(renderer, scene, camera, signal, options) {
       renderer.render(scene, camera)
       if (!options?.batchWarmup) await waitForSceneGPU(renderer, signal)
       object.visible = false
+      reportCompleted()
     }
-    if (options?.batchWarmup) await waitForSceneGPU(renderer, signal)
+    if (options?.batchWarmup) {
+      await waitForSceneGPU(renderer, signal)
+      reportCompleted()
+    }
   } finally {
     entries.forEach(entry => {
       entry.object.visible = entry.visible

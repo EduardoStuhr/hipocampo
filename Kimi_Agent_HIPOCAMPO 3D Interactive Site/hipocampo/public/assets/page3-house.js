@@ -1,12 +1,13 @@
 // A continuous camera passes through a physical doorway, crosses the archive
 // and leaves through its far opening. The original memory map stays aligned.
 import * as THREE from './vendor/three.module.min.js'
+import { createHousePreparation } from './house-preparation.js?v=house-gpu-2'
 import { createRenderBudget } from './render-budget.js?v=fps-1'
-import { createHouseInterior } from './house-interior.js?v=fps-1'
+import { createHouseInterior } from './house-interior.js?v=house-gpu-2'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
-import { createHouseLook } from './house-look.js?v=house-look-1'
+import { createHouseLook } from './house-look.js?v=house-gpu-2'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
-import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=silent-house-1'
+import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=house-gpu-2'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -51,7 +52,7 @@ function untilAborted(promise, signal) {
   })
 }
 
-async function mount(section, controller, onFailure) {
+async function mount(section, controller, onFailure, onProgress) {
   const disposers = []
   let disposed = false, ready = false
   const dispose = () => {
@@ -117,12 +118,15 @@ async function mount(section, controller, onFailure) {
   const cx = manifest.width / 2, cy = manifest.height / 2
   const toWorld = (px, py) => new THREE.Vector3((px - cx) / UNIT, -(py - cy) / UNIT, 0)
   const textureReady = []
+  let loadedTextures = 0
   const loader = new THREE.TextureLoader()
   const loadTexture = (url) => {
     let texture
     textureReady.push(new Promise((resolve, reject) => {
       texture = loader.load(url, () => {
         if (disposed) texture.dispose()
+        loadedTextures++
+        if (!controller.signal.aborted) onProgress('textures', loadedTextures, textureReady.length)
         resolve(texture)
       }, undefined, () => reject(new Error(`Não foi possível carregar a imagem ${url}`)))
     }))
@@ -235,6 +239,9 @@ async function mount(section, controller, onFailure) {
     camera.aspect = viewportW / viewportH
     camera.updateProjectionMatrix()
     archive.resize(camera.aspect)
+    if (prepared && archive.staticLightingDirty()) {
+      archive.prepareStaticLighting(controller.signal).then(wake).catch(error => { if (!controller.signal.aborted) controller.abort(error) })
+    }
     renderer.shadowMap.needsUpdate = true
     updatePaperColor()
     staticDirty = true
@@ -243,10 +250,17 @@ async function mount(section, controller, onFailure) {
 
   let target = 0, progress = 0, visible = false, raf = 0, lastFrame = 0
   let page3Intersecting = false, staticDirty = true, prepared = false
-  const look = createHouseLook({ THREE, section, stage, canvas, camera, invalidate: () => {
+  let lastInteraction = performance.now()
+  const wake = () => {
     staticDirty = true
-    if (visible && !raf) raf = requestAnimationFrame(frame)
-  } })
+    lastInteraction = performance.now()
+    if (visible && !raf) {
+      lastFrame = 0
+      renderBudget.reset()
+      raf = requestAnimationFrame(frame)
+    }
+  }
+  const look = createHouseLook({ THREE, section, stage, canvas, camera, invalidate: wake })
   disposers.push(() => { look.dispose(); section.classList.remove('has-house-look', 'is-house-looking', 'is-house-dragging') })
   const heroFinished = () => (ScrollTrigger.getById('hipocampo-page1-page2')?.progress ?? 1) >= .999
   const scroll = ScrollTrigger.create({
@@ -282,6 +296,7 @@ async function mount(section, controller, onFailure) {
     pointer.x = x
     pointer.y = y
     pointer.known = true
+    wake()
   }
   let pointerListening = false
   const setPointerListening = (enabled) => {
@@ -304,17 +319,21 @@ async function mount(section, controller, onFailure) {
     if (disposed) return
     raf = visible && !reduced ? requestAnimationFrame(frame) : 0
     if (!reduced && renderBudget.sample(now)) staticDirty = true
-    const dt = Math.min((now - (lastFrame || now)) / 1000, 0.05)
+    const dt = Math.min((now - (lastFrame || now)) / 1000, 0.1)
     lastFrame = now
     if (reduced && !staticDirty) return
     staticDirty = false
-    const t = reduced ? 0 : now
     progress += (target - progress) * (1 - Math.exp(-dt * 16))
     if (Math.abs(target - progress) < 0.0001) progress = target
     const p = reduced ? .69 : progress
+    const insideRoom = p >= .5 && p <= .88
+    // Freeze only the idle rest phase after input stops. Springs still settle,
+    // and any mouse, keyboard, resize or scroll resumes rendering immediately.
+    const t = reduced ? 0 : insideRoom ? Math.min(now, lastInteraction + 1000) : now
     const motion = reduced ? 0 : 1
-    pointer.sx += (pointer.x - pointer.sx) * 0.05
-    pointer.sy += (pointer.y - pointer.sy) * 0.05
+    const pointerDamping = 1 - Math.exp(-dt * 3.1)
+    pointer.sx += (pointer.x - pointer.sx) * pointerDamping
+    pointer.sy += (pointer.y - pointer.sy) * pointerDamping
 
     // fases do scroll
     const focus = smooth(0, .34, p)
@@ -415,17 +434,25 @@ async function mount(section, controller, onFailure) {
     }
     const background = leave > 0 ? exitPaper.getStyle() : 'transparent'
     if (stage.style.backgroundColor !== background) stage.style.backgroundColor = background
+    if (insideRoom && now - lastInteraction > 1000 && Math.abs(target - progress) < .0001
+      && Math.abs(pointer.x - pointer.sx) < .0001 && Math.abs(pointer.y - pointer.sy) < .0001
+      && look.isSettled() && archive.isSettled()) {
+      cancelAnimationFrame(raf)
+      raf = 0
+    }
   }
 
   // Race all preparation against cancellation, including a hung image or shader.
   await untilAborted((async () => {
+    onProgress('textures', loadedTextures, textureReady.length)
     await Promise.all(textureReady)
-    await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true, priority: true, compileBatchSize: 4 })
+    await archive.prepareStaticLighting(controller.signal, (done, total) => onProgress('lighting', done, total))
+    await prepareSceneMaterials(renderer, scene, camera, [], controller.signal, { allowDuringScroll: true, priority: true, compileBatchSize: 4, onProgress })
     await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
     camera.position.set(0, 0, fitZ())
     camera.lookAt(0, 0, 0)
     scene.updateMatrixWorld(true)
-    await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true, priority: true, batchWarmup: true })
+    await warmScene(renderer, scene, camera, controller.signal, { allowDuringScroll: true, priority: true, batchWarmup: true, onProgress })
   })(), controller.signal)
   controller.signal.throwIfAborted()
   resize()
@@ -437,6 +464,7 @@ async function mount(section, controller, onFailure) {
     if (visible && !wasVisible) {
       progress = target = scroll.progress
       lastFrame = 0
+      lastInteraction = performance.now()
       renderBudget.reset()
       staticDirty = true
     }
@@ -473,7 +501,7 @@ async function mount(section, controller, onFailure) {
   ready = true
   section.dataset.houseState = 'ready'
   section.houseJourney = {
-    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, renderBudget: renderBudget.inspect(), exteriorActive: piecesWereVisible, linesActive: lines.visible, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, renderBudget: renderBudget.inspect(), exteriorActive: piecesWereVisible, linesActive: lines.visible, renderedFrames: renderer.info.render.frame, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
   } catch (error) {
     dispose()
@@ -521,6 +549,7 @@ function init() {
   if (document.querySelector('#casa')) return true
   const section = buildSection()
   project.after(section)
+  let preparation = createHousePreparation(project)
   // Keep the existing artwork on screen until WebGL can take over. This layer
   // uses cached small map images; it never blocks scrolling or adds UI copy.
   let previewGeometry = null
@@ -563,6 +592,8 @@ function init() {
     window.clearTimeout(retryTimer)
     window.clearTimeout(deadline)
     active?.abort()
+    if (preparation.inspect().disposed) preparation = createHousePreparation(project)
+    preparation.retry()
     section.innerHTML = buildSection().innerHTML
     section.dataset.houseState = 'loading'
     const controller = active = new AbortController()
@@ -583,14 +614,23 @@ function init() {
       section.querySelector('.page3-canvas').style.opacity = '0'
       section.dataset.houseState = 'error'
       if (attempt++ < 1) retryTimer = window.setTimeout(start, 600)
+      else preparation.dispose()
     }
-    mount(section, controller, failed).then(() => window.clearTimeout(deadline), failed)
+    const reportProgress = (stage, done, total) => {
+      if (active === controller && !controller.signal.aborted) preparation.update(stage, done, total)
+    }
+    mount(section, controller, failed, reportProgress).then(() => {
+      if (active !== controller || controller.signal.aborted) return
+      window.clearTimeout(deadline)
+      preparation.complete()
+    }, failed)
   }
   window.addEventListener('pagehide', () => {
     suspended = true
     window.clearTimeout(retryTimer)
     window.clearTimeout(deadline)
     active?.abort()
+    preparation.dispose()
     previewScroll?.kill()
     previewScroll = null
   })

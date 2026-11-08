@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { buildHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { batchStaticMeshes } from './static-mesh-batch.js?v=fps-1'
+import { createHouseStaticLighting } from './house-static-lighting.js?v=house-light-1'
 
 // The archive is built in metres, at the same scale as the photographed door.
 // The camera traverses its threshold and exit; no screen-space opening is used.
@@ -14,6 +15,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   scene.add(root)
   const shapes = new Set(), surfaces = new Set(), textures = new Set()
   const portalMaterials = new Set()
+  const staticLighting = createHouseStaticLighting(root)
   const portalState = { stencilWrite: true, stencilRef: 1, stencilFunc: THREE.EqualStencilFunc, stencilWriteMask: 0 }
   const mesh = (parent, geometry, material, position = [0, 0, 0], shadow = true) => {
     shapes.add(geometry)
@@ -30,7 +32,16 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     if (m.stencilWrite) portalMaterials.add(m)
     return m
   }
-  const box = (parent, dimensions, material, position, shadow = true) => mesh(parent, new THREE.BoxGeometry(...dimensions), material, position, shadow)
+  const box = (parent, dimensions, material, position, shadow = true) => {
+    const segments = material.userData.houseStaticLighting ? dimensions.map(length => length > .4 ? Math.ceil(length / .18) : 1) : [1, 1, 1]
+    return mesh(parent, new THREE.BoxGeometry(...dimensions, ...segments), material, position, shadow)
+  }
+  const bakedMaterial = source => {
+    const material = staticLighting.material(source)
+    surfaces.add(material)
+    if (material.stencilWrite) portalMaterials.add(material)
+    return material
+  }
   const basic = (color) => {
     const m = new THREE.MeshBasicMaterial({ ...portalState, color, toneMapped: false })
     surfaces.add(m)
@@ -78,9 +89,10 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   woodMap.colorSpace = THREE.SRGBColorSpace
   woodMap.wrapS = woodMap.wrapT = THREE.RepeatWrapping
   woodMap.repeat.set(2, 8)
-  const plaster = mat({ map: plasterMap, roughness: .98, bumpMap: plasterMap, bumpScale: .022 })
-  const stone = mat({ color: '#bbb09a', roughness: .91, bumpMap: plasterMap, bumpScale: .025 })
-  const wood = mat({ color: '#a49881', map: woodMap, roughness: .76, bumpMap: woodMap, bumpScale: .015 })
+  const plasterRealtime = mat({ map: plasterMap, roughness: .98, bumpMap: plasterMap, bumpScale: .022 })
+  const plaster = bakedMaterial(plasterRealtime)
+  const stone = bakedMaterial(mat({ color: '#bbb09a', roughness: .91, bumpMap: plasterMap, bumpScale: .025 }))
+  const wood = bakedMaterial(mat({ color: '#a49881', map: woodMap, roughness: .76, bumpMap: woodMap, bumpScale: .015 }))
   const darkWood = mat({ color: '#30291f', roughness: .64 })
   const brass = mat({ color: '#ae8d50', metalness: .68, roughness: .4 })
   const card = mat({ color: '#eee5cf', roughness: 1 })
@@ -199,7 +211,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     geometry.translate(0, 0, -.28)
     return geometry
   }
-  const frontWall = mesh(root, entranceWallGeometry(width), plaster, [0, 0, 0], false)
+  const frontWall = mesh(root, entranceWallGeometry(width), plasterRealtime, [0, 0, 0], false)
   frontWall.name = 'house-front-wall'
   const entryModel = buildHouseDoorway({ parent: entrance, profile: doorway, mesh, box, mat, woodMap, plasterMap, textures })
   const doors = entryModel.doors
@@ -279,10 +291,14 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   let lastDoorAngle = -1, currentWidth = width
   return {
     root, floorY, eyeY: floorY + 1.55, depth,
+    prepareStaticLighting: (signal, onProgress) => staticLighting.prepare(signal, onProgress),
+    staticLightingDirty: () => staticLighting.isDirty(),
+    isSettled: () => pendulums.every(p => Math.abs(p.velocity) < .001 && Math.abs(p.angle - (p.rest || 0)) < .0005),
     setPaper(color) { exitMaterial.color.copy(color) },
     resize(aspect) {
       const nextWidth = aspect < .8 ? 3.65 : width
       if (nextWidth !== currentWidth) {
+        staticLighting.invalidate()
         shapes.delete(frontWall.geometry)
         frontWall.geometry.dispose()
         frontWall.geometry = entranceWallGeometry(nextWidth)
@@ -299,7 +315,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
       })
     },
-    inspect: () => ({ portalActive, batchedMeshes: batching.savedMeshes, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
+    inspect: () => ({ staticLighting: staticLighting.inspect(), portalActive, batchedMeshes: batching.savedMeshes, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
     update(open, time, motion, pointer, dt, camera) {
       // Switch only after the aperture fills the view, before its near plane
       // can be clipped. The same rule applies when scrolling backwards.
@@ -315,11 +331,11 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
       const steps = Math.max(1, Math.ceil(dt * 120)), step = dt / steps
       pendulums.forEach(p => {
         if (!motion) {
-          p.angle = p.velocity = p.pivot.rotation.z = 0
+          p.rest = p.angle = p.velocity = p.pivot.rotation.z = 0
           return
         }
         p.velocity += impulse * p.gain * p.direction
-        const rest = motion * (Math.sin(time * .0005 + p.phase) * (p.free ? .007 : .002) + pointer.sx * (p.free ? .025 : .008))
+        const rest = p.rest = motion * (Math.sin(time * .0005 + p.phase) * (p.free ? .007 : .002) + pointer.sx * (p.free ? .025 : .008))
         for (let i = 0; i < steps; i++) {
           p.velocity += ((rest - p.angle) * 18 - p.velocity * 3.4) * step
           p.angle += p.velocity * step

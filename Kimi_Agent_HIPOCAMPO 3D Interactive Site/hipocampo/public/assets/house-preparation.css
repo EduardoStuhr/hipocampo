@@ -1,0 +1,48 @@
+/* Reserved below the copy: completing preparation never moves the next chapter. */
+#projeto .hipocampo-page2-copy > .page2-copy-paragraph:last-of-type { margin-bottom: 0; }
+#projeto [data-house-preparation-slot] {
+  width: min(18rem, 100%);
+  height: 1rem;
+  margin-top: .65rem;
+}
+#projeto .house-preparation {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  height: 1rem;
+  color: inherit;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  transition: opacity .3s ease, visibility .3s;
+}
+#projeto .house-preparation.is-concealed { opacity: 0; visibility: hidden; }
+#projeto .house-preparation-bar {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  flex: 1;
+  min-width: 0;
+  height: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: rgba(38, 38, 252, .15);
+}
+#projeto .house-preparation-bar::-webkit-progress-bar { background: rgba(38, 38, 252, .15); }
+#projeto .house-preparation-bar::-webkit-progress-value { background: currentColor; }
+#projeto .house-preparation-bar::-moz-progress-bar { background: currentColor; }
+#projeto .house-preparation-percentage {
+  min-width: 4ch;
+  font: inherit;
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+  letter-spacing: 0;
+  word-spacing: normal;
+}
+@media (prefers-reduced-motion: reduce) { #projeto .house-preparation { transition: none; } }

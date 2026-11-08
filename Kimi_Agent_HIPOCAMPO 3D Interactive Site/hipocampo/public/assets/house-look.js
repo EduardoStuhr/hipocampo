@@ -118,6 +118,7 @@ export function createHouseLook({ THREE, section, stage, canvas, camera, invalid
       camera.quaternion.premultiply(yawRotation).multiply(pitchRotation)
     },
     suspend,
+    isSettled: () => !drag && Math.abs(targetYaw - yaw) < .0001 && Math.abs(targetPitch - pitch) < .0001,
     inspect: () => ({ available, active, yaw, pitch, targetYaw, targetPitch, dragging: !!drag }),
     dispose() {
       suspend()
