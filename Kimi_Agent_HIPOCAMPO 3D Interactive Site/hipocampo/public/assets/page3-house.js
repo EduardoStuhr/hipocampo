@@ -36,8 +36,6 @@ function buildSection() {
     <div class="page3-stage">
       <div class="page3-preview" aria-hidden="true"></div>
       <div class="page3-render"><canvas class="page3-canvas" aria-hidden="true"></canvas></div>
-      <p class="page3-caption page3-caption--a">cada fragmento aponta para um lugar</p>
-      <p class="page3-caption page3-caption--b">entre na casa</p>
       <p class="page3-description">Uma passagem tridimensional pela casa da memória: atravesse a porta, percorra a galeria de fotografias e siga a luz até a próxima seção. O caminho se recompõe ao rolar de volta.</p>
     </div>`
   return section
@@ -72,8 +70,6 @@ async function mount(section, controller, onFailure, onProgress) {
   await yieldScenePreparation(controller.signal, { allowDuringScroll: true })
   const canvas = section.querySelector('.page3-canvas')
   const stage = section.querySelector('.page3-stage')
-  const capA = section.querySelector('.page3-caption--a')
-  const capB = section.querySelector('.page3-caption--b')
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, stencil: true, premultipliedAlpha: false, powerPreference: 'high-performance' })
   // Install recovery before textures, shaders or GPU warm-up can fail.
   const contextLost = event => {
@@ -421,8 +417,6 @@ async function mount(section, controller, onFailure, onProgress) {
 
     renderer.setClearColor(0xffffff, reduced ? 1 : smooth(0.0, 0.05, p))
 
-    setOpacity(capA, reduced ? 0 : smooth(0.01, 0.08, p) * (1 - smooth(0.2, 0.3, p)))
-    setOpacity(capB, reduced ? 0 : smooth(.22, .29, p) * (1 - smooth(.30, .36, p)))
     renderer.toneMappingExposure = lerp(.95, 1.35, leave)
     if (!reduced && p >= .995) {
       renderer.setClearColor(exitPaper, 1)

@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { FRAGMENTS } from './installation-collection.js?v=client-1'
 import { createCollectionBuilder } from './installation-props.js?v=client-1'
-import { createRenderBudget } from './render-budget.js?v=fps-1'
+import { createRenderBudget } from './render-budget.js?v=island-gpu-2'
 import { batchStaticMeshes } from './static-mesh-batch.js?v=fps-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
 export { FRAGMENTS } from './installation-collection.js?v=client-1'
@@ -30,7 +30,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false
-  const renderBudget = createRenderBudget(renderer)
+  const renderBudget = createRenderBudget(renderer, { maxPixelRatio: 1, minPixelRatio: .65 })
 
   const camera = new THREE.PerspectiveCamera(35, 1, .1, 90)
   const raycaster = new THREE.Raycaster()
@@ -96,6 +96,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   let doorTarget = doorAngle
   let selectedId = null
   let lastFrame = 0
+  let previousFrameRendered = false
   let width = 1
   let height = 1
   const cachedRect = { left: 0, top: 0, width: 1, height: 1 }
@@ -177,7 +178,12 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const inner = material({ color: '#a59981', roughness: .66 })
   const black = material({ color: '#11100e', roughness: .73 })
   const paper = material({ color: '#c8bb9c', roughness: .96 })
-  const floor = mesh(scene, new THREE.PlaneGeometry(150, 150), material({ color: '#171818', roughness: .96 }), [0, -.025, 0], false)
+  // The broad, matte floor highlights do not need a full GGX material over
+  // the entire viewport. Keep live lights and per-light PCF object shadows.
+  const floorMaterial = new THREE.MeshPhongMaterial({ color: '#171818', specular: '#333333', shininess: 2 })
+  materials.add(floorMaterial)
+  const floor = mesh(scene, new THREE.PlaneGeometry(150, 150), floorMaterial, [0, -.025, 0], false)
+  floor.name = 'installation-floor'
   floor.rotation.x = -Math.PI / 2
   scene.add(new THREE.HemisphereLight('#b5c5d1', '#3b2617', .42))
   await buildYield()
@@ -542,7 +548,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     requestFrame()
   }
   function requestFrame() {
-    if (prepared && visible && !document.hidden && !contextLost && !raf) { renderBudget.reset(); raf = requestAnimationFrame(frame) }
+    if (prepared && visible && !document.hidden && !contextLost && !raf) { lastFrame = 0; previousFrameRendered = false; renderBudget.reset(); raf = requestAnimationFrame(frame) }
   }
   function updateCamera() {
     const v = renderedView
@@ -702,8 +708,11 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   function frame(time) {
     raf = 0
     if (disposed || !visible || document.hidden || contextLost) return
-    if (renderBudget.sample(time)) dirty = true
-    const dt = Math.min(.05, (time - (lastFrame || time - 16)) / 1000)
+    if (renderBudget.sample(time, previousFrameRendered)) dirty = true
+    previousFrameRendered = false
+    const elapsed = Math.max(0, (time - (lastFrame || time - 16)) / 1000)
+    const dt = Math.min(.15, elapsed)
+    const dampingTime = Math.min(.5, elapsed)
     lastFrame = time
     let moving = false
     if (navigating && cameraKeys.size) {
@@ -718,13 +727,13 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       moving = dirty = true
     }
     for (const key of Object.keys(view)) {
-      const next = reducedMotion.matches ? view[key] : THREE.MathUtils.damp(renderedView[key], view[key], 16, dt)
+      const next = reducedMotion.matches ? view[key] : THREE.MathUtils.damp(renderedView[key], view[key], 16, dampingTime)
       const settled = Math.abs(next - view[key]) < .0003
       renderedView[key] = settled ? view[key] : next
       if (!settled) moving = dirty = true
     }
     if (Math.abs(doorAngle - doorTarget) > .001) {
-      doorAngle = reducedMotion.matches ? doorTarget : THREE.MathUtils.damp(doorAngle, doorTarget, 9, dt)
+      doorAngle = reducedMotion.matches ? doorTarget : THREE.MathUtils.damp(doorAngle, doorTarget, 9, dampingTime)
       if (Math.abs(doorAngle - doorTarget) < .005) doorAngle = doorTarget
       door.rotation.y = doorAngle
       const lightFactor = clamp(doorAngle / 1.1, 0, 1)
@@ -736,8 +745,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       moving = true
     }
     for (const [id, motion] of motions) {
-      motion.elapsed += dt
-      const progress = reducedMotion.matches ? 1 : clamp(motion.elapsed / .65, 0, 1)
+      const progress = reducedMotion.matches ? 1 : clamp((time - motion.startedAt) / 650, 0, 1)
       const t = 1 - Math.pow(1 - progress, 3)
       motion.object.position.lerpVectors(motion.start, motion.end, t)
       motion.object.position.y += Math.sin(Math.PI * progress) * .5
@@ -750,10 +758,15 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
       updateCamera()
       prepareShadowUpdates()
       renderer.render(scene, camera)
+      previousFrameRendered = true
       updateOverlays()
       dirty = shadowsDirty = false
     }
-    if (moving || motions.size) raf = requestAnimationFrame(frame)
+    // Keep one sampling sequence during a held gesture. A drag moves the
+    // object directly, so it may have no interpolation motion; ending its RAF
+    // after each pointer event used to reset the quality controller every time.
+    // Unchanged gesture frames remain cheap: the render stays guarded by dirty.
+    if (moving || motions.size || drag || orbit || pinch) raf = requestAnimationFrame(frame)
   }
   function select(entry) {
     selectedId = entry.definition.id
@@ -765,7 +778,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     if (reducedMotion.matches || !visible || document.hidden || contextLost) entry.object.position.copy(target)
     else {
       const start = entry.object.position.clone()
-      motions.set(entry.definition.id, { object: entry.object, start, end: target.clone(), elapsed: 0 })
+      motions.set(entry.definition.id, { object: entry.object, start, end: target.clone(), startedAt: performance.now() })
     }
     invalidate(true, entry.object)
   }
@@ -1233,7 +1246,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
         viewMode: topView ? 'table-top' : 'room', cameraPosition: camera.position.toArray(), cameraDirection: camera.getWorldDirection(new THREE.Vector3()).toArray(), camera: { ...view }, renderedCamera: { ...renderedView }, navigating, gesturesActive: !!drag || !!orbit || !!pinch, scrollReserved: stage.hasAttribute('data-lenis-prevent'), mobile, selectedId,
         lightTable: toScreen(groups.future.localToWorld(new THREE.Vector3(0, 1.64, 0))),
         objects: [...objects.values()].map(entry => ({ id: entry.definition.id, number: entry.definition.number || null, island: entry.definition.island, kind: entry.definition.kind, parent: entry.object.parent.name, position: entry.object.position.toArray(), scale: entry.object.scale.toArray(), atTable: entry.atTable, footprint: entry.atTable ? { x: entry.object.position.x - entry.tableOffset.x, z: entry.object.position.z - entry.tableOffset.z, width: entry.tableSize.x, depth: entry.tableSize.z } : null })),
-        performance: { ...performanceStats }, renderBudget: renderBudget.inspect(),
+        performance: { ...performanceStats }, renderedFrames: renderer.info.render.frame, movingObjects: motions.size, renderBudget: renderBudget.inspect(),
         drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       }
     },

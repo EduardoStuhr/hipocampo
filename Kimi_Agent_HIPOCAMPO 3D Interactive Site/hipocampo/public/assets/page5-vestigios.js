@@ -190,10 +190,9 @@ function buildSection() {
       <p class="page5-text">Ao chegar ao Hipocampo, cada participante recebe uma sinopse que apresenta os primeiros vestígios de uma memória desaparecida, marcada por ausências e perguntas sem resposta, nova possibilidade de memória, revelando como atribuímos significado às imagens e aos objetos que sobrevivem ao tempo.</p>
       <div class="page5-camera-control">
         <img class="page5-camera" draggable="false" src="/images/vestigios/camera-topo.webp" width="1259" height="717" alt="Câmera fotográfica antiga prateada" loading="lazy" />
-        <button class="page5-shutter" type="button" aria-label="Gerar fotografia pelo disparador" aria-describedby="page5-camera-hint" aria-controls="page5-revealed-photos" title="Gerar fotografia"></button>
+        <button class="page5-shutter" type="button" aria-label="Gerar fotografia pelo disparador" aria-describedby="page5-camera-status" aria-controls="page5-revealed-photos" title="Gerar fotografia"></button>
       </div>
-      <p id="page5-camera-hint" class="page5-camera-hint">gerar fotografia</p>
-      <p class="page5-camera-status" role="status" aria-live="polite" aria-atomic="true">Clique no disparador da câmera para revelar fotografias do acervo em formas diferentes, visíveis por cinco segundos.</p>
+      <p id="page5-camera-status" class="page5-camera-status" role="status" aria-live="polite" aria-atomic="true">Clique no disparador da câmera para revelar fotografias do acervo em formas diferentes, visíveis por cinco segundos.</p>
     </div>
     <div class="page5-right">
       <img class="page5-colagem" src="/images/vestigios/colagem.webp" alt="Colagem de fotografias em preto e branco com recorte laranja" loading="lazy" />

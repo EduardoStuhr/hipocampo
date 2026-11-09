@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=fps-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=island-gpu-2'
 import { yieldScenePreparation } from './scene-preparation.js?v=scroll-start-1'
 
 const React = requireReact() // Reuse the application's React singleton.
