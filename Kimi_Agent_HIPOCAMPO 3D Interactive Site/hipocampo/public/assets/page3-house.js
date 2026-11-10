@@ -221,7 +221,14 @@ async function mount(section, controller, onFailure, onProgress) {
     const r = domMap.getBoundingClientRect(), s0 = section.getBoundingClientRect()
     // The DOM map has its own entrance scale. Its final layout height keeps
     // the camera handoff stable after a refresh and when scrolling backwards.
-    if (r.width) startRect = { cx: r.left + r.width / 2, cy: r.top - s0.top + r.height / 2, h: domMap.clientHeight || r.height }
+    const height = domMap.clientHeight || r.height
+    const style = getComputedStyle(domMap)
+    // Evaluate the sticky map at the start boundary, even for a direct jump
+    // into the journey after its source container has scrolled out of view.
+    const cy = style.position === 'sticky'
+      ? Math.min(Number.parseFloat(style.top) || 0, innerHeight - height) + height / 2
+      : r.top - s0.top + r.height / 2
+    if (r.width) startRect = { cx: r.left + r.width / 2, cy, h: height }
   }
   let viewportW = 1, viewportH = 1
   const exitPaper = new THREE.Color('#ffffff')
@@ -465,6 +472,9 @@ async function mount(section, controller, onFailure, onProgress) {
     visible = prepared && page3Intersecting && !document.hidden && heroFinished() && (reduced || target > .0005)
     setPointerListening(visible && !reduced)
     if (visible && !wasVisible) {
+      // The reading map is sticky. Capture its actual position once at the
+      // handoff, rather than using its earlier position above the fold.
+      measureStart()
       progress = target = scroll.progress
       lastFrame = 0
       lastInteraction = performance.now()
@@ -556,6 +566,7 @@ function init() {
   // Keep the existing artwork on screen until WebGL can take over. This layer
   // uses cached small map images; it never blocks scrolling or adds UI copy.
   let previewGeometry = null
+  let previewWasActive = false
   const positionPreview = progress => {
     const map = section.querySelector('.page3-preview-map')
     if (!map || !previewGeometry) return
@@ -572,12 +583,18 @@ function init() {
     if (!r.width || !height) return
     const width = source.clientWidth || r.width
     const left = r.left + (r.width - width) / 2
-    const top = r.top - section.getBoundingClientRect().top + (r.height - height) / 2
+    const style = getComputedStyle(source)
+    const top = style.position === 'sticky'
+      ? Math.min(Number.parseFloat(style.top) || 0, innerHeight - height)
+      : r.top - section.getBoundingClientRect().top + (r.height - height) / 2
     previewGeometry = { width, height, left, top }
     Object.assign(previewMap.style, { width: `${width}px`, height: `${height}px`, left: `${left}px`, top: `${top}px` })
     positionPreview(previewScroll?.progress || 0)
   }
   const updatePreviewRange = st => {
+    const active = st.progress > .0005 && st.progress < .97
+    if (active && !previewWasActive) measurePreview()
+    previewWasActive = active
     section.classList.toggle('is-house-outside', st.progress <= .0005 || st.progress >= .97)
     if (section.dataset.houseState !== 'ready') positionPreview(st.progress)
   }

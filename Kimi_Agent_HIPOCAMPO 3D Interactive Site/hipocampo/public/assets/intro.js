@@ -15,7 +15,7 @@ if (intro) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   if (reduced || scrollY > 32 || location.hash) leave()
   else {
-    timer = setTimeout(leave, 3000)
+    timer = setTimeout(leave, 5000)
     Promise.all([
       document.fonts.load('230px "AquilineTwo"').then(() => {
         // Aquiline's H extends beyond its advance width. Centre its actual ink
@@ -33,7 +33,7 @@ if (intro) {
     ]).then(() => {
       if (finished) return
       clearTimeout(timer)
-      timer = setTimeout(leave, Math.max(0, 1150 - (performance.now() - started)))
+      timer = setTimeout(leave, Math.max(0, 5000 - (performance.now() - started)))
     })
     for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) window.addEventListener(type, leave, { passive: true, once: true })
   }

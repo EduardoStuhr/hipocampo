@@ -51,10 +51,10 @@ body > #root > header nav { gap: clamp(.7rem, 1.4vw, 1.6rem); }
   #sobre.hipocampo-page4, #vestigios.hipocampo-page5 { padding-top: 5.5rem; }
 }
 
-.hipocampo-intro { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; background: #2626fc; color: white; pointer-events: none; animation: intro-fallback .25s 3s forwards; }
+.hipocampo-intro { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; background: #2626fc; color: white; pointer-events: none; animation: intro-fallback .25s 5s forwards; }
 .hipocampo-intro::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 3px, #0000000b 3px 4px); pointer-events: none; }
 .hipocampo-intro svg { width: min(64vw, 24rem); height: min(64vw, 24rem); overflow: visible; }
-.hipocampo-intro text { font-family: "AquilineTwo", Georgia, serif; font-size: 230px; fill: transparent; stroke: currentColor; stroke-width: .65; stroke-dasharray: 1100; stroke-dashoffset: 1100; animation: intro-write 1.05s ease forwards; }
+.hipocampo-intro text { font-family: "AquilineTwo", Georgia, serif; font-size: 230px; fill: transparent; stroke: currentColor; stroke-width: .65; stroke-dasharray: 1100; stroke-dashoffset: 1100; animation: intro-write 4.5s ease forwards; }
 .hipocampo-intro.is-leaving { opacity: 0; transition: opacity .25s ease; }
 @keyframes intro-write { 75% { fill: transparent; } 100% { stroke-dashoffset: 0; fill: currentColor; } }
 @keyframes intro-fallback { to { opacity: 0; visibility: hidden; } }

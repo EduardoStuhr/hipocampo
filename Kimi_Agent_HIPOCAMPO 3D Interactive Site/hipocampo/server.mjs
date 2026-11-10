@@ -100,10 +100,12 @@ async function getPayload(requestedFile, contents, ext, acceptEncoding) {
   }
 
   const encoding = acceptsBr ? 'br' : 'gzip'
-  const cacheKey = `${requestedFile}:${encoding}:${contents.length}`
+  const cacheKey = `${requestedFile}:${encoding}`
   const cached = compressionCache.get(cacheKey)
-  if (cached) {
-    return { data: cached, encoding }
+  // Equal byte lengths do not mean equal files (e.g. 1150 -> 5000). Keep
+  // one version per file/encoding and validate the actual source bytes.
+  if (cached && cached.source.equals(contents)) {
+    return { data: cached.compressed, encoding }
   }
 
   let compressed
@@ -119,7 +121,7 @@ async function getPayload(requestedFile, contents, ext, acceptEncoding) {
     })
   }
 
-  compressionCache.set(cacheKey, compressed)
+  compressionCache.set(cacheKey, { source: contents, compressed })
   return { data: compressed, encoding }
 }
 

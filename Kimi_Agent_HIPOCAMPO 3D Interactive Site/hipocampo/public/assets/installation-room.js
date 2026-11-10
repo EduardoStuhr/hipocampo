@@ -134,8 +134,9 @@ export default function Installation() {
       h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Câmera e fotografia da mesa' },
         h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
         h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
-        h('button', { type: 'button', onClick: () => room.current?.setTopView(!topView), 'aria-pressed': topView, disabled: !ready || unavailable, 'data-action': 'top-view' }, topView ? 'voltar à sala' : 'visão de cima'),
+        h('button', { type: 'button', onClick: () => room.current?.setTopView(!topView), 'aria-pressed': topView, 'aria-describedby': topView ? 'installation-topview-hint' : undefined, disabled: !ready || unavailable, 'data-action': 'top-view' }, topView ? 'voltar ao normal' : 'visão de cima'),
         h('button', { type: 'button', onClick: takePhoto, disabled: !ready || unavailable || capturing, 'data-action': 'take-photo' }, capturing ? 'fotografando…' : 'tirar foto'),
+        topView && h('p', { id: 'installation-topview-hint', className: 'installation-topview-hint', role: 'status' }, 'Visão de cima ativa. Clique em “voltar ao normal” para girar a sala novamente.'),
       ),
       h('div', { className: 'installation-hit-targets' },
         ...FRAGMENTS.map(fragment => h('button', {

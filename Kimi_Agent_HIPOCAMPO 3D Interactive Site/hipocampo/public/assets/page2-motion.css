@@ -95,6 +95,17 @@
   background: radial-gradient(circle, rgba(241, 237, 226, 0.74) 0%, rgba(241, 237, 226, 0) 72%);
 }
 
+/* Let every paragraph contribute to document height. The final viewport is
+   reserved for the map-to-house handoff, after the copy has been read. */
+@media (min-width: 1101px) {
+  #projeto.hipocampo-page2, .hipocampo-page2-inner { overflow: clip; }
+  .hipocampo-page2-inner { padding-top: 28.8svh; padding-bottom: 100svh; }
+  .hipocampo-page2-title { top: 8.8svh; }
+  .hipocampo-page2-copy { position: relative; top: auto; }
+  .page2-map-stage { padding-top: 13.5svh; }
+  .hipocampo-memory-map { position: sticky; top: 13.5svh; right: auto; margin-left: auto; margin-right: 4.4%; }
+}
+
 .memory-map-lines {
   position: absolute;
   inset: 0;
