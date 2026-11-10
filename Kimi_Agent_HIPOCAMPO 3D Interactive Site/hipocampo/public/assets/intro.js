@@ -4,18 +4,19 @@ const intro = document.querySelector('.hipocampo-intro')
 if (intro) {
   const started = performance.now()
   let finished = false, timer = 0
-  const leave = () => {
+  const leave = (skip = false) => {
     if (finished) return
     finished = true
     clearTimeout(timer)
-    intro.classList.add('is-leaving')
-    setTimeout(() => intro.remove(), 260)
+    intro.classList.add(skip ? 'is-skipped' : 'is-leaving')
+    setTimeout(() => intro.remove(), skip ? 140 : 820)
     for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) window.removeEventListener(type, leave)
   }
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (reduced || scrollY > 32 || location.hash) leave()
+  if (reduced || scrollY > 32 || location.hash) leave(true)
   else {
-    timer = setTimeout(leave, 5000)
+    // The last .8 seconds reveal the page by sliding the cover down.
+    timer = setTimeout(leave, 4300)
     Promise.all([
       document.fonts.load('230px "AquilineTwo"').then(() => {
         // Aquiline's H extends beyond its advance width. Centre its actual ink
@@ -33,7 +34,7 @@ if (intro) {
     ]).then(() => {
       if (finished) return
       clearTimeout(timer)
-      timer = setTimeout(leave, Math.max(0, 5000 - (performance.now() - started)))
+      timer = setTimeout(leave, Math.max(0, 4300 - (performance.now() - started)))
     })
     for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) window.addEventListener(type, leave, { passive: true, once: true })
   }

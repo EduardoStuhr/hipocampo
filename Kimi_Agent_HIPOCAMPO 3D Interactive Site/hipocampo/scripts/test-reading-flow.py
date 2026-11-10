@@ -10,7 +10,8 @@ async def run(browser,name,viewport):
  await p.goto('http://127.0.0.1:4173/',wait_until='domcontentloaded')
  await p.wait_for_function("document.documentElement.dataset.editorialMotionReady==='true'&&document.querySelector('#sobre')&&document.querySelector('#vestigios')")
  await p.wait_for_function("!document.querySelector('.hipocampo-intro')",timeout=9000)
- intro=await p.evaluate('__introLeft');assert 4800<=intro<8000,intro
+ intro=await p.evaluate('__introLeft');assert 4100<=intro<7000,intro
+ total=await p.evaluate('performance.now()');assert total>=5000,total
  await p.evaluate('document.fonts.ready');await p.wait_for_timeout(600)
  layout=await p.evaluate('''async()=>{
   const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');ST.refresh();__hipocampoLenis.resize();
