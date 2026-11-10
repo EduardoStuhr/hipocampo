@@ -42,6 +42,8 @@ body > #root > header[data-navigation-visible="true"] > button { opacity: 1 !imp
 body > #root > header[data-nav-theme="dark"] > a,
 body > #root > header[data-nav-theme="dark"] nav a { text-shadow: 0 1px 3px #0008; }
 body > #root > header[data-nav-theme="light"] > a { text-shadow: 0 1px 2px #fffb; }
+body > #root > header nav, body > #root > header > button { font-family: "SquidBoy", sans-serif; font-weight: 400; }
+body > #root > header nav a { font-size: clamp(.75rem, .9vw, .875rem); letter-spacing: .015em; }
 body > #root > header nav { gap: clamp(.7rem, 1.4vw, 1.6rem); }
 @media (max-width: 767px) {
   body > #root > header[data-navigation-visible="true"]:has(> button[aria-expanded="true"]) nav { opacity: 1 !important; transform: none !important; }

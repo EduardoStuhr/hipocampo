@@ -34,7 +34,7 @@ async def check(browser,name,viewport,touch=False,reduced=False):
  root=page.locator('#instalacao')
  assert await root.locator('.installation-intro').count()==0
  assert await root.locator('.installation-toolbar > p').count()==0
- assert 'gire 360' not in await root.locator('.installation-caption').inner_text()
+ assert await root.locator('.installation-caption').count()==0
  async def state():return await root.evaluate('(el)=>el.installationRoom.inspect()')
  async def photo(label):
   before=await state()

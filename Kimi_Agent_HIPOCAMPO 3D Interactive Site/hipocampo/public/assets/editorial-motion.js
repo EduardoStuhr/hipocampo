@@ -199,7 +199,7 @@ function initializeEditorialRedesign() {
         headings.forEach((heading) => {
           // Aquiline's ascenders and flourishes extend beyond an em box.
           // Reveal these titles as complete glyphs instead of cropping lines.
-          if (section === fotofilmes || (section === informacoes && heading.tagName === 'H2')) {
+          if (section === fotofilmes || ((section === informacoes || section.id === 'instalacao') && heading.tagName === 'H2')) {
             gsap.fromTo(heading, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .8, ease: 'power3.out', scrollTrigger: { trigger: heading, start: 'top 90%', toggleActions: 'play none none reverse' } })
             return
           }
