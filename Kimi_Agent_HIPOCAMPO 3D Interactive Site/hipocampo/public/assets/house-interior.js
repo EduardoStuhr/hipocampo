@@ -63,12 +63,12 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const portal = mesh(root, new THREE.ShapeGeometry(portalOutline), portalMaterial, [0, 0, 0], false)
   portal.name = 'house-door-portal'
   portal.renderOrder = -30
-  // Restore daylight without adding another real-time light or changing the
-  // calibrated aperture. It fades away as the physical doors open.
-  const entryLightMaterial = new THREE.MeshBasicMaterial({ ...portalState, color: '#fff9e8', transparent: true, opacity: 1, depthWrite: false, toneMapped: false })
+  // Keep a faint daylight cue behind the leaves. A sheet in front of them
+  // hid the closed door; this one appears only briefly as the gap opens.
+  const entryLightMaterial = new THREE.MeshBasicMaterial({ ...portalState, color: '#fff9e8', transparent: true, opacity: 0, depthWrite: false, toneMapped: false })
   surfaces.add(entryLightMaterial)
   portalMaterials.add(entryLightMaterial)
-  const entryLight = mesh(root, new THREE.ShapeGeometry(portalOutline), entryLightMaterial, [0, 0, .035], false)
+  const entryLight = mesh(root, new THREE.ShapeGeometry(portalOutline), entryLightMaterial, [0, 0, -.24], false)
   entryLight.name = 'house-entrance-daylight'
   let portalActive = true
 
@@ -327,7 +327,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
       // Switch only after the aperture fills the view, before its near plane
       // can be clipped. The same rule applies when scrolling backwards.
       const outside = camera.position.z > .18
-      entryLightMaterial.opacity = Math.max(0, 1 - open * 2)
+      entryLightMaterial.opacity = .22 * Math.sin(Math.PI * Math.min(1, open / .7))
       entryLight.visible = outside && entryLightMaterial.opacity > .001
       if (outside !== portalActive) {
         portalActive = outside

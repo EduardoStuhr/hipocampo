@@ -3,7 +3,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { createHousePreparation } from './house-preparation.js?v=house-gpu-2'
 import { createRenderBudget } from './render-budget.js?v=fps-1'
-import { createHouseInterior } from './house-interior.js?v=client-audio-1'
+import { createHouseInterior } from './house-interior.js?v=door-open-2'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { createHouseLook } from './house-look.js?v=house-gpu-2'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
@@ -21,6 +21,8 @@ function loadManifest() {
 }
 // Fetch metadata while module dependencies and the opening chapter settle.
 loadManifest().catch(() => {})
+// Slightly widen the opening interval without extending the whole journey.
+const DOOR_OPEN_START = .28, DOOR_OPEN_END = .51
 const UNIT = 16 // the photographed doorway is approximately 1 × 2.3 metres
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t) }
@@ -339,7 +341,7 @@ async function mount(section, controller, onFailure, onProgress) {
     const focus = smooth(0, .34, p)
     const travel = clamp((p - .34) / .66, 0, 1)
     const enter = travel < .12 ? travel * smooth(0, .12, travel) : travel > .96 ? 1 - (1 - travel) * smooth(0, .04, 1 - travel) : travel
-    const open = smooth(.29, .48, p)
+    const open = smooth(DOOR_OPEN_START, DOOR_OPEN_END, p)
     const explode = smooth(.02, .35, p)
     const vanish = smooth(.24, .42, p)
     const leave = reduced ? 0 : smooth(.87, .995, p)
@@ -502,7 +504,7 @@ async function mount(section, controller, onFailure, onProgress) {
   ready = true
   section.dataset.houseState = 'ready'
   section.houseJourney = {
-    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(.29, .48, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, renderBudget: renderBudget.inspect(), exteriorActive: piecesWereVisible, linesActive: lines.visible, renderedFrames: renderer.info.render.frame, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    inspect: () => ({ prepared, progress, target, camera: camera.position.toArray(), cameraHeight: camera.position.y - archive.floorY, cameraRotation: [camera.rotation.x, camera.rotation.y, camera.rotation.z], view: look.inspect(), doorOpen: smooth(DOOR_OPEN_START, DOOR_OPEN_END, reduced ? .69 : progress), interior: archive.inspect(), reduced, visible, framePending: !!raf, continuousCamera: true, physicalInterior: true, renderBudget: renderBudget.inspect(), exteriorActive: piecesWereVisible, linesActive: lines.visible, renderedFrames: renderer.info.render.frame, drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
   }
   } catch (error) {
     dispose()
