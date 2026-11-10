@@ -18,6 +18,16 @@ async def check(browser,name,viewport,touch=False,reduced=False):
  async def visit():
   await page.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
   await page.wait_for_timeout(350)
+ # Editorial replacements alter section positions during initial mounting.
+ # Wait for their measured geometry before jumping directly to the room.
+ await page.wait_for_function('''()=>{
+  const e=document.querySelector('#instalacao .installation-stage');
+  if(!e||document.readyState!=='complete'||document.fonts.status!=='loaded'||document.documentElement.dataset.editorialMotionReady!=='true'||!document.querySelector('#sobre')||!document.querySelector('#vestigios'))return false;
+  const r=e.getBoundingClientRect(),key=[document.documentElement.scrollHeight,r.top+scrollY,r.width,r.height].map(Math.round).join(':');
+  const s=window.__photoLayout||(window.__photoLayout={key:null,since:performance.now()});
+  if(s.key!==key){s.key=key;s.since=performance.now()}
+  return performance.now()-s.since>=750;
+ }''')
  await visit()
  await page.wait_for_function("document.querySelector('#instalacao')?.installationRoom?.inspect().prepared",timeout=120000)
  await visit()
@@ -86,6 +96,7 @@ async def check(browser,name,viewport,touch=False,reduced=False):
  # Taking a picture also works directly from the room and preserves its camera.
  await photo('from-room')
  await root.get_by_role('button',name='fechar geladeira',exact=True).click()
+ await page.wait_for_function("!document.querySelector('#instalacao').installationRoom.inspect().fridgeOpen",timeout=10000)
  assert not (await state())['fridgeOpen']
  await root.locator('[data-action=reset]').click()
  reset=await state();assert reset['viewMode']=='room'and not any(o['atTable']for o in reset['objects'])

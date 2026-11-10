@@ -1,3 +1,4 @@
+import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=client-audio-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -140,6 +141,8 @@ function initializeEditorialRedesign() {
     return true
   }
 
+  prepareClientNavigation(header)
+  prepareClientEditorial()
   window.__hipocampoEditorialCleanup?.()
   document.documentElement.dataset.editorialMotionReady = 'true'
 
@@ -194,7 +197,13 @@ function initializeEditorialRedesign() {
         const headings = section.querySelectorAll('h2, h3')
 
         headings.forEach((heading) => {
-          // Na seção fotofilmes, h3 do Fotofilme A possui posicionamento absoluto delicado; animamos suas linhas internas
+          // Aquiline's ascenders and flourishes extend beyond an em box.
+          // Reveal these titles as complete glyphs instead of cropping lines.
+          if (section === fotofilmes || (section === informacoes && heading.tagName === 'H2')) {
+            gsap.fromTo(heading, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .8, ease: 'power3.out', scrollTrigger: { trigger: heading, start: 'top 90%', toggleActions: 'play none none reverse' } })
+            return
+          }
+          // Other editorial headings retain their existing line masks.
           const record = prepareEditorialHeading(heading)
           if (record) {
             splitRecords.push(record)
@@ -414,11 +423,17 @@ function initializeEditorialRedesign() {
   const navLinks = [...header.querySelectorAll('nav a[href^="#"]')]
   const sectionThemeMap = [
     { id: 'abertura', theme: 'dark', cursorTheme: 'on-blue' },
-    { id: 'projeto', theme: 'yellow', cursorTheme: 'on-yellow' },
+    { id: 'projeto', theme: 'light', cursorTheme: 'on-paper' },
+    { id: 'casa', theme: 'light', cursorTheme: 'on-paper' },
+    { id: 'sobre', theme: 'light', cursorTheme: 'on-paper' },
+    { id: 'vestigios', theme: 'light', cursorTheme: 'on-paper' },
     { id: 'oficina', theme: 'dark', cursorTheme: 'on-brown' },
     { id: 'instalacao', theme: 'dark', cursorTheme: 'on-dark' },
     { id: 'fragmentos', theme: 'light', cursorTheme: 'on-paper' },
-    { id: 'fotofilmes', theme: 'dark', cursorTheme: 'on-blue' },
+    { id: 'fotofilmes', selector: '#fotofilmes > div:first-child', theme: 'dark', cursorTheme: 'on-blue' },
+    { id: 'fotofilmes', selector: '#fotofilmes .client-film--1', theme: 'yellow', cursorTheme: 'on-yellow' },
+    { id: 'fotofilmes', selector: '#fotofilmes .client-film--2', theme: 'dark', cursorTheme: 'on-brown' },
+    { id: 'relatos', theme: 'light', cursorTheme: 'on-paper' },
     { id: 'informacoes', theme: 'yellow', cursorTheme: 'on-yellow' },
   ]
 
@@ -433,7 +448,7 @@ function initializeEditorialRedesign() {
   const measureSectionRanges = () => {
     maxPageScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight)
     sectionRanges = sectionThemeMap.map((item) => {
-      const element = document.getElementById(item.id)
+      const element = item.selector ? document.querySelector(item.selector) : document.getElementById(item.id)
       if (!element) return null
       const rect = element.getBoundingClientRect()
       const top = rect.top + window.scrollY
@@ -456,7 +471,7 @@ function initializeEditorialRedesign() {
       header.classList.toggle('hipocampo-header-scrolled', nextHeaderScrolled)
     }
 
-    const probeY = scrollY + window.innerHeight * 0.28
+    const probeY = scrollY + 44
     let activeId = 'abertura'
     let activeTheme = 'dark'
     let activeCursorTheme = 'on-blue'
@@ -476,7 +491,7 @@ function initializeEditorialRedesign() {
       if (item.top <= probeY && item.bottom >= probeY) {
         if (item.id === 'abertura' && heroProgress >= 0.48) {
           activeId = 'projeto'
-          activeTheme = 'yellow'
+          activeTheme = 'light'
           activeCursorTheme = 'on-yellow'
         } else {
           activeId = item.id
@@ -486,10 +501,24 @@ function initializeEditorialRedesign() {
       }
     }
 
+    // Use the same cached scroll interval as the camera; the house overlaps
+    // neighbouring chapters and cannot be classified by a page-height ratio.
+    const houseScroll = ScrollTrigger.getById('hipocampo-house')
+    if (houseScroll?.isActive) {
+      activeId = 'casa'
+      activeTheme = houseScroll.trigger.houseJourney && houseScroll.progress > .34 && houseScroll.progress < .91 ? 'dark' : 'light'
+      activeCursorTheme = activeTheme === 'dark' ? 'on-dark' : 'on-paper'
+    }
+
     if (activeTheme !== currentHeaderTheme) {
       currentHeaderTheme = activeTheme
       header.dataset.navTheme = activeTheme
     }
+    // The earlier project pin also animates these same header children. Once
+    // a later chapter is under the header, its controls must remain available
+    // on reverse scrolling and after opening/closing the mobile disclosure.
+    const navigationVisible = !['abertura', 'projeto'].includes(activeId) || heroProgress < .015
+    if (header.dataset.navigationVisible !== String(navigationVisible)) header.dataset.navigationVisible = String(navigationVisible)
 
     if (activeCursorTheme !== currentCursorTheme) {
       currentCursorTheme = activeCursorTheme
@@ -749,6 +778,7 @@ function initializeEditorialRedesign() {
     progressBar.remove()
     cursorEl?.remove()
     delete header.dataset.navTheme
+    delete header.dataset.navigationVisible
     header.classList.remove('hipocampo-header-scrolled')
     delete document.documentElement.dataset.editorialMotionReady
     delete window.__hipocampoEditorialCleanup

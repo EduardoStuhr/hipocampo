@@ -1,0 +1,61 @@
+/* Each film occupies a complete colour field; the earlier white pages retain
+   their existing photos, proportions and portrait carousel. */
+#fotofilmes.client-films { padding: 0; background: #2626fc; color: #fff; }
+#fotofilmes.client-films > div:first-child { padding: clamp(6rem, 10vw, 10rem) 6vw 4rem; margin: 0; }
+#fotofilmes.client-films h2,
+#fotofilmes.client-films h3 { font-family: "AquilineTwo", Georgia, serif; font-weight: 400; letter-spacing: 0; line-height: 1.12 !important; position: static; }
+#fotofilmes.client-films h2 { font-size: clamp(3.4rem, 7vw, 7.5rem); }
+#fotofilmes.client-films .eyebrow { color: #f0d756 !important; }
+#fotofilmes.client-films article { margin: 0; padding: clamp(3rem, 7vw, 7rem) 6vw; }
+#fotofilmes.client-films article > div:first-child { min-height: 0; }
+#fotofilmes.client-films h3 { font-size: clamp(2.6rem, 4.7vw, 5.5rem); margin-top: 1rem; line-height: 1.4 !important; }
+#fotofilmes.client-films .client-film--1 .text-center strong { font-family: "SquidBoy", sans-serif; font-size: clamp(2rem, 4vw, 4rem); line-height: 1.15; margin: 1rem 0; }
+#fotofilmes.client-films .client-film--1 .text-center > span { display: block; color: #f0d756; }
+#fotofilmes.client-films .client-film--1 .text-center .script { font: 400 .9rem/1.4 "SquidBoy", sans-serif; }
+#fotofilmes.client-films .client-film--2 p.absolute { display: none; }
+#fotofilmes.client-films .film-index { font-family: "SquidBoy", sans-serif; color: inherit !important; }
+#fotofilmes.client-films .client-film--1 { background: #f0d756; color: #6b311c; }
+#fotofilmes.client-films .client-film--2 { background: #6b311c; color: #f0d756; }
+.client-stories { padding: clamp(5rem, 9vw, 9rem) 9vw; background: #fff; color: #6b311c; scroll-margin-top: 5rem; }
+.client-stories h2 { font: 400 clamp(3.5rem, 7vw, 7rem)/1.2 "AquilineTwo", Georgia, serif; margin: 1rem 0 2rem; }
+.client-stories > p:last-child { font-family: "SquidBoy", sans-serif; }
+#instalacao.installation { overflow: clip; }
+#instalacao .installation-toolbar { position: sticky; top: 6rem; z-index: 4; background: #000; }
+
+/* Local text shadow protects the mark on photography, without a full-width
+   opaque header covering the archive underneath. */
+body > #root > header[data-nav-theme] { background: transparent !important; border-color: transparent; backdrop-filter: none; }
+body > #root > header[data-nav-theme] > a,
+body > #root > header[data-nav-theme] > button,
+body > #root > header[data-nav-theme] nav a { color: #fff; }
+body > #root > header[data-nav-theme="light"] > a,
+body > #root > header[data-nav-theme="light"] > button,
+body > #root > header[data-nav-theme="light"] nav a,
+body > #root > header[data-nav-theme="yellow"] > a,
+body > #root > header[data-nav-theme="yellow"] > button,
+body > #root > header[data-nav-theme="yellow"] nav a { color: #6b311c; text-shadow: none; }
+body > #root > header[data-navigation-visible="true"] > a,
+body > #root > header[data-navigation-visible="true"] > button { opacity: 1 !important; transform: none !important; }
+@media (min-width: 768px) {
+  body > #root > header[data-navigation-visible="true"] nav { opacity: 1 !important; transform: none !important; }
+}
+body > #root > header[data-nav-theme="dark"] > a,
+body > #root > header[data-nav-theme="dark"] nav a { text-shadow: 0 1px 3px #0008; }
+body > #root > header[data-nav-theme="light"] > a { text-shadow: 0 1px 2px #fffb; }
+body > #root > header nav { gap: clamp(.7rem, 1.4vw, 1.6rem); }
+@media (max-width: 767px) {
+  body > #root > header[data-navigation-visible="true"]:has(> button[aria-expanded="true"]) nav { opacity: 1 !important; transform: none !important; }
+  body > #root > header nav { background: #fff !important; color: #6b311c; border: 1px solid #6b311c30; box-shadow: 0 12px 32px #0002; }
+  body > #root > header nav a,
+  body > #root > header nav span { color: #6b311c !important; text-shadow: none !important; }
+  #sobre.hipocampo-page4, #vestigios.hipocampo-page5 { padding-top: 5.5rem; }
+}
+
+.hipocampo-intro { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; background: #2626fc; color: white; pointer-events: none; animation: intro-fallback .25s 3s forwards; }
+.hipocampo-intro::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 3px, #0000000b 3px 4px); pointer-events: none; }
+.hipocampo-intro svg { width: min(64vw, 24rem); height: min(64vw, 24rem); overflow: visible; }
+.hipocampo-intro text { font-family: "AquilineTwo", Georgia, serif; font-size: 230px; fill: transparent; stroke: currentColor; stroke-width: .65; stroke-dasharray: 1100; stroke-dashoffset: 1100; animation: intro-write 1.05s ease forwards; }
+.hipocampo-intro.is-leaving { opacity: 0; transition: opacity .25s ease; }
+@keyframes intro-write { 75% { fill: transparent; } 100% { stroke-dashoffset: 0; fill: currentColor; } }
+@keyframes intro-fallback { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .hipocampo-intro { display: none; } }

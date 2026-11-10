@@ -63,6 +63,13 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const portal = mesh(root, new THREE.ShapeGeometry(portalOutline), portalMaterial, [0, 0, 0], false)
   portal.name = 'house-door-portal'
   portal.renderOrder = -30
+  // Restore daylight without adding another real-time light or changing the
+  // calibrated aperture. It fades away as the physical doors open.
+  const entryLightMaterial = new THREE.MeshBasicMaterial({ ...portalState, color: '#fff9e8', transparent: true, opacity: 1, depthWrite: false, toneMapped: false })
+  surfaces.add(entryLightMaterial)
+  portalMaterials.add(entryLightMaterial)
+  const entryLight = mesh(root, new THREE.ShapeGeometry(portalOutline), entryLightMaterial, [0, 0, .035], false)
+  entryLight.name = 'house-entrance-daylight'
   let portalActive = true
 
   // Quiet plaster grain, lit by the room rather than a painted radial gradient.
@@ -315,11 +322,13 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
         m.position.x = (i ? 1 : -1) * (currentWidth + exitW) / 4
       })
     },
-    inspect: () => ({ staticLighting: staticLighting.inspect(), portalActive, batchedMeshes: batching.savedMeshes, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
+    inspect: () => ({ staticLighting: staticLighting.inspect(), portalActive, entranceDaylight: { visible: entryLight.visible, opacity: entryLightMaterial.opacity }, batchedMeshes: batching.savedMeshes, doorway: { center: [door.x, floorY + doorH / 2, 0], width: doorW, height: doorH, corners: doorway.localCorners.map(p => [door.x + p.x, floorY + p.y, 0]), modelFitResidualPx: doorway.modelFitResidualPx, leafThickness: entryModel.leafThickness, hingeDepth: entryModel.hingeDepth }, swings: pendulums.map(p => ({ angle: p.angle, velocity: p.velocity, free: p.free })) }),
     update(open, time, motion, pointer, dt, camera) {
       // Switch only after the aperture fills the view, before its near plane
       // can be clipped. The same rule applies when scrolling backwards.
       const outside = camera.position.z > .18
+      entryLightMaterial.opacity = Math.max(0, 1 - open * 2)
+      entryLight.visible = outside && entryLightMaterial.opacity > .001
       if (outside !== portalActive) {
         portalActive = outside
         portal.visible = outside

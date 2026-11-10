@@ -67,6 +67,7 @@ export const COLLECTION = entries.map(([label, kind, members], index) => {
     definition.position = [-1.05 + (i % 7) * .35, 1.57, -.42 + Math.floor(i / 7) * .17]
   }
   if (number >= 5 && number <= 7) definition.sharedSetup = 'cartas'
+  if (kind === 'holy-card') definition.memory = label + ' — cartão devocional de papel do acervo.'
   // One entry per CD photograph when their final count and images arrive.
   if (number === 72) { definition.photoMode = 'one-per-cd'; definition.variants = [] }
   return definition

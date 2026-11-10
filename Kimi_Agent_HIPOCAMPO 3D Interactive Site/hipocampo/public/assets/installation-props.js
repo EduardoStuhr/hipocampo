@@ -30,6 +30,24 @@ export function createCollectionBuilder({ mesh, box, tube, material, textures, l
     const face = mesh(p, new THREE.PlaneGeometry(w - .03, d - .03), material({ map, roughness: .94 }), [0, .011, 0], false)
     face.rotation.x = -Math.PI / 2
   }
+  function holyCard(p, item) {
+    // A devotional print is still a paper card. Distinguish it from a typed
+    // document until the actual archive photograph is supplied.
+    const c = document.createElement('canvas'); c.width = 384; c.height = 576
+    const g = c.getContext('2d')
+    g.fillStyle = '#e5d9bc'; g.fillRect(0, 0, c.width, c.height)
+    g.strokeStyle = '#8e6d37'; g.lineWidth = 5; g.strokeRect(16, 16, 352, 544)
+    g.lineWidth = 1; g.strokeRect(25, 25, 334, 526)
+    g.fillStyle = '#ba9b5e'; g.beginPath(); g.arc(192, 157, 69, 0, Math.PI * 2); g.fill()
+    g.fillStyle = item.number % 2 ? '#786f61' : '#716c82'
+    g.beginPath(); g.moveTo(192, 189); g.bezierCurveTo(128, 222, 122, 310, 94, 392); g.lineTo(290, 392); g.bezierCurveTo(262, 310, 256, 222, 192, 189); g.fill()
+    g.fillStyle = '#c7b294'; g.beginPath(); g.ellipse(192, 159, 32, 43, 0, 0, Math.PI * 2); g.fill()
+    g.fillStyle = '#58412a'; g.font = '24px Georgia'; g.textAlign = 'center'
+    g.fillText(item.label, 192, 463)
+    g.lineWidth = 2; g.beginPath(); g.moveTo(192, 490); g.lineTo(192, 526); g.moveTo(179, 503); g.lineTo(205, 503); g.stroke()
+    const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; textures.add(map)
+    print(p, map, 2 / 3)
+  }
   function book(p, item) {
     const surface = palette[(item.number || 0) % palette.length]
     box(p, .53, .059, .38, paper, [0, .038, 0], .003)
@@ -99,7 +117,8 @@ export function createCollectionBuilder({ mesh, box, tube, material, textures, l
     const k = item.kind, surface = palette[(item.number || 0) % palette.length]
     if (k === 'chemical') { bottle(p, item.color, item.size); return }
     if (k === 'photo' || k === 'postcard') { photo(p, ((item.number || 1) % 4) + 1); return }
-    if (['letter', 'document', 'drawing', 'newspaper', 'poster', 'holy-card'].includes(k)) { print(p, labelMap(item), k === 'holy-card' ? .72 : 1.4); return }
+    if (k === 'holy-card') { holyCard(p, item); return }
+    if (['letter', 'document', 'drawing', 'newspaper', 'poster'].includes(k)) { print(p, labelMap(item)); return }
     if (k === 'book' || k === 'magazine') { book(p, item); return }
     if (k === 'clothes') { clothes(p); return }
     if (k === 'apron') { apron(p); return }

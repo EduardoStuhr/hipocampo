@@ -1,28 +1,14 @@
 // Photo trail is scoped to the opening; it does not capture clicks or scrolling.
 const photoSources = [
-  { src: '/images/trail/photo-1.webp', shape: 'torn' },
-  { src: '/images/trail/photo-2.webp', shape: 'oval' },
-  { src: '/images/trail/mountains-cutout.webp', shape: 'cutout' },
-  { src: '/images/trail/birds-cutout.webp', shape: 'cutout' },
-  { src: '/images/trail/photo-5.webp', shape: 'arch' },
-  { src: '/images/trail/tv-cutout.webp', shape: 'cutout' },
-  { src: '/images/trail/photo-7.webp', shape: 'film' },
-  { src: '/images/trail/photo-8.webp', shape: 'torn' },
-  { src: '/images/trail/photo-9.webp', shape: 'oval' },
-  { src: '/images/client-2026-11/foto-3.webp', shape: 'torn' },
-  { src: '/images/client-2026-11/foto-4.webp', shape: 'oval' },
-  { src: '/images/client-2026-11/foto-5.webp', shape: 'arch' },
+  ...Array.from({ length: 9 }, (_, i) => ({ src: `/images/trail/photo-${i + 1}.webp`, shape: 'square' })),
+  ...[3, 4, 5].map(i => ({ src: `/images/client-2026-11/foto-${i}.webp`, shape: 'square' })),
 ]
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 const style = document.createElement('style')
 style.textContent = `
 .hipocampo-photo-trail { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; contain: strict; }
-.hipocampo-trail-photo { position: absolute; width: clamp(88px, 11vw, 150px); height: auto; max-height: 190px; object-fit: contain; pointer-events: none; opacity: 0; transform: translate(-50%, -50%); }
+.hipocampo-trail-photo { position: absolute; width: clamp(88px, 11vw, 150px); height: auto; aspect-ratio: 1; object-fit: cover; background: #f4f0e7; pointer-events: none; opacity: 0; transform: translate(-50%, -50%); }
 .hipocampo-trail-photo.is-active { will-change: transform, opacity; }
-.hipocampo-trail-photo--oval { clip-path: ellipse(49% 49% at 50% 50%); }
-.hipocampo-trail-photo--arch { border-radius: 48% 48% 3% 3% / 38% 38% 3% 3%; }
-.hipocampo-trail-photo--torn { -webkit-mask: url('/images/trail/torn-mask.png') 50% 50% / 100% 100% no-repeat; mask: url('/images/trail/torn-mask.png') 50% 50% / 100% 100% no-repeat; }
-.hipocampo-trail-photo--film { width: clamp(55px, 6vw, 80px); }
 @media (prefers-reduced-motion: reduce) { .hipocampo-photo-trail { display: none; } }
 `
 document.head.append(style)

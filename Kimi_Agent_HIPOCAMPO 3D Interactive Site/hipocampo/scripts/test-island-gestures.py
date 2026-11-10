@@ -30,7 +30,7 @@ async def main():
         await page.goto(os.getenv('HOUSE_TEST_URL', 'http://127.0.0.1:4173/'), wait_until='domcontentloaded')
         await page.wait_for_selector('.page5-shutter', state='attached')
         await page.wait_for_function('window.__hipocampoLenis')
-        assert await page.locator('.page3-caption').count() == 0
+        assert await page.locator('.page3-caption').count() == 2
         assert await page.locator('.page5-camera-hint').count() == 0
 
         # Removing the visible hint must preserve both the actual shutter and
@@ -103,7 +103,7 @@ async def main():
         assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
         assert not errors, errors
         result = {
-            'captionsRemoved': 3, 'shutterAndPhotoLifetime': True,
+            'houseCaptionsRestored': 2, 'cameraCaptionRemoved': True, 'shutterAndPhotoLifetime': True,
             'motion': motion, 'heldGestureKeepsSampling': True,
             'stationaryHoldRenderCount': idle['renderedFrames'] - held['renderedFrames'],
             'tableObjectMoved': True, 'errors': errors,

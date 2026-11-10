@@ -1,0 +1,52 @@
+"""Check restored house captions/daylight and the devotional card on the table."""
+import asyncio,json
+from pathlib import Path
+from playwright.async_api import async_playwright
+OUT=Path(__file__).resolve().parents[1]/'artifacts'/'client-house';OUT.mkdir(parents=True,exist_ok=True)
+async def main():
+ async with async_playwright()as pw:
+  b=await pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+  p=await b.new_page(viewport={'width':1366,'height':768});errors=[]
+  p.on('pageerror',lambda e:errors.append(str(e)))
+  p.on('console',lambda m:errors.append(m.text)if m.type=='error'and 'Shader Error' in m.text else None)
+  await p.goto('http://127.0.0.1:4173/',wait_until='domcontentloaded')
+  await p.wait_for_function("document.documentElement.dataset.editorialMotionReady==='true'&&document.querySelector('#sobre')&&document.querySelector('#vestigios')")
+  await p.wait_for_timeout(1000)
+  await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#projeto'),{immediate:true,force:true})")
+  await p.wait_for_function("document.querySelector('#casa')?.houseJourney",timeout=120000)
+  async def go(v):
+   await p.evaluate("async v=>{const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');const s=ST.getById('hipocampo-house');__hipocampoLenis.scrollTo(s.start+v*(s.end-s.start),{immediate:true,force:true});ST.update()}",v)
+   await p.wait_for_function('(v)=>Math.abs(document.querySelector("#casa").houseJourney.inspect().progress-v)<.003',arg=v,timeout=30000)
+  async def captions():return await p.locator('.page3-caption').evaluate_all('(es)=>es.map(e=>Number(getComputedStyle(e).opacity))')
+  await go(.10);a=await captions();assert a[0]>.9 and a[1]<.01,a
+  await p.screenshot(path=str(OUT/'house-caption-a.png'))
+  await go(.275);a=await captions();assert a[0]<.01 and a[1]>.9,a
+  assert await p.locator('header').get_attribute('data-nav-theme')=='light'
+  light=await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().interior.entranceDaylight')
+  assert light['visible'] and light['opacity']>.8,light
+  await p.screenshot(path=str(OUT/'house-door-daylight.png'))
+  await go(.65);a=await captions();assert max(a)<.01,a
+  state=await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect()')
+  assert not state['interior']['entranceDaylight']['visible'],state
+  assert await p.locator('header').get_attribute('data-nav-theme')=='dark'
+  await p.screenshot(path=str(OUT/'house-room.png'))
+  await p.mouse.move(700,300);await p.mouse.down();await p.mouse.move(850,320,steps=5);await p.mouse.up()
+  await p.wait_for_timeout(400)
+  assert abs(await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().view.targetYaw'))>.1
+  await p.wait_for_function('!document.querySelector("#casa").houseJourney.inspect().framePending',timeout=30000)
+  before=await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().renderedFrames');await p.wait_for_timeout(700)
+  assert before==await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().renderedFrames')
+  await go(.275);assert (await captions())[1]>.9
+  await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
+  await p.wait_for_function("document.querySelector('#instalacao')?.installationRoom?.inspect().prepared",timeout=120000)
+  await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
+  await p.locator('#instalacao').evaluate("e=>{e.installationRoom.moveToTable('objeto-67');e.installationRoom.moveToTable('objeto-68');e.installationRoom.moveToTable('objeto-45')}")
+  await p.wait_for_function("document.querySelector('#instalacao').installationRoom.inspect().movingObjects===0")
+  async with p.expect_download()as event:await p.locator('#instalacao [data-action=take-photo]').click()
+  photo=await event.value;await photo.save_as(str(OUT/'holy-cards-table.png'));assert await photo.failure()is None
+  await p.locator('#instalacao [data-action=reset]').click()
+  assert not any(o['atTable']for o in await p.locator('#instalacao').evaluate('(e)=>e.installationRoom.inspect().objects'))
+  assert not errors,errors
+  result={'captionsDisjoint':True,'doorDaylight':light,'daylightHiddenInside':True,'rotationAndIdle':True,'devotionalCardsPhotographed':True,'errors':errors}
+  print(json.dumps(result),flush=True);(OUT/'result.json').write_text(json.dumps(result,indent=2));await b.close()
+asyncio.run(main())

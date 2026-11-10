@@ -1,3 +1,4 @@
+import { prepareClientNavigation } from './client-editorial.js?v=client-audio-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 import Lenis from './vendor/lenis.mjs'
 
@@ -46,6 +47,7 @@ function initializeHeroMotion() {
     return true
   }
 
+  prepareClientNavigation(header)
   window.__hipocampoHeroMotionCleanup?.()
   window.__hipocampoHeroTransitionCleanup?.()
   field.dataset.heroMotionReady = 'true'
@@ -290,6 +292,7 @@ function initializeHeroMotion() {
     })
 
     transitionTimeline
+      .to(circle, { clipPath: 'circle(calc(var(--hipocampo-circle-size) * 0.5) at 50% 100%)', duration: .08, ease: 'power1.out' }, 0)
       .to(lines, {
         y: (index) => {
           const direction = index < lines.length / 2 ? -1 : 1

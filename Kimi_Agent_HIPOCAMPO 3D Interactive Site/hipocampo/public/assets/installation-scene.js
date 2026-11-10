@@ -1,10 +1,10 @@
 import * as THREE from './vendor/three.module.min.js'
-import { FRAGMENTS } from './installation-collection.js?v=client-1'
-import { createCollectionBuilder } from './installation-props.js?v=client-1'
+import { FRAGMENTS } from './installation-collection.js?v=client-audio-1'
+import { createCollectionBuilder } from './installation-props.js?v=client-audio-1'
 import { createRenderBudget } from './render-budget.js?v=island-gpu-2'
 import { batchStaticMeshes } from './static-mesh-batch.js?v=fps-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=scroll-start-1'
-export { FRAGMENTS } from './installation-collection.js?v=client-1'
+export { FRAGMENTS } from './installation-collection.js?v=client-audio-1'
 
 const clamp = THREE.MathUtils.clamp
 const BASE_LAYOUT = {
@@ -633,7 +633,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   function positionControls() {
     controlsFrame = 0
     if (disposed) return
-    const top = clamp(96 - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
+    // Leave the mark and the sticky room actions their own vertical space.
+    const top = clamp(184 - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
     navigationBar.style.top = `${Math.round(top)}px`
   }
   function resize() {
