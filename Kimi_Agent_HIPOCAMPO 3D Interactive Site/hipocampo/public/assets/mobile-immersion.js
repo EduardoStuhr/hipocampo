@@ -1,3 +1,4 @@
+import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 // Mounted exclusively by mobile-layout.js at phone widths.
 export function mountMobileImmersion(root) {
   const disposers = []
@@ -89,11 +90,8 @@ export function mountMobileImmersion(root) {
 
   // Prevent scrolling from the canvas, controls, header or page edges while
   // locked. A controls panel may still scroll internally on a short phone.
-  let startY = 0
-  listen(document, 'touchstart', event => { startY = event.touches[0]?.clientY || 0 }, { passive: true })
   listen(document, 'touchmove', event => {
     if (lockOwner && !event.target.closest('[data-mobile-tools-scroll]')) event.preventDefault()
-    else if (!lockOwner && scrollY <= 0 && (event.touches[0]?.clientY || 0) > startY + 4) event.preventDefault()
   }, { passive: false })
   listen(window, 'wheel', event => { if (lockOwner && !event.target.closest('[data-mobile-tools-scroll]')) event.preventDefault() }, { passive: false })
   listen(document, 'click', event => {
@@ -102,45 +100,59 @@ export function mountMobileImmersion(root) {
   listen(window, 'scroll', () => {
     if (lockOwner && Math.abs(scrollY - lockY) > 1) window.scrollTo(0, lockY)
   }, { passive: true })
-  listen(window, 'resize', () => {
+  const reanchor = () => {
     clearTimeout(resizeTimer)
     resizeTimer = setTimeout(() => {
       if (!lockOwner) return
       const scene = lockOwner === 'room' ? stage : document.querySelector('#casa')
       lockY = scene.getBoundingClientRect().top + scrollY
-      if (lockOwner === 'house') lockY += houseProgress * Math.max(0, scene.offsetHeight - innerHeight)
+      if (lockOwner === 'house') {
+        const journey = ScrollTrigger.getById('hipocampo-house')
+        if (journey) lockY = journey.start + houseProgress * (journey.end - journey.start)
+      }
       window.__hipocampoLenis?.resize()
       window.__hipocampoLenis?.scrollTo(lockY, { immediate: true, force: true })
     }, 300)
+  }
+  let viewportWidth = innerWidth
+  listen(window, 'resize', () => {
+    if (viewportWidth === innerWidth) return
+    viewportWidth = innerWidth
+    reanchor()
   }, { passive: true })
+  // A real orientation / viewport change resizes the stable lvh scene.
+  // Chrome's address-bar motion only moves controls and never clears WebGL.
+  const sceneResize = new ResizeObserver(() => { if (lockOwner) reanchor() })
+  sceneResize.observe(stage)
+  sceneResize.observe(document.querySelector('.page3-stage'))
 
   const house = document.querySelector('#casa')
   const houseCanvas = house.querySelector('canvas')
   const houseToggle = () => house.querySelector('.page3-look-toggle')
   let houseLocked = false
+  const commandHouse = active => house.dispatchEvent(new CustomEvent('hipocampo:house-look-command', { detail: { active } }))
   const houseSync = () => {
-    const active = houseLocked
-    if (active && !document.hidden && house.classList.contains('has-house-look') && !house.classList.contains('is-house-looking')) houseToggle()?.click()
     const toggle = houseToggle(), hint = house.querySelector('#house-look-hint')
-    if (toggle) toggle.textContent = active ? 'voltar à rolagem' : 'olhar ao redor'
-    if (hint) hint.textContent = active ? 'Rolagem bloqueada. Toque em “voltar à rolagem” para seguir.' : 'Toque e arraste para olhar ao redor.'
+    if (toggle) toggle.textContent = houseLocked ? 'voltar à rolagem' : 'olhar ao redor'
+    if (hint) hint.textContent = houseLocked ? 'Rolagem bloqueada. Toque em “voltar à rolagem” para seguir.' : 'Para girar, toque em olhar ao redor. Para seguir, deslize na tela.'
   }
-  const houseState = new MutationObserver(houseSync)
-  houseState.observe(house, { attributes: true, attributeFilter: ['class'], childList: true, subtree: false })
-  listen(houseCanvas, 'pointerdown', event => {
-    if (event.pointerType !== 'touch' || !house.classList.contains('has-house-look')) return
-    if (!house.classList.contains('is-house-looking')) houseToggle()?.click()
-  }, true)
-  // Delegation handles the look controls even if WebGL finishes preparing late.
   listen(house, 'click', event => {
     if (!event.target.closest('.page3-look-toggle, .page3-look-reset')) return
-    // Capture explicit intent before the look controller changes its class;
-    // its MutationObserver must not interpret a reset as an auto-suspension.
-    houseLocked = !event.target.closest('.page3-look-reset') && !house.classList.contains('is-house-looking')
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    houseLocked = !event.target.closest('.page3-look-reset') && !houseLocked
     if (houseLocked) freeze('house')
     else release('house')
+    commandHouse(houseLocked)
+    houseSync()
   }, true)
-  listen(document, 'visibilitychange', houseSync)
+  // Explicit commands, rather than synthetic clicks and class observers,
+  // keep browser suspension and the page lock from toggling one another.
+  listen(house, 'hipocampo:house-look-state', event => {
+    if (houseLocked && event.detail.available && !event.detail.active && !document.hidden) commandHouse(true)
+    houseSync()
+  })
+  listen(houseCanvas, 'contextmenu', event => event.preventDefault())
 
   const sceneObserver = new IntersectionObserver(entries => {
     const entry = entries[0]
@@ -148,26 +160,35 @@ export function mountMobileImmersion(root) {
   }, { rootMargin: '-15% 0px -15% 0px', threshold: 0 })
   sceneObserver.observe(stage)
 
-  // Native sticky replaces the mobile fixed-pin paint path. Address-bar
-  // resizing gets a full dynamic viewport without rebuilding the animation.
+  // Native sticky and stable lvh scene sizes keep Chrome's moving browser
+  // bars from rebuilding the animation or clearing the WebGL buffer.
   const hero = document.querySelector('#abertura')
-  let touchChars = [], restoreTimer = 0, lastCharFrame = 0
+  let touchChars = [], restoreTimer = 0, lastCharFrame = 0, touch = null, holdTimer = 0
   const charAnimations = new Map()
   const restoreChars = () => {
     touchChars = []
     charAnimations.forEach(animation => animation.cancel())
     charAnimations.clear()
   }
+  const revealTouch = point => {
+    hero.dispatchEvent(new CustomEvent('hipocampo:hero-touch', { detail: { clientX: point.clientX, clientY: point.clientY, start: !touch?.revealed } }))
+    if (touch) touch.revealed = true
+    moveChars(point)
+  }
+  listen(hero, 'contextmenu', event => event.preventDefault())
+  listen(hero, 'dragstart', event => event.preventDefault())
+  listen(document.querySelector('[data-memory-map]'), 'contextmenu', event => event.preventDefault())
   listen(hero, 'pointerdown', event => {
     if (event.pointerType !== 'touch' || event.target.closest('a,button')) return
-    clearTimeout(restoreTimer)
+    clearTimeout(restoreTimer); clearTimeout(holdTimer)
     restoreChars()
     lastCharFrame = 0
+    touch = { id: event.pointerId, clientX: event.clientX, clientY: event.clientY, pointerType: 'touch', mode: 'pending', revealed: false }
     touchChars = [...hero.querySelectorAll('.memory-char')].map(char => {
       const r = char.getBoundingClientRect()
       return { char, x: r.left + r.width / 2, y: r.top + r.height / 2, visible: r.width > 0 }
     }).filter(item => item.visible)
-    moveChars(event)
+    holdTimer = setTimeout(() => { if (touch?.mode === 'pending') revealTouch(touch) }, 220)
   }, { passive: true })
   const moveChars = event => {
     if (event.pointerType !== 'touch' || matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -187,19 +208,36 @@ export function mountMobileImmersion(root) {
         charAnimations.set(char, animation)
       })
   }
-  listen(hero, 'pointermove', moveChars, { passive: true })
-  const endChars = () => { clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreChars, 1000) }
-  listen(hero, 'pointerup', endChars, { passive: true })
-  listen(hero, 'pointercancel', endChars, { passive: true })
+  listen(hero, 'pointermove', event => {
+    if (!touch || event.pointerId !== touch.id) return
+    const dx = event.clientX - touch.clientX, dy = event.clientY - touch.clientY
+    if (touch.mode === 'pending' && Math.hypot(dx, dy) > 8) {
+      clearTimeout(holdTimer)
+      touch.mode = Math.abs(dy) >= Math.abs(dx) ? 'scroll' : 'effect'
+    }
+    if (touch.mode === 'scroll') { restoreChars(); return }
+    if (touch.mode === 'effect') revealTouch(event)
+  }, { passive: true })
+  listen(hero, 'pointerup', event => {
+    clearTimeout(holdTimer)
+    if (touch?.id === event.pointerId && touch.mode === 'pending' && !touch.revealed) revealTouch(event)
+    touch = null
+    clearTimeout(restoreTimer); restoreTimer = setTimeout(restoreChars, 1000)
+  }, { passive: true })
+  listen(hero, 'pointercancel', () => {
+    clearTimeout(holdTimer); touch = null; restoreChars()
+  }, { passive: true })
 
   return () => {
     roomLocked = false
     root.installationRoom?.setNavigation(false)
-    if (house.classList.contains('is-house-looking')) houseToggle()?.click()
+    houseLocked = false
+    commandHouse(false)
+    if (houseToggle()) houseToggle().textContent = 'olhar ao redor'
     release()
-    state.disconnect(); houseState.disconnect(); sceneObserver.disconnect()
+    state.disconnect(); sceneObserver.disconnect(); sceneResize.disconnect()
     disposers.forEach(dispose => dispose())
-    clearTimeout(restoreTimer); clearTimeout(resizeTimer); restoreChars()
+    clearTimeout(restoreTimer); clearTimeout(holdTimer); clearTimeout(resizeTimer); restoreChars()
     toolbar.append(actions)
     stage.insertBefore(zoom, zoomNext)
     controls.remove(); tools.remove()

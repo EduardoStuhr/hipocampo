@@ -224,7 +224,13 @@ function initializeHeroMotion() {
     ScrollTrigger.refresh()
   }
 
+  let previousViewportWidth = window.innerWidth
   const onResize = () => {
+    // Chrome's address bar changes height during a phone swipe. Refreshing
+    // every pin then would reset the scene in the middle of that same gesture.
+    const phoneToolbarResize = innerWidth <= 767 && innerWidth === previousViewportWidth
+    previousViewportWidth = innerWidth
+    if (phoneToolbarResize) return
     window.clearTimeout(resizeTimer)
     resizeTimer = window.setTimeout(() => {
       if (resizePending) return

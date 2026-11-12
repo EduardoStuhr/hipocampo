@@ -1,9 +1,11 @@
-import { mountMobileImmersion } from './mobile-immersion.js?v=touch-1'
+import { mountMobileImmersion } from './mobile-immersion.js?v=phone-gestures-1'
+import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 // Mobile adapters use the existing React/Three APIs; desktop keeps its DOM.
 const phone = matchMedia('(max-width: 767px)')
 let cleanup = () => {}
 
 function mountPhone(root) {
+  ScrollTrigger.config({ ignoreMobileResize: true })
   const disposers = []
   const listen = (target, event, callback, options) => {
     target.addEventListener(event, callback, options)
@@ -86,6 +88,7 @@ function mountPhone(root) {
   })
   return () => {
     disposeImmersion()
+    ScrollTrigger.config({ ignoreMobileResize: false })
     menuState.disconnect()
     menuToggle.textContent = originalMenuLabel
     mutations.disconnect(); resize.disconnect()

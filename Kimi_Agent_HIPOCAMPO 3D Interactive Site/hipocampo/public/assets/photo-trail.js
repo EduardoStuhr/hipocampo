@@ -63,7 +63,8 @@ function initializePhotoTrail() {
     })
   }
 
-  function move(event) {
+  function move(event, mobileEffect = false) {
+    if (event.pointerType === 'touch' && innerWidth <= 767 && !mobileEffect) return
     if (reducedMotion.matches || (event.pointerType === 'touch' && event.buttons === 0)) return
     if (event.target.closest('a, button, input, select, textarea')) return
     if (!heroRect) heroRect = hero.getBoundingClientRect()
@@ -107,12 +108,13 @@ function initializePhotoTrail() {
   }
 
   hero.addEventListener('pointermove', move, { passive: true })
-  // A phone has no hover: each contact starts a new print, even in one spot.
-  hero.addEventListener('pointerdown', event => {
-    if (event.pointerType !== 'touch' || innerWidth > 767) return
-    previous = null
-    move(event)
-  }, { passive: true })
+  // The phone controller distinguishes taps / horizontal exploration from
+  // vertical scrolling before asking the existing pool to reveal a print.
+  hero.addEventListener('hipocampo:hero-touch', event => {
+    if (innerWidth > 767) return
+    if (event.detail.start) previous = null
+    move({ ...event.detail, target: hero, pointerType: 'touch', buttons: 1 }, true)
+  })
   hero.addEventListener('pointerenter', invalidateRect, { passive: true })
   hero.addEventListener('pointerleave', () => { previous = null })
   window.addEventListener('resize', invalidateRect, { passive: true })

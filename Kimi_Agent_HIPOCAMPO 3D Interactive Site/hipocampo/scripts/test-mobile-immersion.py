@@ -32,7 +32,7 @@ async def check(b,w,h):
  line=await p.locator('.hipocampo-memory-line').nth(3).bounding_box()
  c=await p.context.new_cdp_session(p)
  await c.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':w*.4,'y':line['y']+line['height']/2}]})
- await p.wait_for_timeout(100)
+ await p.wait_for_timeout(250)
  assert await p.locator('.hipocampo-trail-photo.is-active').count()>0,'Tap did not create a photograph'
  assert await p.locator('.memory-char').evaluate_all('(es)=>es.some(e=>e.getAnimations().length>0)'), 'Letters ignore touch'
  await p.screenshot(path=str(OUT/f'{w}-hero-touch.png'))
@@ -59,7 +59,7 @@ async def check(b,w,h):
   await timeline('hipocampo-house',progress);await full('.page3-stage')
   await p.screenshot(path=str(OUT/f'{w}-house-{progress}.png'))
  await p.wait_for_selector('#casa.has-house-look')
- await p.locator('.page3-canvas').tap(position={'x':w*.5,'y':h*.5})
+ await p.locator('.page3-look-toggle').tap()
  await p.wait_for_function("document.documentElement.classList.contains('mobile-scroll-locked')")
  y=await p.evaluate('scrollY');await swipe(p,w*.9,h*.6,dy=-100)
  assert abs(await p.evaluate('scrollY')-y)<2,'House page lock leaked'

@@ -24,16 +24,18 @@
      GSAP retains its spacer and the same reversible circle timeline. */
   #abertura.hipocampo-hero {
     position: sticky !important; top: 0 !important; left: 0 !important;
-    transform: none !important; height: 100dvh !important; min-height: 0;
+    transform: none !important; height: 100lvh !important; min-height: 0;
     max-height: none !important; width: 100% !important; max-width: none !important;
     touch-action: pan-y;
   }
   /* Sticky is constrained by its parent's content box, not its padding.
      Convert the 180% GSAP pin padding into real height on phones. */
-  .pin-spacer:has(> #abertura) { overflow: visible; padding-bottom: 0 !important; height: 280dvh !important; max-height: none !important; }
-  .page2-map-stage { min-height: 100dvh; }
-  #casa.hipocampo-page3 { margin-top: -100dvh; }
-  .page3-stage { height: 100dvh; }
+  .pin-spacer:has(> #abertura) { overflow: visible; padding-bottom: 0 !important; height: 280lvh !important; max-height: none !important; }
+  .page2-map-stage { min-height: 100lvh; }
+  #casa.hipocampo-page3 { margin-top: -100lvh; }
+  .page3-stage { height: 100lvh; }
+  #abertura, #casa canvas, .hipocampo-memory-map { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #abertura img, .hipocampo-memory-map img { -webkit-user-drag: none; }
   #casa.hipocampo-page3:not(.is-reduced-motion):not([hidden]) + #sobre { margin-top: 0; }
   .hipocampo-memory-map { pointer-events: auto; touch-action: none; }
   .page3-look-reset { display: none !important; }
@@ -49,6 +51,7 @@
   .page2-map-stage { margin-top: 2rem; }
   .page3-caption { transform: translateX(-50%); font-size: 1.4rem; width: calc(100% - 2.5rem); }
   .page3-look-controls { width: calc(100% - 2.5rem); font-size: .95rem; padding: .5rem; }
+  .page3-look-controls { bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 100lvh - 100dvh); }
   .page3-look-controls p { font-size: .85rem; }
 
   #sobre.hipocampo-page4 { min-height: 0; padding: 6rem 1.25rem 3rem; }
@@ -77,15 +80,15 @@
   #instalacao .installation-toolbar { display: none; }
   .installation-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
   .installation-actions button { font-size: .875rem; line-height: 1.5; text-align: left; }
-  .installation-stage { height: 100dvh; width: calc(100% + 2.5rem); margin-inline: -1.25rem; }
+  .installation-stage { height: 100lvh; width: calc(100% + 2.5rem); margin-inline: -1.25rem; }
   .installation-mobile-tools .installation-zoom { position: static !important; max-width: 100%; width: 100%; padding: .25rem 0; gap: .25rem .65rem; background: none; }
   .installation-zoom button { flex: 1 1 auto; font-size: .85rem; min-height: 44px; }
   .installation-topview-hint { font-size: .9rem; }
-  .installation-mobile-navigation { position: absolute; z-index: 5; left: 1rem; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: start; gap: .5rem; pointer-events: none; }
+  .installation-mobile-navigation { position: absolute; z-index: 5; left: 1rem; right: 1rem; bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 100lvh - 100dvh); display: flex; flex-direction: column; align-items: start; gap: .5rem; pointer-events: none; }
   .installation-mobile-navigation button { min-height: 44px; min-width: 7rem; max-width: calc(100% - 6rem); pointer-events: auto; padding: .5rem .7rem; border: 1px solid #c6ac7b; color: #fff; background: #000b; font: inherit; font-size: .9rem; }
   .installation-mobile-navigation button[aria-pressed="true"] { color: #f0d756; border-color: currentColor; }
   .installation-mobile-navigation p { margin: 0; max-width: 100%; font-size: .8rem; line-height: 1.5; color: #e8dfcb; text-shadow: 0 1px 3px #000; }
-  .installation-mobile-tools { position: absolute; z-index: 6; right: 1rem; bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3rem); }
+  .installation-mobile-tools { position: absolute; z-index: 6; right: 1rem; bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3rem + 100lvh - 100dvh); }
   .installation-mobile-tools > summary { min-height: 44px; display: flex; align-items: center; padding: .5rem .7rem; border: 1px solid #c6ac7b; background: #000b; cursor: pointer; font-size: .9rem; }
   .installation-mobile-tools-panel { position: absolute; right: 0; bottom: calc(100% + .5rem); width: min(22rem, calc(100vw - 2rem)); max-height: 55dvh; padding: .75rem; background: #090909ed; border: 1px solid #c6ac7b60; overflow-y: auto; overscroll-behavior: contain; }
   .installation-mobile-tools:not([open]) .installation-mobile-tools-panel { display: none; }

@@ -32,6 +32,7 @@ export function createHouseLook({ THREE, section, stage, canvas, camera, invalid
     hint.textContent = active
       ? touch ? 'Arraste para olhar · volte ao percurso para rolar' : 'Arraste ou use as setas · role para seguir · Esc para voltar'
       : touch ? 'Toque em olhar ao redor · deslize para seguir' : 'Arraste para olhar em 360° · role para seguir'
+    if (innerWidth <= 767) section.dispatchEvent(new CustomEvent('hipocampo:house-look-state', { detail: { available, active } }))
   }
   const reset = (immediate = false) => {
     const focused = document.activeElement === resetButton
@@ -47,6 +48,13 @@ export function createHouseLook({ THREE, section, stage, canvas, camera, invalid
   const activate = () => { if (available) { active = true; sync(); invalidate() } }
   const onToggle = () => active ? reset() : activate()
   const onReset = () => reset()
+  const onMobileCommand = event => {
+    // Teardown may release a phone lock after the viewport became desktop.
+    if (innerWidth > 767 && event.detail?.active) return
+    if (event.detail?.active) activate()
+    else reset()
+  }
+  section.addEventListener('hipocampo:house-look-command', onMobileCommand)
   const onDown = event => {
     if (!available || event.button !== 0 || (event.pointerType === 'touch' && !active)) return
     if (drag) return
@@ -133,6 +141,7 @@ export function createHouseLook({ THREE, section, stage, canvas, camera, invalid
       window.removeEventListener('keydown', onEscape)
       window.removeEventListener('blur', finishDrag)
       controls.remove()
+      section.removeEventListener('hipocampo:house-look-command', onMobileCommand)
     },
   }
 }

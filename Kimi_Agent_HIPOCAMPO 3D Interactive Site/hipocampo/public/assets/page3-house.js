@@ -5,7 +5,7 @@ import { createHousePreparation } from './house-preparation.js?v=house-gpu-2'
 import { createRenderBudget } from './render-budget.js?v=fps-1'
 import { createHouseInterior } from './house-interior.js?v=door-open-2'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
-import { createHouseLook } from './house-look.js?v=house-gpu-2'
+import { createHouseLook } from './house-look.js?v=phone-gestures-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 import { yieldScenePreparation, prepareSceneMaterials, warmScene } from './scene-preparation.js?v=house-gpu-2'
 
@@ -295,7 +295,9 @@ async function mount(section, controller, onFailure, onProgress) {
   resizeObserver.observe(stage)
   disposers.push(() => resizeObserver.disconnect())
   const onPointerMove = (e) => {
-    if (e.pointerType === 'touch' && innerWidth > 767) return
+    // Touch rotation belongs to the explicit look controller. Feeding the
+    // page's vertical swipes into mouse parallax makes the mobile camera jump.
+    if (e.pointerType === 'touch') return
     const x = (e.clientX / window.innerWidth) * 2 - 1
     const y = (e.clientY / window.innerHeight) * 2 - 1
     if (pointer.known) {
