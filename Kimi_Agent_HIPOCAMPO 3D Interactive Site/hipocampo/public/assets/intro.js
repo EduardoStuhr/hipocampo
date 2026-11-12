@@ -21,8 +21,25 @@ if (intro) {
       document.fonts.load('230px "AquilineTwo"').then(() => {
         // Aquiline's H extends beyond its advance width. Centre its actual ink
         // rather than the text anchor, including on a narrow phone viewport.
-        const svg = intro.querySelector('svg'), bounds = svg.querySelector('text').getBBox()
-        if (bounds.width && bounds.height) svg.setAttribute('viewBox', `${bounds.x - 20} ${bounds.y - 20} ${bounds.width + 40} ${bounds.height + 40}`)
+        const svg = intro.querySelector('svg'), text = svg.querySelector('text'), bounds = text.getBBox()
+        if (bounds.width && bounds.height) {
+          let x = bounds.x - 20, y = bounds.y - 20
+          if (matchMedia('(max-width: 767px)').matches) {
+            // SVG's text box includes font-wide ascent/descent. Centre the
+            // visible H on phones, preserving the existing scale and timing.
+            const context = document.createElement('canvas').getContext('2d')
+            const style = getComputedStyle(text)
+            context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+            const ink = context.measureText(text.textContent)
+            if (ink.actualBoundingBoxAscent + ink.actualBoundingBoxDescent > 0) {
+              const centerX = Number(text.getAttribute('x')) - ink.width / 2 + (ink.actualBoundingBoxRight - ink.actualBoundingBoxLeft) / 2
+              const centerY = Number(text.getAttribute('y')) + (ink.actualBoundingBoxDescent - ink.actualBoundingBoxAscent) / 2
+              x = centerX - (bounds.width + 40) / 2
+              y = centerY - (bounds.height + 40) / 2
+            }
+          }
+          svg.setAttribute('viewBox', `${x} ${y} ${bounds.width + 40} ${bounds.height + 40}`)
+        }
       }).catch(() => {}),
       new Promise(resolve => {
         const ready = () => {
