@@ -75,6 +75,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   let controlsFrame = 0
   let controlsDocumentTop = 0
   let controlsHeight = 0
+  let controlsViewportTop = 184
   let dirty = true
   let shadowsDirty = true
   let mobile = false
@@ -634,7 +635,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     controlsFrame = 0
     if (disposed) return
     // Leave the mark and the sticky room actions their own vertical space.
-    const top = clamp(184 - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
+    const top = clamp(controlsViewportTop - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
     navigationBar.style.top = `${Math.round(top)}px`
   }
   function resize() {
@@ -642,6 +643,11 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     // Cache document geometry on layout changes, not on every scroll frame.
     controlsDocumentTop = stage.getBoundingClientRect().top + window.scrollY
     controlsHeight = navigationBar.offsetHeight
+    // Mobile's explicit touch-mode row also needs room above camera actions.
+    const toolbar = root.querySelector('.installation-toolbar')
+    controlsViewportTop = window.innerWidth <= 767
+      ? (parseFloat(getComputedStyle(toolbar).top) || 76) + toolbar.offsetHeight + 12
+      : 184
     positionControls()
     const nextWidth = stage.clientWidth, nextHeight = stage.clientHeight
     if (!nextWidth || !nextHeight || (nextWidth === width && nextHeight === height)) return
@@ -1128,6 +1134,7 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(stage)
   resizeObserver.observe(navigationBar)
+  resizeObserver.observe(root.querySelector('.installation-toolbar'))
   const main = root.closest('main')
   if (main) resizeObserver.observe(main)
   function toggleFridge() {
