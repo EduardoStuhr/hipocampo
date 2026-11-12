@@ -92,8 +92,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   let pinch = null
   let drag = null
   let orbit = null
-  let fridgeOpen = true
-  let doorAngle = Math.PI * .56
+  let fridgeOpen = false
+  let doorAngle = 0
   let doorTarget = doorAngle
   let selectedId = null
   let lastFrame = 0
@@ -401,11 +401,11 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     tube(door, [[-1.22, y, -.28], [-1.22, y + .12, -.28], [-.21, y + .12, -.28], [-.21, y, -.28]], .018, inner)
   }
   tube(door, [[-1.25, .18, .15], [-1.29, .23, .23], [-1.29, .71, .23], [-1.25, .76, .15]], .028, chrome)
-  const redLight = new THREE.PointLight('#ff160b', 5.5, 4.4, 1.5)
+  const redLight = new THREE.PointLight('#ff160b', 0, 4.4, 1.5)
   redLight.position.set(0, 1.85, .18)
   fridge.add(redLight)
-  const redBulb = box(fridge, .47, .04, .07, material({ color: '#ff3422', emissive: '#ff1004', emissiveIntensity: 4 }), [0, 2.12, .02], .01)
-  const redSpill = spotlight(fridge, '#ff1c0e', 6, [0, 1.4, .25], [0, .05, 1.4], .7, false)
+  const redBulb = box(fridge, .47, .04, .07, material({ color: '#ff3422', emissive: '#ff1004', emissiveIntensity: 0 }), [0, 2.12, .02], .01)
+  const redSpill = spotlight(fridge, '#ff1c0e', 0, [0, 1.4, .25], [0, .05, 1.4], .7, false)
 
   const photoTextures = [1, 2, 3, 4].map(n => loadTexture(`/images/trail/photo-${n}.webp`))
   await buildYield()

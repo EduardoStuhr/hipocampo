@@ -31,10 +31,13 @@ async def run(browser,name,size):
  await page.screenshot(path=str(OUT/f'{name}-heading.png'))
  if await root.locator('.installation-mobile-tools').count():
   await root.locator('.installation-mobile-tools > summary').click()
+ initial=await root.evaluate('(e)=>e.installationRoom.inspect()')
+ assert not initial['fridgeOpen'] and initial['doorAngle']==0 and initial['redLightIntensity']==0 and initial['redSpillIntensity']==0,initial
+ assert await root.locator('[data-action=fridge]').inner_text()=='abrir geladeira'
  await root.locator('[data-action=fridge]').click()
- await page.wait_for_function("!document.querySelector('#instalacao').installationRoom.inspect().fridgeOpen")
+ await page.wait_for_function("(()=>{const s=document.querySelector('#instalacao').installationRoom.inspect();return s.fridgeOpen&&s.doorAngle>1.7&&s.redLightIntensity>0})()")
  await root.locator('[data-action=fridge]').click()
- await page.wait_for_function("document.querySelector('#instalacao').installationRoom.inspect().fridgeOpen")
+ await page.wait_for_function("(()=>{const s=document.querySelector('#instalacao').installationRoom.inspect();return !s.fridgeOpen&&s.doorAngle===0&&s.redLightIntensity===0})()")
  await go('#instalacao .installation-stage',-180)
  top=root.locator('[data-action=top-view]');await top.click()
  await root.locator('#installation-topview-hint').wait_for(state='visible')

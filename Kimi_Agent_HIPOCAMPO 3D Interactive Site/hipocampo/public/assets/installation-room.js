@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=mobile-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=fridge-closed-1'
 import { yieldScenePreparation } from './scene-preparation.js?v=scroll-start-1'
 
 const React = requireReact() // Reuse the application's React singleton.
@@ -13,7 +13,7 @@ export default function Installation() {
   const [ready, setReady] = React.useState(false)
   const [unavailable, setUnavailable] = React.useState(false)
   const [selected, setSelected] = React.useState(null)
-  const [fridgeOpen, setFridgeOpen] = React.useState(true)
+  const [fridgeOpen, setFridgeOpen] = React.useState(false)
   const [navigating, setNavigating] = React.useState(false)
   const [topView, setTopView] = React.useState(false)
   const [capturing, setCapturing] = React.useState(false)
