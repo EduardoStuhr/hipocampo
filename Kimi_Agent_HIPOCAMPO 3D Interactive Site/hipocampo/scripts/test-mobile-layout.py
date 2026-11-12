@@ -52,11 +52,11 @@ async def check(browser,w,h,full=False):
   await touch_drag(p,canvas['x']+canvas['width']*.9, min(h-60,canvas['y']+canvas['height']*.65),-70,0)
   assert (await state())['camera']!=before,'Touch did not rotate camera'
  await mode.tap();assert not (await state())['navigating'] and not (await state())['scrollReserved']
+ await root.locator('.installation-mobile-tools > summary').tap()
  # Controls do not cover the sticky touch row, including overhead mode.
  await root.locator('[data-action=top-view]').tap();assert (await state())['viewMode']=='table-top'
  await root.locator('#installation-topview-hint').wait_for(state='visible')
- r=await root.locator('.installation-zoom').bounding_box();t=await root.locator('.installation-toolbar').bounding_box()
- assert r['y']>=t['y']+t['height']-1,(r,t)
+ assert await root.locator('.installation-mobile-tools-panel').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}')
  await root.locator('[data-action=top-view]').tap()
  await root.locator('.installation-accessible summary').tap()
  await root.locator('.installation-search').fill('Relógio')

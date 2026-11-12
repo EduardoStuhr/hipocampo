@@ -295,7 +295,7 @@ async function mount(section, controller, onFailure, onProgress) {
   resizeObserver.observe(stage)
   disposers.push(() => resizeObserver.disconnect())
   const onPointerMove = (e) => {
-    if (e.pointerType === 'touch') return
+    if (e.pointerType === 'touch' && innerWidth > 767) return
     const x = (e.clientX / window.innerWidth) * 2 - 1
     const y = (e.clientY / window.innerHeight) * 2 - 1
     if (pointer.known) {

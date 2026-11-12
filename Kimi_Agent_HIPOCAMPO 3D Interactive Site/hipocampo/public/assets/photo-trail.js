@@ -107,6 +107,12 @@ function initializePhotoTrail() {
   }
 
   hero.addEventListener('pointermove', move, { passive: true })
+  // A phone has no hover: each contact starts a new print, even in one spot.
+  hero.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch' || innerWidth > 767) return
+    previous = null
+    move(event)
+  }, { passive: true })
   hero.addEventListener('pointerenter', invalidateRect, { passive: true })
   hero.addEventListener('pointerleave', () => { previous = null })
   window.addEventListener('resize', invalidateRect, { passive: true })

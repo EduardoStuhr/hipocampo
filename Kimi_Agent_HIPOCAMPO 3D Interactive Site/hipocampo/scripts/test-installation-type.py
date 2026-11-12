@@ -29,6 +29,8 @@ async def run(browser,name,size):
  assert fonts['loaded'] and 'SquidBoy' in fonts['nav'] and 'SquidBoy' in fonts['control'] and 'SquidBoy' in fonts['accessible'],fonts
  assert 'AquilineTwo' in fonts['title'] and fonts['color']=='rgb(255, 255, 255)',fonts
  await page.screenshot(path=str(OUT/f'{name}-heading.png'))
+ if await root.locator('.installation-mobile-tools').count():
+  await root.locator('.installation-mobile-tools > summary').click()
  await root.locator('[data-action=fridge]').click()
  await page.wait_for_function("!document.querySelector('#instalacao').installationRoom.inspect().fridgeOpen")
  await root.locator('[data-action=fridge]').click()

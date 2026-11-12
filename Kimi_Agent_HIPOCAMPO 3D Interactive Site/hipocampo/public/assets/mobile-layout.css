@@ -7,7 +7,11 @@
   body > #root > header > button {
     min-width: 64px; min-height: 44px; font-size: .8rem;
     display: inline-flex; align-items: center; justify-content: center;
+    gap: .5rem; border: 1px solid currentColor; padding: .35rem .65rem;
   }
+  body > #root > header > button::before { content: "☰"; font: 1rem sans-serif; }
+  body > #root > header nav { display: none; }
+  body > #root > header:has(> button[aria-expanded="true"]) nav { display: block; visibility: visible !important; opacity: 1 !important; }
   body > #root > header nav {
     top: calc(4.5rem + env(safe-area-inset-top)); left: 1.25rem; right: 1.25rem;
     min-width: 0; max-height: calc(100svh - 6rem - env(safe-area-inset-top));
@@ -15,7 +19,24 @@
   }
   body > #root > header nav a { min-height: 44px; font-size: .9rem; padding-block: .65rem; }
 
-  #abertura.hipocampo-hero { min-height: 28rem; }
+  html, body { overscroll-behavior-y: none; }
+  /* Native sticky avoids fixed-pin gaps during asynchronous touch scrolling.
+     GSAP retains its spacer and the same reversible circle timeline. */
+  #abertura.hipocampo-hero {
+    position: sticky !important; top: 0 !important; left: 0 !important;
+    transform: none !important; height: 100dvh !important; min-height: 0;
+    max-height: none !important; width: 100% !important; max-width: none !important;
+    touch-action: pan-y;
+  }
+  /* Sticky is constrained by its parent's content box, not its padding.
+     Convert the 180% GSAP pin padding into real height on phones. */
+  .pin-spacer:has(> #abertura) { overflow: visible; padding-bottom: 0 !important; height: 280dvh !important; max-height: none !important; }
+  .page2-map-stage { min-height: 100dvh; }
+  #casa.hipocampo-page3 { margin-top: -100dvh; }
+  .page3-stage { height: 100dvh; }
+  #casa.hipocampo-page3:not(.is-reduced-motion):not([hidden]) + #sobre { margin-top: 0; }
+  .hipocampo-memory-map { pointer-events: auto; touch-action: none; }
+  .page3-look-reset { display: none !important; }
   .hipocampo-memory-field { width: calc(100% - 2.5rem); font-size: clamp(1.25rem, 8vw, 2.5rem); line-height: 1.4; }
   /* One complete phrase per row, preserving all eight animated rows. */
   .hipocampo-memory-line .memory-char:nth-child(n+24) { display: none !important; }
@@ -53,17 +74,25 @@
 
   #instalacao.installation { padding: 5.5rem 1.25rem 3rem; }
   .installation-heading h2 { font-size: clamp(2.2rem, 9.5vw, 4.2rem); }
-  #instalacao .installation-toolbar { top: calc(4.75rem + env(safe-area-inset-top)); padding: .5rem 0; }
+  #instalacao .installation-toolbar { display: none; }
   .installation-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
   .installation-actions button { font-size: .875rem; line-height: 1.5; text-align: left; }
-  .installation-stage { height: clamp(460px, 75svh, 650px); }
-  .installation-zoom { left: 0; max-width: 100%; width: 100%; padding: .5rem; gap: .25rem .65rem; }
+  .installation-stage { height: 100dvh; width: calc(100% + 2.5rem); margin-inline: -1.25rem; }
+  .installation-mobile-tools .installation-zoom { position: static !important; max-width: 100%; width: 100%; padding: .25rem 0; gap: .25rem .65rem; background: none; }
   .installation-zoom button { flex: 1 1 auto; font-size: .85rem; min-height: 44px; }
   .installation-topview-hint { font-size: .9rem; }
-  .installation-mobile-navigation { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
-  .installation-mobile-navigation button { min-height: 44px; min-width: 7rem; padding: .5rem .7rem; border: 1px solid #c6ac7b; color: #fff; background: #000; font: inherit; font-size: .9rem; }
+  .installation-mobile-navigation { position: absolute; z-index: 5; left: 1rem; right: 1rem; bottom: max(1rem, env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: start; gap: .5rem; pointer-events: none; }
+  .installation-mobile-navigation button { min-height: 44px; min-width: 7rem; max-width: calc(100% - 6rem); pointer-events: auto; padding: .5rem .7rem; border: 1px solid #c6ac7b; color: #fff; background: #000b; font: inherit; font-size: .9rem; }
   .installation-mobile-navigation button[aria-pressed="true"] { color: #f0d756; border-color: currentColor; }
-  .installation-mobile-navigation p { margin: 0; font-size: .875rem; line-height: 1.5; color: #c7bca6; }
+  .installation-mobile-navigation p { margin: 0; max-width: 100%; font-size: .8rem; line-height: 1.5; color: #e8dfcb; text-shadow: 0 1px 3px #000; }
+  .installation-mobile-tools { position: absolute; z-index: 6; right: 1rem; bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3rem); }
+  .installation-mobile-tools > summary { min-height: 44px; display: flex; align-items: center; padding: .5rem .7rem; border: 1px solid #c6ac7b; background: #000b; cursor: pointer; font-size: .9rem; }
+  .installation-mobile-tools-panel { position: absolute; right: 0; bottom: calc(100% + .5rem); width: min(22rem, calc(100vw - 2rem)); max-height: 55dvh; padding: .75rem; background: #090909ed; border: 1px solid #c6ac7b60; overflow-y: auto; overscroll-behavior: contain; }
+  .installation-mobile-tools:not([open]) .installation-mobile-tools-panel { display: none; }
+  .mobile-in-scene body > #root > header > a { opacity: 0 !important; pointer-events: none; }
+  /* clip blocks native scrolling without turning body into a new sticky
+     containing block (overflow:hidden would move the house out of view). */
+  html.mobile-scroll-locked { overflow: clip !important; overscroll-behavior: none; }
   .installation-memory { min-height: 4.5rem; }
   .installation-memory-label { font-size: .75rem; line-height: 1.6; letter-spacing: .08em; }
   .installation-memory-text, .installation-accessible { font-size: 1rem; line-height: 1.6; }
@@ -106,9 +135,6 @@
 @media (max-width: 767px) and (max-height: 480px) and (orientation: landscape) {
   body > #root > header > a { font-size: 1.5rem; }
   body > #root > header nav { top: 3.75rem; max-height: calc(100svh - 4.5rem); }
-  #instalacao .installation-toolbar { top: calc(3.75rem + env(safe-area-inset-top)); flex-direction: row; align-items: center; }
   .installation-actions { flex: 1; }
-  .installation-mobile-navigation { margin: 0; }
-  .installation-mobile-navigation p { display: none; }
-  .installation-stage { height: max(360px, 85svh); }
+  .installation-mobile-tools-panel { max-height: 65dvh; }
 }

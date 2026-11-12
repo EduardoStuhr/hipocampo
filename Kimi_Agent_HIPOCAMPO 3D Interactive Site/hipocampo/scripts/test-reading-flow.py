@@ -38,6 +38,8 @@ async def run(browser,name,viewport):
  await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
  await p.wait_for_function("document.querySelector('#instalacao')?.installationRoom?.inspect().prepared",timeout=120000)
  await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
+ if await p.locator('.installation-mobile-tools').count():
+  await p.locator('.installation-mobile-tools > summary').click()
  button=p.locator('[data-action=top-view]');await button.click()
  await p.locator('#installation-topview-hint').wait_for(state='visible')
  assert await button.inner_text()=='voltar ao normal'

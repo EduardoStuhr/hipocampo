@@ -81,7 +81,7 @@ async function mountMemoryMap(container) {
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
   const coarsePointer = window.matchMedia('(hover: none), (pointer: coarse)')
-  const pointer = { localX: 0, localY: 0, clientX: 0, clientY: 0, active: false }
+  const pointer = { localX: 0, localY: 0, clientX: 0, clientY: 0, active: false, touch: false }
   let visible = false
   let covered = container.dataset.houseCovered === 'true'
   let destroyed = false
@@ -159,7 +159,7 @@ async function mountMemoryMap(container) {
     if (!width || !height) return
 
     const motionFactor = reducedMotion.matches ? REDUCED_MOTION_FACTOR : 1
-    const allowRepulsion = !coarsePointer.matches && pointer.active
+    const allowRepulsion = (!coarsePointer.matches || pointer.touch) && pointer.active
     if (allowRepulsion) {
       const rect = container.getBoundingClientRect()
       pointer.localX = pointer.clientX - rect.left
@@ -262,10 +262,12 @@ async function mountMemoryMap(container) {
   }
 
   const onPointerMove = (event) => {
-    if (destroyed || !visible || coarsePointer.matches) return
+    const phoneTouch = event.pointerType === 'touch' && innerWidth <= 767
+    if (destroyed || !visible || (coarsePointer.matches && !phoneTouch)) return
     // Só guarda a posição; a geometria é lida uma vez por quadro em render().
     pointer.clientX = event.clientX
     pointer.clientY = event.clientY
+    pointer.touch = phoneTouch
     pointer.active = true
   }
   const clearPointer = () => { pointer.active = false }
@@ -298,6 +300,20 @@ async function mountMemoryMap(container) {
     updateActivity()
   }
   container.addEventListener('hipocampo:map-coverage', onCoverageChange)
+  let touchRelease = 0
+  const onTouch = event => {
+    if (event.pointerType === 'touch' && innerWidth <= 767) {
+      clearTimeout(touchRelease)
+      onPointerMove(event)
+    }
+  }
+  const onTouchEnd = event => {
+    if (event.pointerType === 'touch') touchRelease = setTimeout(clearPointer, 350)
+  }
+  container.addEventListener('pointerdown', onTouch, { passive: true })
+  container.addEventListener('pointermove', onTouch, { passive: true })
+  container.addEventListener('pointerup', onTouchEnd, { passive: true })
+  container.addEventListener('pointercancel', onTouchEnd, { passive: true })
   window.addEventListener('hipocampo:hero-pin-state', updateActivity)
   window.addEventListener('blur', clearPointer)
   document.addEventListener('pointerout', onPointerOut, { passive: true })
@@ -312,6 +328,11 @@ async function mountMemoryMap(container) {
     resizeObserver.disconnect()
     intersectionObserver.disconnect()
     container.removeEventListener('hipocampo:map-coverage', onCoverageChange)
+    container.removeEventListener('pointerdown', onTouch)
+    container.removeEventListener('pointermove', onTouch)
+    container.removeEventListener('pointerup', onTouchEnd)
+    container.removeEventListener('pointercancel', onTouchEnd)
+    clearTimeout(touchRelease)
     setPointerListening(false)
     window.removeEventListener('hipocampo:hero-pin-state', updateActivity)
     window.removeEventListener('blur', clearPointer)

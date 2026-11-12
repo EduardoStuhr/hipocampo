@@ -49,6 +49,8 @@ async def main():
   await p.wait_for_function('!document.querySelector("#casa").houseJourney.inspect().framePending',timeout=30000)
   before=await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().renderedFrames');await p.wait_for_timeout(700)
   assert before==await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().renderedFrames')
+  if MOBILE and await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().view.active'):
+   await p.locator('.page3-look-toggle').click()
   await go(.275);assert (await captions())[1]>.9
   assert not (await p.locator('#casa').evaluate('(e)=>e.houseJourney.inspect().interior.entranceDaylight.visible'))
   await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
@@ -56,6 +58,8 @@ async def main():
   await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#instalacao .installation-stage'),{immediate:true,force:true,offset:-110})")
   await p.locator('#instalacao').evaluate("e=>{e.installationRoom.moveToTable('objeto-67');e.installationRoom.moveToTable('objeto-68');e.installationRoom.moveToTable('objeto-45')}")
   await p.wait_for_function("document.querySelector('#instalacao').installationRoom.inspect().movingObjects===0")
+  if await p.locator('.installation-mobile-tools').count():
+   await p.locator('.installation-mobile-tools > summary').click()
   async with p.expect_download()as event:await p.locator('#instalacao [data-action=take-photo]').click()
   photo=await event.value;await photo.save_as(str(OUT/'holy-cards-table.png'));assert await photo.failure()is None
   await p.locator('#instalacao [data-action=reset]').click()

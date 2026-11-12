@@ -32,6 +32,8 @@ async def check(browser,name,viewport,touch=False,reduced=False):
  await page.wait_for_function("document.querySelector('#instalacao')?.installationRoom?.inspect().prepared",timeout=120000)
  await visit()
  root=page.locator('#instalacao')
+ if await root.locator('.installation-mobile-tools').count():
+  await root.locator('.installation-mobile-tools > summary').click()
  assert await root.locator('.installation-intro').count()==0
  assert await root.locator('.installation-toolbar > p').count()==0
  assert await root.locator('.installation-caption').count()==0

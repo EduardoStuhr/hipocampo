@@ -1,3 +1,4 @@
+import { mountMobileImmersion } from './mobile-immersion.js?v=touch-1'
 // Mobile adapters use the existing React/Three APIs; desktop keeps its DOM.
 const phone = matchMedia('(max-width: 767px)')
 let cleanup = () => {}
@@ -8,38 +9,7 @@ function mountPhone(root) {
     target.addEventListener(event, callback, options)
     disposers.push(() => target.removeEventListener(event, callback, options))
   }
-  const stage = root.querySelector('.installation-stage')
-  const canvas = stage.querySelector('canvas')
-  const oldDescription = canvas.getAttribute('aria-label')
-  canvas.setAttribute('aria-label', 'Sala 3D. Toque nos objetos ou use explorar sem arrastar. Ative girar a sala para mover a câmera com o dedo; volte à rolagem para continuar a página.')
-  const controls = document.createElement('div')
-  controls.className = 'installation-mobile-navigation'
-  const toggle = document.createElement('button')
-  toggle.type = 'button'
-  toggle.dataset.action = 'mobile-navigation'
-  toggle.setAttribute('aria-describedby', 'installation-mobile-hint')
-  const hint = document.createElement('p')
-  hint.id = 'installation-mobile-hint'
-  hint.setAttribute('role', 'status')
-  controls.append(toggle, hint)
-  // Put the exit in the sticky toolbar, reachable even while touch scroll is off.
-  root.querySelector('.installation-toolbar').append(controls)
-  const sync = () => {
-    const active = stage.classList.contains('is-exploring')
-    toggle.disabled = stage.getAttribute('aria-busy') === 'true' || !!root.querySelector('.installation-fallback')
-    toggle.setAttribute('aria-pressed', String(active))
-    toggle.textContent = active ? 'voltar à rolagem' : 'girar a sala'
-    hint.textContent = active ? 'Arraste para olhar ao redor. Volte à rolagem para seguir a página.' : 'Toque nos objetos. Para olhar ao redor, ative “girar a sala”.'
-  }
-  sync()
-  listen(toggle, 'click', () => {
-    const api = root.installationRoom
-    if (!api) return
-    api.setNavigation(!api.inspect().navigating)
-    sync()
-  })
-  const state = new MutationObserver(sync)
-  state.observe(stage, { attributes: true, attributeFilter: ['class', 'aria-busy'] })
+  const disposeImmersion = mountMobileImmersion(root)
   const envelope = document.querySelector('.page4-photo--envelope')
   const envelopeLabel = envelope?.getAttribute('aria-label')
   if (envelope) {
@@ -51,6 +21,14 @@ function mountPhone(root) {
     })
   }
   const menuToggle = document.querySelector('header > button[aria-controls="site-nav"]')
+  const originalMenuLabel = menuToggle.textContent
+  const labelMenu = () => {
+    const label = menuToggle.getAttribute('aria-expanded') === 'true' ? 'fechar menu' : 'menu'
+    if (menuToggle.textContent !== label) menuToggle.textContent = label
+  }
+  const menuState = new MutationObserver(labelMenu)
+  menuState.observe(menuToggle, { attributes: true, attributeFilter: ['aria-expanded'], childList: true, characterData: true, subtree: true })
+  labelMenu()
   const closeMenu = () => {
     if (menuToggle?.getAttribute('aria-expanded') === 'true') menuToggle.click()
   }
@@ -107,11 +85,11 @@ function mountPhone(root) {
     img.alt = `Fotografia do acervo Hipocampo, fragmento ${i + 1}`
   })
   return () => {
-    root.installationRoom?.setNavigation(false)
-    state.disconnect(); mutations.disconnect(); resize.disconnect()
+    disposeImmersion()
+    menuState.disconnect()
+    menuToggle.textContent = originalMenuLabel
+    mutations.disconnect(); resize.disconnect()
     disposers.forEach(dispose => dispose())
-    controls.remove()
-    canvas.setAttribute('aria-label', oldDescription)
     if (envelope) { envelope.removeAttribute('role'); envelope.setAttribute('aria-label', envelopeLabel) }
     originalStyles.forEach((style, card) => card.setAttribute('style', style))
     sources.forEach(([img, src, alt]) => { img.setAttribute('src', src); img.setAttribute('alt', alt) })
