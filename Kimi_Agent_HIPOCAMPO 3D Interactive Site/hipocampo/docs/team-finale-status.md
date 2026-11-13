@@ -44,3 +44,7 @@ Executados `npm run build`, verificações de sintaxe e `python scripts/test-tea
 O build agora gera nomes com hash de conteúdo para o CSS, JavaScript e manifesto da equipe. O HTML produzido referencia esses nomes e o módulo referencia o manifesto correspondente. Os caminhos anteriores continuam disponíveis. Isso evita reutilização dos assets antigos quando o HTML novo é publicado, mesmo em caches que ignoram parâmetros de URL. A entrada de desenvolvimento também recebeu uma nova versão.
 
 Destino do novo envio: `main` de `EduardoStuhr/hipocampo`. A publicação em `hipocampo.pages.dev` depende da integração Cloudflare; não foi possível consultá-la neste ambiente.
+
+## Diagnóstico da publicação de produção
+
+As capturas do painel Cloudflare confirmam produção configurada na branch `main`. A produção permaneceu em `5b72450`, enquanto `0140e42` só apareceu como pré-visualização em `feat/equipe-hipocampo`. O build remoto terminou em 11 segundos; a pré-visualização ficou na etapa implantar. Novo envio somente à `main`, com marcador HTML `hipocampo-release=beatriz-hover-production-20261113-1`, para distinguir a versão publicada. Não assumir conclusão do deploy apenas com o push.
