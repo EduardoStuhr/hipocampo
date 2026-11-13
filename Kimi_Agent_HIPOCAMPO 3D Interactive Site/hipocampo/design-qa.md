@@ -582,3 +582,10 @@ Referência visual: captura enviada pelo usuário. Resultados atuais inspecionad
 Build, sintaxe e cinco cenários de navegador aprovados: 1440×900, 390×844, 375×667, 320×640 e 390×844 com movimento reduzido. Todos usam os oito retratos originais, verificam sua ordem, fontes/letras, seleção dos oito nomes, destaque por mouse/toque, Escape, pausa fora da tela e ausência de overflow, erros JavaScript ou recursos locais ausentes. Não há pendência P0/P1/P2 no escopo solicitado. Testes em Chromium/SwiftShader, com toque emulado.
 
 final result: passed
+
+
+## 2026-11-13 — Beatriz e interação em HIPOCAMPO
+
+Beatriz acrescentada como nona integrante, mantendo os oito retratos anteriores em ordem. O leque foi redistribuído. Letras brancas reagem ao mouse com uma onda suave e retornam ao sair; efeito desativado para toque e movimento reduzido. Sem loop permanente de animação ou alterações nas cenas 3D.
+
+Validação: build, sintaxe JavaScript e suíte Playwright em desktop 1440×900 e celulares 390×844, 375×667, 320×640, além de desktop e celular com movimento reduzido. Nove imagens e seleções verificadas; sem erros JavaScript, arquivos ausentes ou overflow. Movimento e retorno das letras verificados no desktop.

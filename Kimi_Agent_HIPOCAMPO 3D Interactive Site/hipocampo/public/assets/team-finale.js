@@ -1,10 +1,63 @@
-import { TEAM } from './team-members.js?v=portraits-1'
+import { TEAM } from './team-members.js?v=beatriz-1'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 const POSES = [
-  [8, 23, -32], [20, 9, -15], [32, 18, 6], [44, 2, -12],
-  [56, 10, 15], [68, 17, -7], [80, 11, 21], [92, 25, 34],
+  [7, 25, -34], [18, 12, -21], [29, 20, 6], [40, 5, -10],
+  [50, 14, 12], [61, 18, -6], [72, 10, 16], [82, 19, 26], [93, 28, 34],
 ]
+
+function mountTitleHover(title) {
+  const enabled = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)')
+  const letters = [...title.querySelectorAll('.team-letter')]
+  let geometry = null, frame = 0, x = 0, y = 0
+  const last = letters.map(() => '')
+  const reset = () => {
+    cancelAnimationFrame(frame); frame = 0; geometry = null
+    title.removeAttribute('data-interacting')
+    letters.forEach((letter, i) => { if (last[i]) letter.style.removeProperty('transform'); last[i] = '' })
+  }
+  const measure = () => {
+    const rect = title.getBoundingClientRect()
+    geometry = { rect, centers: letters.map(letter => rect.left + letter.offsetLeft + letter.offsetWidth / 2) }
+  }
+  const render = () => {
+    frame = 0
+    if (!enabled.matches) return reset()
+    if (!geometry) measure()
+    const { rect, centers } = geometry
+    const radius = rect.width / letters.length * 1.5
+    const vertical = Math.max(0, 1 - Math.abs(y - rect.top - rect.height / 2) / rect.height)
+    title.setAttribute('data-interacting', '')
+    letters.forEach((letter, i) => {
+      const direction = (x - centers[i]) / radius
+      const influence = Math.max(0, 1 - Math.abs(direction)) ** 2 * vertical
+      const lift = -Math.min(25, rect.height * .15) * influence
+      const pose = `translateY(${lift.toFixed(2)}px) rotate(${(direction * influence * 10).toFixed(2)}deg) scaleY(${(1 + .1 * influence).toFixed(3)})`
+      if (last[i] !== pose) { letter.style.transform = pose; last[i] = pose }
+    })
+  }
+  const move = event => {
+    if (!enabled.matches || event.pointerType === 'touch') return
+    x = event.clientX; y = event.clientY
+    if (!frame) frame = requestAnimationFrame(render)
+  }
+  title.addEventListener('pointermove', move, { passive: true })
+  title.addEventListener('pointerleave', reset)
+  enabled.addEventListener('change', reset)
+  window.addEventListener('scroll', reset, { passive: true })
+  const resize = new ResizeObserver(reset)
+  resize.observe(title)
+  return {
+    reset,
+    dispose() {
+      reset(); resize.disconnect()
+      title.removeEventListener('pointermove', move)
+      title.removeEventListener('pointerleave', reset)
+      enabled.removeEventListener('change', reset)
+      window.removeEventListener('scroll', reset)
+    },
+  }
+}
 
 function mount() {
   const section = document.querySelector('#informacoes')
@@ -36,6 +89,7 @@ function mount() {
     tile.textContent = letter
     title.append(tile)
   }
+  const titleHover = mountTitleHover(title)
   const fan = document.createElement('div')
   fan.className = 'team-portrait-fan'
   fan.setAttribute('role', 'group')
@@ -107,7 +161,7 @@ function mount() {
   stage.append(fan, title)
   const bottom = document.createElement('div')
   bottom.className = 'team-finale-bottom'
-  bottom.innerHTML = '<p>Oito olhares. Uma história em construção.</p><a href="mailto:contato@projetohipocampo.art">Entre em contato</a>'
+  bottom.innerHTML = '<p>Nove olhares. Uma história em construção.</p><a href="mailto:contato@projetohipocampo.art">Entre em contato</a>'
   section.append(top, stage, names, live, bottom)
   const escape = event => {
     if (event.key === 'Escape') { selected = preview = null; live.textContent = 'Equipe completa.'; sync() }
@@ -116,17 +170,18 @@ function mount() {
   const observer = new IntersectionObserver(entries => {
     const visible = entries[0].isIntersecting
     section.classList.toggle('team-in-view', visible && !document.hidden)
+    if (!visible) titleHover.reset()
     if (visible) section.classList.add('team-revealed')
   }, { threshold: .08 })
   observer.observe(section)
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) section.classList.remove('team-in-view')
+    if (document.hidden) { section.classList.remove('team-in-view'); titleHover.reset() }
     else {
       const r = section.getBoundingClientRect()
       section.classList.toggle('team-in-view', r.bottom > 0 && r.top < innerHeight)
     }
   })
-  window.addEventListener('pagehide', () => { section.classList.remove('team-in-view'); observer.disconnect() }, { once: true })
+  window.addEventListener('pagehide', () => { section.classList.remove('team-in-view'); observer.disconnect(); titleHover.dispose() }, { once: true })
   window.__hipocampoLenis?.resize()
   ScrollTrigger.refresh()
   return true

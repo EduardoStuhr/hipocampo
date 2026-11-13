@@ -3,7 +3,7 @@ import asyncio,json
 from pathlib import Path
 from playwright.async_api import async_playwright
 OUT=Path(__file__).resolve().parents[1]/'artifacts'/'team-finale';OUT.mkdir(parents=True,exist_ok=True)
-NAMES=['Mariana','Heitor','Guilherme','Heloiza','Gabriel','Lara','Tiago','Raphael']
+NAMES=['Mariana','Heitor','Guilherme','Heloiza','Gabriel','Lara','Tiago','Raphael','Beatriz']
 async def check(b,w,h,reduced=False):
  p=await b.new_page(viewport={'width':w,'height':h},is_mobile=w<768,has_touch=w<768,reduced_motion='reduce'if reduced else'no-preference')
  errors=[];missing=[]
@@ -22,11 +22,11 @@ async def check(b,w,h,reduced=False):
  assert await root.locator('.team-finale-title').evaluate('(e)=>getComputedStyle(e).color')=='rgb(255, 255, 255)'
  assert await p.evaluate('document.fonts.check(\'700 80px "HipocampoFinale"\')')
  assert await root.locator('.team-finale-title').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth}')
- assert await root.locator('.team-portrait-card').count()==8
+ assert await root.locator('.team-portrait-card').count()==9
  chips=root.locator('.team-name-list button')
  assert await chips.all_text_contents()==NAMES
  await p.wait_for_function("[...document.querySelectorAll('.team-portrait-card img')].every(i=>i.complete&&i.naturalWidth)")
- assert await root.locator('.team-portrait-card img').count()==8
+ assert await root.locator('.team-portrait-card img').count()==9
  assert await root.locator('.team-portrait-card img').evaluate_all('(es)=>es.map(e=>e.getAttribute("src"))')==[f'/images/team/{n.lower()}.webp'for n in NAMES]
  assert await p.locator('header').get_attribute('data-nav-theme')=='dark'
  for i,name in enumerate(NAMES):
@@ -42,6 +42,24 @@ async def check(b,w,h,reduced=False):
   assert await root.locator('.team-portrait-slot.is-active').count()==0
   assert await chip.get_attribute('aria-pressed')=='false'
  await go('#informacoes')
+ title=root.locator('.team-finale-title');letters=root.locator('.team-letter')
+ before=await title.bounding_box()
+ if w>=768:
+  a=await letters.nth(0).bounding_box()
+  await p.mouse.move(a['x']+a['width']/2,before['y']+before['height']/2);await p.wait_for_timeout(400)
+  shifts=await letters.evaluate_all('(es)=>es.map(e=>new DOMMatrix(getComputedStyle(e).transform).m42)')
+  if reduced:assert all(abs(v)<.01 for v in shifts),shifts
+  else:
+   assert min(shifts)<-5 and shifts.index(min(shifts))<=1,shifts
+   a=await letters.nth(8).bounding_box()
+   await p.mouse.move(a['x']+a['width']/2,before['y']+before['height']/2);await p.wait_for_timeout(400)
+   shifts=await letters.evaluate_all('(es)=>es.map(e=>new DOMMatrix(getComputedStyle(e).transform).m42)')
+   assert min(shifts)<-5 and shifts.index(min(shifts))>=7,shifts
+   await p.screenshot(path=str(OUT/'word-hover.png'))
+  await p.mouse.move(5,5);await p.wait_for_timeout(450)
+ assert await letters.evaluate_all('(es)=>es.every(e=>!e.style.transform)')
+ after=await title.bounding_box();assert abs(after['width']-before['width'])<1
+ assert not await title.get_attribute('data-interacting')
  if w>=768:
   r=await root.locator('.team-portrait-card').nth(3).bounding_box()
   await p.mouse.move(r['x']+r['width']/2,r['y']+35);await p.wait_for_timeout(100)
@@ -56,12 +74,12 @@ async def check(b,w,h,reduced=False):
  assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
  assert not errors,errors
  assert not missing,missing
- result={'viewport':[w,h],'reducedMotion':reduced,'originalPortraits':8,'whiteLetterforms':'HIPOCAMPO','selectionAllEight':True,'offscreenPaused':True,'errors':errors,'missingLocalFiles':missing}
+ result={'viewport':[w,h],'reducedMotion':reduced,'originalPortraits':9,'whiteLetterforms':'HIPOCAMPO','selectionAllNine':True,'wordHoverVerified':w>=768,'offscreenPaused':True,'errors':errors,'missingLocalFiles':missing}
  print(json.dumps(result),flush=True);await p.close();return result
 async def main():
  async with async_playwright()as pw:
   b=await pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
   results=[]
-  for args in [(1440,900),(390,844),(375,667),(320,640),(390,844,True)]:results.append(await check(b,*args))
+  for args in [(1440,900),(390,844),(375,667),(320,640),(390,844,True),(1440,900,True)]:results.append(await check(b,*args))
   (OUT/'results.json').write_text(json.dumps(results,indent=2));await b.close()
 if __name__=='__main__':asyncio.run(main())

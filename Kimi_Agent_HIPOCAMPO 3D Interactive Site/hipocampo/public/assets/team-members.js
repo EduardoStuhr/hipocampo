@@ -31,5 +31,9 @@ export const TEAM = [
   {
     "name": "Raphael",
     "portrait": "/images/team/raphael.webp"
+  },
+  {
+    "name": "Beatriz",
+    "portrait": "/images/team/beatriz.webp"
   }
 ]
