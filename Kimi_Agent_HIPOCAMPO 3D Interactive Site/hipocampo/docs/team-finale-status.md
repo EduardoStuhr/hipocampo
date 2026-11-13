@@ -1,40 +1,36 @@
-# Prévia da última página — Hipocampo
+# Última página — Hipocampo
 
-Referência visual: captura fornecida pelo usuário do Readymag, com fotografias em leque atrás de blocos arredondados com letras. A adaptação usa HIPOCAMPO e a paleta existente do projeto.
+Implementação concluída a partir da composição de referência fornecida pelo usuário: oito retratos em leque, atrás de HIPOCAMPO formado por letras brancas grandes e arredondadas. Os antigos blocos com letras pequenas foram retirados.
 
-## Implementado
+## Retratos originais
 
-- Última seção `#informacoes`, mantendo a navegação e o restante do site.
-- Nove blocos com as letras de HIPOCAMPO e oito cartões em leque.
-- Entrada escalonada, flutuação suave e destaque por mouse, teclado ou toque.
-- Seleção pelos oito nomes, retorno com Escape e contato por e-mail.
-- Animações pausadas fora da tela e respeito a movimento reduzido.
+As oito fotografias vieram de `fotos_compactadas.zip`. A ordem do ZIP foi preservada exatamente como o usuário determinou:
 
-## Pendência: retratos originais
+| Ordem | Nome | Arquivo local |
+| --- | --- | --- |
+| 1 | Mariana | `/images/team/mariana.webp` |
+| 2 | Heitor | `/images/team/heitor.webp` |
+| 3 | Guilherme | `/images/team/guilherme.webp` |
+| 4 | Heloiza | `/images/team/heloiza.webp` |
+| 5 | Gabriel | `/images/team/gabriel.webp` |
+| 6 | Lara | `/images/team/lara.webp` |
+| 7 | Tiago | `/images/team/tiago.webp` |
+| 8 | Raphael | `/images/team/raphael.webp` |
 
-As fotos foram exibidas na conversa, mas não estão disponíveis como arquivos no workspace. Nenhuma pessoa foi gerada ou substituída por uma fotografia de outra pessoa. Até receber o ZIP, os cartões exibem somente os nomes.
+Os arquivos mantêm a orientação e a proporção originais, sem ampliação. As imagens maiores foram reduzidas para até 960 px e todas foram salvas localmente em WebP. O recorte 3:4 dos cartões é feito por CSS. O manifesto está em `public/assets/team-members.js`.
 
-O manifesto editável é `public/assets/team-members.js`. Os campos `portrait` estão explicitamente como `null`, portanto a prévia não faz pedidos a imagens inexistentes.
+## Letras e movimento
 
-Ordem fornecida pelo usuário:
+- HIPOCAMPO usa glifos brancos reais, sem fundos retangulares nem pequenos rótulos entre colchetes. O título permanece acessível como texto.
+- Fonte Fredoka condensada, peso 700, instalada localmente e limitada aos glifos usados. Licença em `public/fonts/Fredoka-OFL.txt`.
+- Entrada escalonada, flutuação suave e aproximação por mouse, teclado ou toque.
+- No celular, tocar em um nome centraliza e amplia o retrato correspondente.
+- Animações pausam fora da tela e respeitam a preferência por movimento reduzido.
+- A seção conserva `#informacoes`, os links de navegação e o contato existente. As outras páginas e os módulos 3D foram preservados.
 
-| Nome | Arquivo a preparar quando o original chegar |
-| --- | --- |
-| Mariana | `/images/team/mariana.webp` |
-| Heitor | `/images/team/heitor.webp` |
-| Guilherme | `/images/team/guilherme.webp` |
-| Heloiza | `/images/team/heloiza.webp` |
-| Gabriel | `/images/team/gabriel.webp` |
-| Lara | `/images/team/lara.webp` |
-| Tiago | `/images/team/tiago.webp` |
-| Raphael | `/images/team/raphael.webp` |
+## Evidências e validação
 
-Os caminhos da tabela são o destino planejado, não arquivos já existentes. Após inserir os originais, atualizar `portrait` no manifesto e repetir a inspeção visual do corte dos rostos. A versão está na branch de prévia `feat/equipe-hipocampo`; a `main` foi preservada enquanto os arquivos estão pendentes.
+Capturas: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`.
+Vídeo: `docs/team-finale-motion.mp4`.
 
-Vídeo da prévia: `docs/team-finale-motion.mp4`. Os cartões ainda exibem nomes, pois os retratos originais estão pendentes.
-
-## Validação
-
-`npm run build`, `node --check public/assets/team-finale.js` e `python scripts/test-team-finale.py`.
-
-O teste de imagens usa uma fotografia de arquivo apenas em resposta interceptada pelo navegador de testes, para verificar o carregamento e o corte. Esse fixture nunca é escrito no manifesto nem usado na versão de prévia.
+Executados `npm run build`, verificações de sintaxe e `python scripts/test-team-finale.py`. A suíte usa os oito retratos originais, sem mocks, em 1440×900, 390×844, 375×667 e 320×640, mais 390×844 com movimento reduzido. Foram verificados carregamento, ordem, letras brancas, seleção dos oito nomes, hover/toque, Escape, animação fora da tela, overflow, erros JavaScript e arquivos locais ausentes. Todos passaram.

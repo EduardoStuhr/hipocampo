@@ -1,12 +1,35 @@
-// Order supplied by the client. Attach original portraits here once uploaded;
-// null renders the member's name without inventing or substituting a face.
+// Original portraits supplied by the client, preserving the ZIP order.
 export const TEAM = [
-  { name: 'Mariana', portrait: null },
-  { name: 'Heitor', portrait: null },
-  { name: 'Guilherme', portrait: null },
-  { name: 'Heloiza', portrait: null },
-  { name: 'Gabriel', portrait: null },
-  { name: 'Lara', portrait: null },
-  { name: 'Tiago', portrait: null },
-  { name: 'Raphael', portrait: null },
+  {
+    "name": "Mariana",
+    "portrait": "/images/team/mariana.webp"
+  },
+  {
+    "name": "Heitor",
+    "portrait": "/images/team/heitor.webp"
+  },
+  {
+    "name": "Guilherme",
+    "portrait": "/images/team/guilherme.webp"
+  },
+  {
+    "name": "Heloiza",
+    "portrait": "/images/team/heloiza.webp"
+  },
+  {
+    "name": "Gabriel",
+    "portrait": "/images/team/gabriel.webp"
+  },
+  {
+    "name": "Lara",
+    "portrait": "/images/team/lara.webp"
+  },
+  {
+    "name": "Tiago",
+    "portrait": "/images/team/tiago.webp"
+  },
+  {
+    "name": "Raphael",
+    "portrait": "/images/team/raphael.webp"
+  }
 ]

@@ -569,3 +569,16 @@ P1 — The eight original portrait files have not been made available in the wor
 The browser suite exercises all eight selections, hover, touch, keyboard Escape, viewport overflow, offscreen animation suspension, reduced motion, local asset errors and browser errors. Image rendering is also exercised with a browser-only local photograph fixture; it is not shipped as a team portrait.
 
 The earlier sections and their 3D scene modules are preserved. Only the final section's header theme changes to white navigation on its new blue background. This is a draft on `feat/equipe-hipocampo`; it is not a completed production handoff.
+
+
+## Finalização da equipe e letras brancas — 13/11/2026
+
+A dependência anterior de retratos foi resolvida: `fotos_compactadas.zip` forneceu oito imagens, inseridas na ordem indicada pelo usuário (Mariana, Heitor, Guilherme, Heloiza, Gabriel, Lara, Tiago, Raphael). Nenhuma fotografia foi gerada ou substituída. Conversão WebP local com orientação corrigida e sem ampliação.
+
+O título foi corrigido conforme a revisão: o branco forma as próprias letras de HIPOCAMPO, em fonte arredondada pesada. Foram removidos os blocos de fundo e as letras pequenas entre colchetes. Fonte Fredoka local com licença OFL e texto semântico acessível. O restante da identidade e das seções foi preservado.
+
+Referência visual: captura enviada pelo usuário. Resultados atuais inspecionados em `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`; vídeo em `docs/team-finale-motion.mp4`. A paleta é a existente do projeto. A captura estática foi usada como referência de composição, sem alegação de reproduzir tempos de uma animação que não foi possível acessar no Readymag.
+
+Build, sintaxe e cinco cenários de navegador aprovados: 1440×900, 390×844, 375×667, 320×640 e 390×844 com movimento reduzido. Todos usam os oito retratos originais, verificam sua ordem, fontes/letras, seleção dos oito nomes, destaque por mouse/toque, Escape, pausa fora da tela e ausência de overflow, erros JavaScript ou recursos locais ausentes. Não há pendência P0/P1/P2 no escopo solicitado. Testes em Chromium/SwiftShader, com toque emulado.
+
+final result: passed

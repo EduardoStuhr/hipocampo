@@ -1,4 +1,4 @@
-import { TEAM } from './team-members.js?v=team-fan-1'
+import { TEAM } from './team-members.js?v=portraits-1'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 const POSES = [
@@ -33,7 +33,7 @@ function mount() {
     const tile = document.createElement('span')
     tile.className = 'team-letter'
     tile.setAttribute('aria-hidden', 'true')
-    tile.textContent = `[${letter}]`
+    tile.textContent = letter
     title.append(tile)
   }
   const fan = document.createElement('div')
