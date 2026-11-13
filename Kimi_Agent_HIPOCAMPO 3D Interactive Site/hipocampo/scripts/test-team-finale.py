@@ -1,5 +1,5 @@
 """Check the original portraits, white letterforms and team interactions."""
-import asyncio,json
+import asyncio,json,os
 from pathlib import Path
 from playwright.async_api import async_playwright
 OUT=Path(__file__).resolve().parents[1]/'artifacts'/'team-finale';OUT.mkdir(parents=True,exist_ok=True)
@@ -9,7 +9,7 @@ async def check(b,w,h,reduced=False):
  errors=[];missing=[]
  p.on('pageerror',lambda e:errors.append(str(e)))
  p.on('response',lambda r:missing.append(r.url)if r.status>=400 and '127.0.0.1' in r.url else None)
- await p.goto('http://127.0.0.1:4173/',wait_until='domcontentloaded')
+ await p.goto(os.environ.get('HIPOCAMPO_TEST_URL', 'http://127.0.0.1:4173/'),wait_until='domcontentloaded')
  await p.wait_for_selector('.team-finale');await p.keyboard.press('Escape')
  await p.wait_for_function("!document.querySelector('.hipocampo-intro')")
  await p.evaluate('document.fonts.ready')
@@ -59,7 +59,7 @@ async def check(b,w,h,reduced=False):
   await p.mouse.move(5,5);await p.wait_for_timeout(450)
  assert await letters.evaluate_all('(es)=>es.every(e=>!e.style.transform)')
  after=await title.bounding_box();assert abs(after['width']-before['width'])<1
- assert not await title.get_attribute('data-interacting')
+ assert await title.get_attribute('data-interacting') is None
  if w>=768:
   r=await root.locator('.team-portrait-card').nth(3).bounding_box()
   await p.mouse.move(r['x']+r['width']/2,r['y']+35);await p.wait_for_timeout(100)

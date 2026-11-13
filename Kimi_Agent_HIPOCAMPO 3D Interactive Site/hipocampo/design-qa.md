@@ -589,3 +589,10 @@ final result: passed
 Beatriz acrescentada como nona integrante, mantendo os oito retratos anteriores em ordem. O leque foi redistribuído. Letras brancas reagem ao mouse com uma onda suave e retornam ao sair; efeito desativado para toque e movimento reduzido. Sem loop permanente de animação ou alterações nas cenas 3D.
 
 Validação: build, sintaxe JavaScript e suíte Playwright em desktop 1440×900 e celulares 390×844, 375×667, 320×640, além de desktop e celular com movimento reduzido. Nove imagens e seleções verificadas; sem erros JavaScript, arquivos ausentes ou overflow. Movimento e retorno das letras verificados no desktop.
+
+
+## 2026-11-13 — Novo envio e versionamento dos arquivos da equipe
+
+Após relato de versão anterior em hipocampo.pages.dev, o build passou a emitir CSS, módulo e manifesto da equipe com hash de conteúdo no nome. Referências do HTML e importação do manifesto acompanham o hash; os caminhos antigos são preservados. Não há confirmação de causa no Cloudflare, cujo acesso está bloqueado neste ambiente.
+
+Validação do diretório dist em servidor estático local na porta 4174 com a suíte de equipe: desktop 1440×900, celulares 390×844, 375×667 e 320×640, desktop e celular com movimento reduzido. Build e sintaxe do script verificados. Novo envio à main solicitado pelo usuário para tentar novamente a publicação.

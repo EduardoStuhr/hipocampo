@@ -1,4 +1,4 @@
-import { TEAM } from './team-members.js?v=beatriz-1'
+import { TEAM } from './team-members.js?v=beatriz-2'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 const POSES = [

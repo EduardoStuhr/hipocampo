@@ -38,3 +38,9 @@ Capturas: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.w
 Vídeo: `docs/team-finale-motion.mp4`.
 
 Executados `npm run build`, verificações de sintaxe e `python scripts/test-team-finale.py`. A suíte usa os nove retratos originais, sem mocks, em 1440×900, 390×844, 375×667 e 320×640, mais 390×844 e 1440×900 com movimento reduzido. Foram verificados carregamento, ordem, letras brancas, seleção dos nove nomes, onda nas letras, retorno ao sair, hover/toque, Escape, animação fora da tela, overflow, erros JavaScript e arquivos locais ausentes. Todos passaram.
+
+## Novo envio para publicação — 13/11/2026
+
+O build agora gera nomes com hash de conteúdo para o CSS, JavaScript e manifesto da equipe. O HTML produzido referencia esses nomes e o módulo referencia o manifesto correspondente. Os caminhos anteriores continuam disponíveis. Isso evita reutilização dos assets antigos quando o HTML novo é publicado, mesmo em caches que ignoram parâmetros de URL. A entrada de desenvolvimento também recebeu uma nova versão.
+
+Destino do novo envio: `main` de `EduardoStuhr/hipocampo`. A publicação em `hipocampo.pages.dev` depende da integração Cloudflare; não foi possível consultá-la neste ambiente.
