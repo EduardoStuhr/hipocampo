@@ -434,7 +434,7 @@ function initializeEditorialRedesign() {
     { id: 'fotofilmes', selector: '#fotofilmes .client-film--1', theme: 'yellow', cursorTheme: 'on-yellow' },
     { id: 'fotofilmes', selector: '#fotofilmes .client-film--2', theme: 'dark', cursorTheme: 'on-brown' },
     { id: 'relatos', theme: 'light', cursorTheme: 'on-paper' },
-    { id: 'informacoes', theme: 'yellow', cursorTheme: 'on-yellow' },
+    { id: 'informacoes', theme: 'dark', cursorTheme: 'on-blue' },
   ]
 
   let currentCursorTheme = 'on-blue'

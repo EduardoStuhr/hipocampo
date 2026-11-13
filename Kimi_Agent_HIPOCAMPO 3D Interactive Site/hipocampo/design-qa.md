@@ -551,3 +551,21 @@ e sintaxe aprovados. Chromium/SwiftShader emulado, sem teste em aparelho físico
 Backup: `backup/antes-parede-entrada-2026-11-06` → `14304d3`.
 
 final result: passed
+
+# Última página: leque da equipe — 13/11/2026
+
+final result: blocked
+
+## Scope and evidence
+
+The target is the user-supplied Readymag screenshot: a fan of rounded photographs behind a foreground row of rounded letter tiles. The requested adaptation uses HIPOCAMPO, eight supplied names and the existing site palette. Rendered drafts were inspected at desktop and phone widths; previews are in `docs/team-finale-preview-1440.webp` and `docs/team-finale-preview-390.webp`.
+
+## Blocking asset dependency
+
+P1 — The eight original portrait files have not been made available in the workspace. The visible conversation images have no downloadable file pointers. The draft uses the supplied names on cards; it does not invent faces, use unrelated photographs in production, or issue broken image requests. Final photographic fidelity cannot be approved until the original images are uploaded and their crops are verified.
+
+## Functional validation
+
+The browser suite exercises all eight selections, hover, touch, keyboard Escape, viewport overflow, offscreen animation suspension, reduced motion, local asset errors and browser errors. Image rendering is also exercised with a browser-only local photograph fixture; it is not shipped as a team portrait.
+
+The earlier sections and their 3D scene modules are preserved. Only the final section's header theme changes to white navigation on its new blue background. This is a draft on `feat/equipe-hipocampo`; it is not a completed production handoff.

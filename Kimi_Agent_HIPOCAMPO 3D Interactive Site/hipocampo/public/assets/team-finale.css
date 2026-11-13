@@ -1,0 +1,55 @@
+#informacoes.team-finale {
+  display: block; min-height: 100svh; padding: 7rem 3vw 3rem;
+  background: #2626fc !important; color: #f4f0e7;
+  overflow: clip; font-family: "SquidBoy", sans-serif;
+}
+.team-finale-top, .team-finale-bottom { display: flex; justify-content: space-between; gap: 2rem; max-width: 100rem; margin: 0 auto; align-items: center; }
+.team-finale-top p, .team-finale-bottom p { margin: 0; font-size: clamp(.9rem, 1vw, 1.1rem); line-height: 1.6; }
+.team-finale-top .team-eyebrow { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; }
+.team-fan-stage { position: relative; height: clamp(25rem, 41vw, 46rem); width: 100%; max-width: 100rem; margin: 2rem auto 0; isolation: isolate; contain: layout; }
+.team-portrait-fan { position: absolute; inset: 0; }
+.team-portrait-slot { position: absolute; left: var(--member-x); top: var(--member-y); width: 15.5%; z-index: 1; transform: translateX(-50%) rotate(var(--member-angle)); animation: team-float 6s ease-in-out infinite; animation-delay: calc(var(--member-index) * -.65s); animation-play-state: paused; }
+.team-in-view .team-portrait-slot { animation-play-state: running; }
+.team-portrait-entrance { opacity: 0; transform: translateY(5rem) scale(.8); }
+.team-revealed .team-portrait-entrance { animation: team-reveal .85s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--member-index) * 65ms); }
+.team-portrait-card { display: block; position: relative; width: 100%; aspect-ratio: 3 / 4; padding: 0; border: 1px solid #f4f0e738; border-radius: clamp(.7rem, 1.2vw, 1.4rem); background: #6b311c; color: #f0d756; overflow: hidden; cursor: pointer; touch-action: manipulation; user-select: none; transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s; }
+.team-portrait-card img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 50% 35%; pointer-events: none; }
+.team-portrait-name { position: absolute; left: .8rem; right: .8rem; top: 40%; font: 400 clamp(1.1rem, 1.8vw, 2rem)/1.4 "SquidBoy", sans-serif; text-align: center; overflow-wrap: anywhere; }
+.has-portrait .team-portrait-name { top: auto; bottom: .75rem; padding: .4rem .5rem; background: #000b; color: #fff; font-size: clamp(.85rem, 1.2vw, 1.2rem); }
+.team-portrait-slot:nth-child(even) .team-portrait-card:not(.has-portrait) { background: #f0d756; color: #6b311c; }
+.team-portrait-slot.is-active, .team-portrait-slot:focus-within { z-index: 5; animation-play-state: paused; }
+.team-portrait-slot.is-active .team-portrait-card, .team-portrait-card:focus-visible { transform: translateY(-2rem) rotate(calc(-1 * var(--member-angle))) scale(1.08); box-shadow: 0 1rem 2rem #0003; }
+.team-portrait-card:focus-visible, .team-name-list button:focus-visible, .team-finale-bottom a:focus-visible { outline: 2px solid #f0d756; outline-offset: 5px; }
+#informacoes.team-finale .team-finale-title { position: absolute; z-index: 3; left: 5%; right: 5%; bottom: 12%; margin: 0; display: grid; grid-template-columns: repeat(9, minmax(0,1fr)); padding: 0; line-height: 1; pointer-events: none; }
+.team-letter { height: clamp(7rem, 13.5vw, 14rem); display: flex; align-items: center; justify-content: center; background: #e8e8e5; color: #2626fc; border-radius: 29%; font: 600 clamp(.8rem, 1.15vw, 1.25rem)/1 ui-monospace, monospace; }
+.team-name-list { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; max-width: 70rem; margin: 0 auto 3rem; }
+.team-name-list button { min-height: 44px; padding: .5rem .15rem; border: 0; border-bottom: 1px solid transparent; color: inherit; background: none; font: 400 1rem/1.5 "SquidBoy", sans-serif; cursor: pointer; touch-action: manipulation; }
+.team-name-list button:hover, .team-name-list button[aria-pressed="true"] { color: #f0d756; border-color: currentColor; }
+.team-finale-bottom { padding-top: 1.5rem; border-top: 1px solid #f4f0e74d; }
+#informacoes.team-finale .team-finale-bottom a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; text-underline-offset: .3em; font-size: 1rem; }
+.team-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@keyframes team-float { 0%,100% { transform: translate(-50%, 0) rotate(var(--member-angle)); } 50% { transform: translate(-50%, -.65rem) rotate(calc(var(--member-angle) + 2deg)); } }
+@keyframes team-reveal { to { opacity: 1; transform: translateY(0) scale(1); } }
+.team-revealed:not(.team-in-view) .team-portrait-entrance { animation-play-state: paused; }
+@media (max-width: 767px) {
+  #informacoes.team-finale { padding: 6rem 1.25rem 2rem; }
+  .team-finale-top { display: block; }
+  .team-finale-top p:last-child { margin-top: 1rem; max-width: 16rem; font-size: 1.05rem; }
+  .team-fan-stage { height: 23rem; width: calc(100% + 1.5rem); margin: 2rem -.75rem 0; }
+  .team-portrait-slot { width: 27%; top: calc(var(--member-y) * .75 + 12%); }
+  .team-portrait-slot.is-active { left: 50%; top: 6%; width: 42%; animation: none; transform: translateX(-50%); }
+  .team-portrait-slot.is-active .team-portrait-card { transform: translateY(-.5rem) scale(1.05); }
+  .team-portrait-card { border-radius: .7rem; }
+  .team-portrait-name { left: .3rem; right: .3rem; font-size: .85rem; }
+  #informacoes.team-finale .team-finale-title { left: 2%; right: 2%; bottom: 15%; }
+  .team-letter { height: clamp(4.7rem, 20vw, 7.5rem); border-radius: 30%; font-size: .65rem; }
+  .team-name-list { gap: .2rem 1rem; margin-bottom: 2rem; }
+  .team-name-list button { font-size: 1rem; }
+  .team-finale-bottom { display: block; }
+  .team-finale-bottom a { margin-top: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-portrait-slot { animation: none; }
+  .team-revealed .team-portrait-entrance { opacity: 1; transform: none; animation: none; }
+  .team-portrait-card { transition: none; }
+}
