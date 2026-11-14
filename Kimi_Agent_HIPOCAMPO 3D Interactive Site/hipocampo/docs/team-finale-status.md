@@ -22,7 +22,7 @@ Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retr
 ## Layout e movimento
 
 - Quatro colunas no desktop, três no tablet e duas no celular.
-- Fonte monoespaçada em nomes e funções, como no print; textos sem truncamento.
+- Fonte monoespaçada em nomes e funções, como no print; nomes em amarelo #f0d756, maiores e com mais separação das funções em branco; textos sem truncamento.
 - Entrada suave por fotografia, flutuação local enquanto visível, revelação da foto inteira ao passar o mouse, focar ou tocar, sem zoom nem recorte da proporção original.
 - Toque alterna a posição; Escape retorna. Botões possuem nome acessível e estado aria-pressed.
 - Movimento reduzido desativa flutuação e deslocamentos. Animações pausam fora da tela e na aba oculta.

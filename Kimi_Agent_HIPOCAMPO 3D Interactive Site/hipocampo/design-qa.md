@@ -619,3 +619,10 @@ Correção do recorte relatado pelo usuário na foto da Lara. Antes, cover e uma
 Evidências: `docs/team-lara-full-1440.webp`, `docs/team-lara-full-390.webp`; capturas Playwright do componente ativo em desktop e celular, DPR 1. A foto completa termina antes da linha e o nome/funções seguem legíveis. Teste geométrico adicional das nove imagens: todos os limites do img dentro da janela, object-fit contain, escala 1 após ativação; hover, toque e Escape, ausência de overflow e console mantidos.
 
 final result: passed
+
+
+## 2026-11-14 — Hierarquia de nomes e funções
+
+A pedido do usuário, nomes em amarelo de marca #f0d756 e tamanho maior (16–18 px no desktop, 15,2 px no celular); funções permanecem brancas (14–16 px / 12,8 px). Mais espaçamento entre nome e funções. Build executado e capturas renderizadas de desktop 1440×1000 e mobile 390×844 inspecionadas. Dez nomes legíveis, acentos preservados e nenhum truncamento. Evidências atualizadas em `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`.
+
+final result: passed

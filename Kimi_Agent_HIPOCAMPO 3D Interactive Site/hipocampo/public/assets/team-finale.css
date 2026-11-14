@@ -20,7 +20,7 @@
 .team-credit.is-active .team-photo-float, .team-credit:focus-within .team-photo-float { animation: none; transform: none; }
 .team-photo-window:focus-visible, #informacoes.team-finale a:focus-visible { outline: 2px solid #fff; outline-offset: 5px; }
 .team-photo-unavailable { cursor: default; }
-#informacoes.team-finale .team-credit h3 { margin: 1.5rem 0 .4rem; font: inherit; font-size: clamp(.875rem, 1.1vw, 1rem); line-height: 1.35; text-transform: uppercase; overflow-wrap: anywhere; }
+#informacoes.team-finale .team-credit h3 { margin: 1.5rem 0 .65rem; font: inherit; color: #f0d756; font-size: clamp(1rem, 1.25vw, 1.125rem); line-height: 1.35; text-transform: uppercase; overflow-wrap: anywhere; }
 .team-credit-roles { margin: 0 auto; max-width: 28ch; font-size: clamp(.875rem, 1.1vw, 1rem); line-height: 1.45; text-wrap: pretty; }
 .team-finale-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; border-top: 1px solid #f4f0e780; padding-top: 1.5rem; font-size: .875rem; line-height: 1.5; }
 .team-finale-bottom p { margin: 0; }
@@ -44,7 +44,7 @@
   .team-revealed .team-photo-window img { transform: translateY(4rem) rotate(var(--member-angle)); }
   .team-credit.is-active .team-photo-window img, .team-photo-window:focus-visible img { transform: none; }
   .team-photo-window img { border-radius: .75rem; }
-  #informacoes.team-finale .team-credit h3 { margin-top: 1.1rem; font-size: .85rem; }
+  #informacoes.team-finale .team-credit h3 { margin-top: 1.1rem; font-size: .95rem; }
   .team-credit-roles { font-size: .8rem; line-height: 1.5; }
   .team-finale-bottom { display: block; }
   .team-finale-bottom a { margin-top: .75rem; }
