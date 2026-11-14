@@ -50,9 +50,19 @@ async def check(browser,w,h,reduced=False):
   assert (baseline==hover)if reduced else(baseline!=hover)
   await p.screenshot(path=str(OUT/f'hover-{w}-{reduced}.png'))
   await p.mouse.move(2,2)
- await portrait.click();assert await portrait.get_attribute('aria-pressed')=='true'
- assert 'is-active' in await items.first.get_attribute('class')
- await portrait.press('Escape');await portrait.evaluate('(e)=>e.blur()');assert await portrait.get_attribute('aria-pressed')=='false'
+ # All nine original images must fit without clipping when opened, including Lara.
+ for i,(_,_,image) in enumerate(EXPECTED):
+  if not image:continue
+  await go(f'.team-credit:nth-child({i+1})')
+  button=items.nth(i).locator('button')
+  await button.click();assert await button.get_attribute('aria-pressed')=='true'
+  await p.wait_for_timeout(700 if not reduced else 30)
+  bounds=await button.evaluate('''e=>{const image=e.querySelector('img'),r=image.getBoundingClientRect(),box=e.getBoundingClientRect(),style=getComputedStyle(image);return {fits:r.left>=box.left-1&&r.right<=box.right+1&&r.top>=box.top-1&&r.bottom<=box.bottom+1,fit:style.objectFit,scale:new DOMMatrix(style.transform).a}}''')
+  assert bounds['fits'] and bounds['fit']=='contain' and abs(bounds['scale']-1)<.001,(i,bounds)
+  if image=='lara':await items.nth(i).screenshot(path=str(OUT/f'lara-full-{w}-{reduced}.png'))
+  await button.press('Escape');await button.evaluate('(e)=>e.blur()')
+  assert await button.get_attribute('aria-pressed')=='false'
+ await go('.team-credit:first-child')
  await p.mouse.move(2,2);await p.wait_for_timeout(700)
  assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
  cols=await root.locator('.team-credit-grid').evaluate('(e)=>getComputedStyle(e).gridTemplateColumns.split(" ").length')

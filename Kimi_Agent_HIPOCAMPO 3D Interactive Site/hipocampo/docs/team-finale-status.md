@@ -23,7 +23,7 @@ Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retr
 
 - Quatro colunas no desktop, três no tablet e duas no celular.
 - Fonte monoespaçada em nomes e funções, como no print; textos sem truncamento.
-- Entrada suave por fotografia, flutuação local enquanto visível, elevação e alinhamento ao passar o mouse, focar ou tocar.
+- Entrada suave por fotografia, flutuação local enquanto visível, revelação da foto inteira ao passar o mouse, focar ou tocar, sem zoom nem recorte da proporção original.
 - Toque alterna a posição; Escape retorna. Botões possuem nome acessível e estado aria-pressed.
 - Movimento reduzido desativa flutuação e deslocamentos. Animações pausam fora da tela e na aba oculta.
 - Créditos ficam fora do processamento de títulos editoriais, impedindo máscaras antigas de esconder os nomes.
@@ -36,3 +36,7 @@ Build, sintaxe JS e suíte Playwright no diretório `dist`, servido pela porta 4
 Previews atuais: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`. O vídeo `team-finale-motion.mp4` é um registro histórico do leque anterior.
 
 Produção: Cloudflare Pages conectado ao repositório `EduardoStuhr/hipocampo`, branch `main`. Enviar somente à `main` e acompanhar o check do Cloudflare; pré-visualizações de outras branches não comprovam publicação em hipocampo.pages.dev. Os assets da equipe usam nomes com hash de conteúdo no build.
+
+## Ajuste de enquadramento — 14/11/2026
+
+Retirado o zoom e o object-fit cover dos retratos. As fotos preservam a proporção original com contain; no estado ativo ficam inteiramente dentro da área disponível. O movimento de flutuação para ao interagir, para não cortar o topo. Em movimento reduzido, os retratos já aparecem inteiros. Regressão verifica limites geométricos, contain e escala 1 nas nove imagens em PC, celular e movimento reduzido, incluindo Lara.

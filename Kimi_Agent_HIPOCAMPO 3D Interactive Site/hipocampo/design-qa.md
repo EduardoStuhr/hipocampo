@@ -610,3 +610,12 @@ Superfícies revisadas: tipografia monoespaçada com nomes em caixa alta e acent
 Validação: build, node --check e suíte Playwright de cinco cenários no build de produção. Dez créditos, nove retratos, roles exatos, grade 1440/390/320, hover/toque, Escape, ausência de overflow, erros JS e 404 verificados. Inspeção pós-correção de todos os nomes em desktop e celular. Sem necessidade de recorte focado adicional: nomes, retratos e funções estão legíveis nas capturas integrais.
 
 final result: passed
+
+
+## 2026-11-14 — Retratos inteiros durante interação
+
+Correção do recorte relatado pelo usuário na foto da Lara. Antes, cover e uma escala 1,03 mantinham a fotografia recortada mesmo durante interação. Agora contain preserva a imagem original e o estado ativo alinha a foto inteira na área fixa, com escala 1; flutuação é interrompida nesse estado. Mantém a entrada inclinada na posição de descanso. Movimento reduzido mostra as imagens inteiras desde o início.
+
+Evidências: `docs/team-lara-full-1440.webp`, `docs/team-lara-full-390.webp`; capturas Playwright do componente ativo em desktop e celular, DPR 1. A foto completa termina antes da linha e o nome/funções seguem legíveis. Teste geométrico adicional das nove imagens: todos os limites do img dentro da janela, object-fit contain, escala 1 após ativação; hover, toque e Escape, ausência de overflow e console mantidos.
+
+final result: passed
