@@ -5,7 +5,7 @@
   font-weight: 400;
 }
 .team-finale-top, .team-intro, .team-credit-grid, .team-finale-bottom { max-width: 1160px; margin-inline: auto; }
-#informacoes.team-finale h2 { margin: 0; padding: .2em .1em .45em; font: 400 clamp(3rem, 5.5vw, 5rem)/1.5 "AquilineTwo", Georgia, serif; text-transform: uppercase; text-align: center; letter-spacing: 0; }
+#informacoes.team-finale h2 { margin: 0; padding: .2em .1em .45em; font: 400 clamp(3rem, 5.5vw, 5rem)/1.5 "AquilineTwo", Georgia, serif; text-transform: none; text-align: center; letter-spacing: 0; }
 .team-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 2rem; }
 .team-intro p { margin: 0; border-top: 1px solid #f4f0e7b3; padding-top: 1.7rem; font-size: clamp(.95rem, 1.3vw, 1.125rem); line-height: 1.4; text-wrap: pretty; }
 .team-intro p:first-child { text-transform: uppercase; }

@@ -1,6 +1,6 @@
 # Sobre nós — Hipocampo
 
-Com o título “SOBRE NÓS”, a seção `#informacoes` usa uma grade inspirada no print de equipe fornecido em 14/11/2026: título centralizado, introdução em duas colunas, fotografias inclinadas recortadas por uma linha horizontal e nome/funções abaixo. Substitui o leque com a palavra gigante. Mantém o azul original #2626fc e o contato existente.
+Com o título “Sobre nós”, a seção `#informacoes` usa uma grade inspirada no print de equipe fornecido em 14/11/2026: título centralizado, introdução em duas colunas, fotografias inclinadas recortadas por uma linha horizontal e nome/funções abaixo. Substitui o leque com a palavra gigante. Mantém o azul original #2626fc e o contato existente.
 
 ## Créditos em ordem alfabética
 
@@ -22,7 +22,7 @@ Os dez retratos vêm do ZIP fotos.zip recebido em 14/11/2026 e foram associados 
 ## Layout e movimento
 
 - Quatro colunas no desktop, três no tablet e duas no celular.
-- Título SOBRE NÓS em AquilineTwo e nomes, funções e demais textos da seção em SquidBoy local; nomes em amarelo #f0d756, maiores e com mais separação das funções em branco; textos sem truncamento.
+- Título Sobre nós em AquilineTwo e nomes, funções e demais textos da seção em SquidBoy local; nomes em amarelo #f0d756, maiores e com mais separação das funções em branco; textos sem truncamento.
 - Entrada suave por fotografia, flutuação local enquanto visível, revelação da foto inteira ao passar o mouse, focar ou tocar, sem zoom nem recorte da proporção original.
 - Toque alterna a posição; Escape retorna. Botões possuem nome acessível e estado aria-pressed.
 - Movimento reduzido desativa flutuação e deslocamentos. Animações pausam fora da tela e na aba oculta.

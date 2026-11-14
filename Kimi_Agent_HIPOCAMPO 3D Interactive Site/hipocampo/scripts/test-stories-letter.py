@@ -15,7 +15,7 @@ async def check(browser,w,h,reduced=False):
  await p.evaluate('document.fonts.ready');await p.wait_for_timeout(600)
  await p.evaluate("async()=>{const {t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');ST.refresh()}")
  root=p.locator('#relatos');paper=root.locator('.stories-letter-paper');track=root.locator('.stories-scroll-track');room=root.locator('.stories-reading-room')
- assert await p.locator('#team-finale-title').inner_text()=='SOBRE NÓS'
+ assert await p.locator('#team-finale-title').inner_text()=='Sobre nós'
  assert await p.locator('#team-finale-title').evaluate('(e)=>getComputedStyle(e).fontFamily.includes("AquilineTwo")')
  assert await p.locator('.team-credit h3').first.evaluate('(e)=>getComputedStyle(e).fontFamily.includes("SquidBoy")')
  assert await p.locator('.team-credit-roles').first.evaluate('(e)=>getComputedStyle(e).fontFamily.includes("SquidBoy")')
