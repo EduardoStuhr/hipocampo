@@ -35,7 +35,7 @@ export const TEAM = [
     ]
   },
   {
-    "name": "Heloísa Miranda",
+    "name": "Heloiza Miranda",
     "portrait": "/images/team/heloisa-e8a49fc5db72.webp",
     "roles": [
       "Direção de Fotografia",

@@ -10,7 +10,7 @@ Com o título “Sobre nós”, a seção `#informacoes` usa uma grade inspirada
 | Gabriel Orlando | Direção de Arte; Cenografia | gabriel-a9179d8a2137.webp |
 | Guilherme Brandão | Direção de Experiência; Mediação; Assistência de Produção | guilherme-cbae9f8d76ee.webp |
 | Heitor Lopes | Direção de Fotografia; Documentação | heitor-8a253cab9b3c.webp |
-| Heloísa Miranda | Direção de Fotografia; Documentação; Assistência de Produção | heloisa-e8a49fc5db72.webp |
+| Heloiza Miranda | Direção de Fotografia; Documentação; Assistência de Produção | heloisa-e8a49fc5db72.webp |
 | Lara Sanchez | Direção de Arte; Cenografia | lara-cdd50bedccc0.webp |
 | Marcos Bonavita | Assistência de Som; Trilha Sonora | marcos-a006a67ceead.webp |
 | Mariana Teixeira | Direção Criativa; Direção de Produção | mariana-130c88ae8ddc.webp |

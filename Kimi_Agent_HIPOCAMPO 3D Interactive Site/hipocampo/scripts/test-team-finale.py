@@ -9,7 +9,7 @@ EXPECTED=[
  ('Gabriel Orlando','Direção de Arte + Cenografia','gabriel'),
  ('Guilherme Brandão','Direção de Experiência + Mediação + Assistência de Produção','guilherme'),
  ('Heitor Lopes','Direção de Fotografia + Documentação','heitor'),
- ('Heloísa Miranda','Direção de Fotografia + Documentação + Assistência de Produção','heloisa'),
+ ('Heloiza Miranda','Direção de Fotografia + Documentação + Assistência de Produção','heloisa'),
  ('Lara Sanchez','Direção de Arte + Cenografia','lara'),
  ('Marcos Bonavita','Assistência de Som + Trilha Sonora','marcos'),
  ('Mariana Teixeira','Direção Criativa + Direção de Produção','mariana'),
