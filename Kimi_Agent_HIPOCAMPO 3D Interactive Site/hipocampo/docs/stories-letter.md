@@ -1,28 +1,25 @@
-# Relatos — envelope aberto pela rolagem
+# Relatos — envelope físico em 3D
 
-A seção #relatos contém um envelope em camadas que abre progressivamente conforme a rolagem normal. A animação retira o selo, vira a aba, revela a folha e afasta o envelope. Ao rolar para cima, a sequência se inverte. Depois da abertura, a folha cresce com perspectiva até preencher toda a viewport branca. Uma camada de leitura mantém o texto “Em breve, relatos” nítido no final, como espaço para os relatos futuros. Não há carta de apresentação ou assinatura no papel.
+A experiência de relatos usa agora um modelo Three.js com quatro abas articuladas, papel com espessura e fibras, sombras projetadas e selo de cera irregular em relevo. O selo, seus aros e a inicial H são geometria; o selo acompanha a aba superior. A rolagem gira cada dobradiça e aproxima a câmera para o interior. Ao terminar, o branco preenche a viewport com “Em breve, relatos”. Reverter a rolagem fecha o envelope.
 
-O usuário esclareceu que a referência é o movimento da carta e não o desenho. O link Pinterest não pôde ser visualizado pela rede do ambiente; a imagem do envelope anexada e a descrição explícita orientaram a implementação. Não se afirma reprodução exata do vídeo.
+## Modelo e materiais
 
-## Implementação
+- stories-envelope-3d.js compartilha o Three.js local já utilizado pelo projeto.
+- Papel: malhas extrudadas com bordas, mapa de fibras e relevo de material gerados numericamente; não usa foto/PNG de envelope.
+- Cera: contorno irregular extrudado, borda arredondada, aros e H em relevo, material físico com brilho controlado.
+- Iluminação hemisférica e direcional com sombras; abas giram em torno das próprias bordas.
+- A entrada na carta é movimento real da câmera até a superfície interna, acompanhado pela camada branca de leitura para texto nítido.
 
-- stories-letter.js monta as superfícies e usa o GSAP/ScrollTrigger já existente: scrub, progresso reversível e geometria recalculada apenas ao inicializar/atualizar o layout.
-- stories-letter.css usa sticky nativo e superfícies CSS do envelope; nenhuma imagem de carta ou captura de tela substitui a interação.
-- A aproximação é dimensionada por geometria da viewport: a folha cobre os quatro cantos, inclusive após resize.
-- Rolagem não é interceptada, bloqueada ou simulada com temporizadores. Nenhum loop adicional contínuo de JavaScript.
-- A fase semântica e aria-hidden só mudam ao atravessar os limites de fechado/abrindo/aberto.
-- Com movimento reduzido, a tela branca com o aviso aparece diretamente e o trecho longo de animação é removido.
-- Navegação #relatos permanece; cabeçalho claro sobre marrom e marrom sobre branco, atualizado na mudança de fase sem depender de novo movimento de rolagem.
-- A equipe mantém os créditos e retratos; título SOBRE NÓS em AquilineTwo e textos em SquidBoy local.
+## Ciclo de vida e desempenho
+
+Carrega somente ao chegar a 700 px da seção, sem mensagem de carregamento. O modelo inicial tem 4550 triângulos e 16 chamadas de desenho no renderer. Renderiza sob demanda na rolagem ou resize; não há loop contínuo de renderização. Para fora da tela, aba oculta e trecho final coberto pela área de leitura.
+
+DPR limitado a 1,5 no desktop e 1,25 em ponteiro touch. Sombra 1024 no desktop e 512 no celular. Geometria de enquadramento é cacheada no resize. Materiais, texturas, sombras, observers e renderer são liberados na desmontagem/troca de preferência.
+
+Com movimento reduzido, exibe diretamente a área branca sem criar WebGL. Sem WebGL2, mantém a abertura CSS funcional. Se perder o contexto, mostra essa alternativa até restaurar o renderer. Os elementos do canvas não interceptam toque ou mouse.
 
 ## Verificação
 
-npm run build, node --check e scripts/test-stories-letter.py. Desktop 1440×1000 e 1366×768, celulares 390×844 e 320×640, celular com movimento reduzido. Estados 0/20/45/70/100%, reversão, roda do mouse e PageDown nativos, gesto de toque via CDP, ausência de bloqueio ao continuar à equipe, branco puro cobrindo toda a viewport, aviso “Em breve, relatos”, fontes carregadas e contraste do cabeçalho, viewport sem overflow, imagens e créditos preservados, título SOBRE NÓS, console e recursos ausentes. Todos passaram.
+Build e sintaxe JS; Playwright em 1440×1000, 1366×768, 390×844, 320×640 e movimento reduzido. Confirmados modelo pronto, triângulos/chamadas/DPR, ausência de renders contínuos e fora de tela, rotação de abas e câmera, progresso/reversão, roda/PageDown/toque, branco cobrindo viewport, aviso e cabeçalho legíveis, dez retratos/créditos e fontes preservados, resize e troca de preferência sem duplicar a timeline. Perda/restauração de contexto testada e cenário adicional força WebGL indisponível para confirmar a alternativa.
 
-Uma rodada adicional desktop verificou mudança de preferência de movimento e redimensionamento para 390×844: geometria refeita, folha cobrindo a tela e somente uma timeline ativa.
-
-Capturas finais: docs/stories-scroll-closed-1440.webp, stories-scroll-opening-1440.webp, stories-scroll-open-390.webp. Imagens antigas de stories-letter-* são evidências históricas da versão anterior.
-
-## Evidências de aproximação
-
-Previews atuais: docs/stories-entering-1440.webp e docs/stories-fullscreen-390.webp. A geometria é cacheada em onRefreshInit, sem leituras de layout nos frames de scroll. O aviso aparece em camada separada depois do zoom, evitando ampliar ou desfocar as letras.
+Capturas: stories-envelope-closed.webp, stories-envelope-opening.webp e stories-envelope-open-mobile.webp. Vídeo de navegação com roda do mouse: stories-envelope-physical.mp4. O vídeo foi capturado no Chromium com renderer de software e não serve como medição de FPS de dispositivos reais.

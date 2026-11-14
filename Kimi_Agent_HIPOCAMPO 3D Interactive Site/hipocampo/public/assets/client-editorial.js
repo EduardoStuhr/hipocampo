@@ -1,4 +1,4 @@
-import { prepareStoriesLetter } from './stories-letter.js?v=immersive-1'
+import { prepareStoriesLetter } from './stories-letter.js?v=physical-envelope-1'
 
 // Adapt the recovered editorial entry without editing its bundled React code.
 export function prepareClientNavigation(header) {

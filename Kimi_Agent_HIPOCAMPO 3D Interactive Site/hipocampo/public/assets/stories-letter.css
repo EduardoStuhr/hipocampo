@@ -5,6 +5,8 @@
 #relatos .stories-eyebrow { margin: 0; color: #f0d756; font: 400 .8rem/1.5 "Courier New", Courier, monospace; letter-spacing: .14em; text-transform: uppercase; }
 #relatos .stories-introduction h2 { margin: .6rem 0 1.2rem; padding-bottom: .35em; color: #f4f0e7; font: 400 clamp(3.8rem, 6vw, 5.5rem)/1.35 "AquilineTwo", Georgia, serif; }
 #relatos .stories-invitation { margin: 0; font: 400 1rem/1.5 "SquidBoy", sans-serif; }
+.stories-envelope-canvas { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; pointer-events: none; }
+.stories-three-ready .stories-envelope-scene { opacity: 0; pointer-events: none; }
 .stories-envelope-scene { position: absolute; left: 50%; top: 58%; width: min(88vw, 34rem); aspect-ratio: 1.58; transform: translate(-50%, -50%); perspective: 1200px; isolation: isolate; }
 .stories-envelope-back { position: absolute; inset: 0; z-index: 0; background: #d9cbae; border: 1px solid #c7b58f; border-radius: .25rem; box-shadow: 0 1.5rem 3rem #210c0740; }
 .stories-paper-pocket { position: absolute; inset: 0; z-index: 1; overflow: hidden; perspective: 1200px; }

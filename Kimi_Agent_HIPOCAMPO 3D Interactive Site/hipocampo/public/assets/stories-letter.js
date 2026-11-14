@@ -63,13 +63,35 @@ export function prepareStoriesLetter(section) {
   media.add('(prefers-reduced-motion: no-preference)', () => {
     setPhase('closed')
     measure()
+    let currentProgress = 0, experience = null, valid = true, loading = false
+    const loader = new IntersectionObserver(async entries => {
+      if (!entries.some(entry => entry.isIntersecting) || loading) return
+      loading = true
+      loader.disconnect()
+      try {
+        const { createEnvelopeExperience } = await import('./stories-envelope-3d.js?v=paper-wax-1')
+        const model = await createEnvelopeExperience(stage)
+        if (!valid) { model.dispose(); return }
+        experience = model
+        delete stage.dataset.envelopeFallback
+        stage.envelopeExperience = model
+        experience.setProgress(currentProgress)
+      } catch {
+        if (valid) stage.dataset.envelopeFallback = 'true'
+      }
+    }, { rootMargin: '700px' })
+    loader.observe(track)
     const timeline = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
         id: 'hipocampo-stories-letter', trigger: track,
         start: 'top top', end: 'bottom bottom', scrub: true,
         invalidateOnRefresh: true, onRefreshInit: measure,
-        onUpdate: self => setPhase(self.progress < .06 ? 'closed' : self.progress < .8 ? 'opening' : 'open'),
+        onUpdate: self => {
+          currentProgress = self.progress
+          experience?.setProgress(currentProgress)
+          setPhase(currentProgress < .06 ? 'closed' : currentProgress < .8 ? 'opening' : 'open')
+        },
       },
     })
     timeline
@@ -86,6 +108,12 @@ export function prepareStoriesLetter(section) {
       .to(paper, { scaleX: () => geometry.zoom, scaleY: () => geometry.zoom, y: () => geometry.zoomY, rotationX: 0, rotationY: 0, duration: .32 }, .48)
       .to(room, { autoAlpha: 1, duration: .06 }, .8)
       .to({}, { duration: .14 }, .86)
+    return () => {
+      valid = false
+      loader.disconnect()
+      experience?.dispose()
+      if (stage.envelopeExperience === experience) delete stage.envelopeExperience
+    }
   })
   media.add('(prefers-reduced-motion: reduce)', () => setPhase('open'))
 

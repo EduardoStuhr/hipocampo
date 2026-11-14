@@ -35,11 +35,21 @@ async def check(browser,w,h,reduced=False):
   assert await root.locator('.stories-envelope-scene').evaluate('(e)=>getComputedStyle(e).display')=='none'
   assert await room.get_attribute('aria-hidden')=='false'
   assert await track.evaluate('(e)=>e.offsetHeight')<h*1.6
+  assert await root.locator('.stories-envelope-canvas').count()==0
   await p.screenshot(path=str(OUT/f'reduced-{w}.png'),style=style)
  else:
   states=[]
   for fraction in (0,.2,.45,.7,1):
    await go(fraction)
+   if fraction==0:
+    await p.wait_for_function("document.querySelector('.stories-correspondence').envelopeExperience?.getDiagnostics().ready",timeout=45000)
+    await p.wait_for_timeout(150)
+    initial=await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics()')
+    assert initial['triangles']>1000 and initial['triangles']<10000 and initial['drawCalls']<=25,initial
+    assert initial['pixelRatio']<=1.5,initial
+    await p.wait_for_timeout(600)
+    idle=await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics()')
+    assert idle['frames']<=initial['frames']+1,(initial,idle)
    state=await root.evaluate('''e=>{const p=e.querySelector('.stories-letter-paper'),f=e.querySelector('.stories-envelope-flap'),front=e.querySelector('.stories-envelope-front');return {phase:e.dataset.letterPhase,scaleY:new DOMMatrix(getComputedStyle(p).transform).m22,flap:getComputedStyle(f).transform,frontOpacity:Number(getComputedStyle(front).opacity)}}''')
    states.append(state)
    await p.screenshot(path=str(OUT/f'scroll-{w}-{int(fraction*100)}.png'),style=style)
@@ -48,6 +58,10 @@ async def check(browser,w,h,reduced=False):
   assert states[-1]['phase']=='open',states
   assert states[-1]['scaleY']>1.5 and states[-1]['frontOpacity']<.01,states
   assert states[1]['flap']!=states[0]['flap'],states
+  finalModel=await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics()')
+  assert finalModel['topAngle']<-2 and finalModel['leftAngle']<-2,finalModel
+  assert finalModel['cameraZ']<initial['cameraZ']/2,finalModel
+  assert await root.locator('.stories-envelope-canvas').count()==1
   assert await room.get_attribute('aria-hidden')=='false'
   rect=await paper.bounding_box()
   assert rect['x']<=0 and rect['x']+rect['width']>=w-1,rect
@@ -75,11 +89,26 @@ async def check(browser,w,h,reduced=False):
   await go(1)
   await p.mouse.wheel(0,h*2);await p.wait_for_timeout(900)
   assert await p.evaluate("document.querySelector('#informacoes').getBoundingClientRect().top<innerHeight")
+ if not reduced:
+  offscreen=await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics()')
+  await p.wait_for_timeout(600)
+  stopped=await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics()')
+  assert stopped['frames']<=offscreen['frames']+1,(offscreen,stopped)
  assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
  assert await p.locator('#informacoes .team-credit').count()==10
  assert await p.locator('#informacoes .team-credit img').count()==10
  if w==1440 and not reduced:
+  await go(.45)
+  canRestore=await p.evaluate('''()=>{const canvas=document.querySelector('.stories-envelope-canvas');window.__letterTestContext=canvas.getContext('webgl2').getExtension('WEBGL_lose_context');if(!window.__letterTestContext)return false;window.__letterTestContext.loseContext();return true}''')
+  if canRestore:
+   await p.wait_for_timeout(300)
+   assert await p.locator('.stories-correspondence').evaluate('(e)=>e.envelopeExperience.getDiagnostics().contextLost')
+   assert not await p.locator('.stories-correspondence').evaluate('(e)=>e.classList.contains("stories-three-ready")')
+   await p.evaluate('window.__letterTestContext.restoreContext()')
+   await p.wait_for_function("document.querySelector('.stories-correspondence').envelopeExperience?.getDiagnostics().ready",timeout=15000)
+   await p.evaluate('delete window.__letterTestContext')
   await p.emulate_media(reduced_motion='reduce');await p.wait_for_timeout(400)
+  assert await root.locator('.stories-envelope-canvas').count()==0
   assert await root.get_attribute('data-letter-phase')=='open'
   await p.emulate_media(reduced_motion='no-preference');await p.wait_for_timeout(400)
   await p.set_viewport_size({'width':390,'height':844});await p.wait_for_timeout(500)
@@ -93,9 +122,29 @@ async def check(browser,w,h,reduced=False):
  assert not missing,missing
  print(json.dumps({'viewport':[w,h],'reducedMotion':reduced,'fullScreenWhite':True,'fontsLoaded':True,'scrollReversible':not reduced,'nativeWheelOrTouch':not reduced,'aboutTitle':True,'noOverflow':True,'errors':errors,'missingFiles':missing}),flush=True)
  await p.close()
+async def check_fallback(browser):
+ p=await browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
+ errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
+ await p.add_init_script("""(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(this.classList.contains('stories-envelope-canvas')&&type.startsWith('webgl'))return null;return original.call(this,type,...args)}})()""")
+ await p.goto(os.environ.get('HIPOCAMPO_TEST_URL','http://127.0.0.1:4180/'),wait_until='domcontentloaded')
+ await p.wait_for_selector('#relatos[data-letter-ready]');await p.keyboard.press('Escape')
+ await p.wait_for_function("!document.querySelector('.hipocampo-intro')")
+ await p.evaluate("__hipocampoLenis.scrollTo(document.querySelector('#relatos'),{immediate:true,force:true})")
+ await p.wait_for_function("document.querySelector('.stories-correspondence').dataset.envelopeFallback==='true'",timeout=20000)
+ assert await p.locator('.stories-envelope-canvas').count()==0
+ assert await p.locator('.stories-envelope-scene').evaluate('(e)=>getComputedStyle(e).opacity')=='1'
+ await p.evaluate("()=>{const e=document.querySelector('.stories-scroll-track');__hipocampoLenis.scrollTo(e.getBoundingClientRect().top+scrollY+e.offsetHeight-innerHeight,{immediate:true,force:true})}")
+ await p.wait_for_timeout(500)
+ assert await p.locator('.stories-reading-room').get_attribute('aria-hidden')=='false'
+ assert await p.locator('.stories-reading-room').inner_text()=='Em breve, relatos'
+ assert not errors,errors
+ print(json.dumps({'webglUnavailableFallback':True,'scrollAndReadingPreserved':True,'errors':errors}),flush=True)
+ await p.close()
+
 async def main():
  async with async_playwright() as pw:
   b=await pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
   for args in [(1440,1000),(1366,768),(390,844),(320,640),(390,844,True)]:await check(b,*args)
+  await check_fallback(b)
   await b.close()
 if __name__=='__main__':asyncio.run(main())

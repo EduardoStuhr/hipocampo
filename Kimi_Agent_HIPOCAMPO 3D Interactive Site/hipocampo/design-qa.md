@@ -680,3 +680,16 @@ Preparação técnica: orientação EXIF respeitada e conversão de 768×1024 pa
 Verificação de browser: carregamento das dez imagens, dimensões naturais e URLs versionadas, nomes/funções exatos, ordem, mouse/toque, Escape, enquadramento contain com todos os cantos da foto dentro da janela durante interação, ausência de overflow, pausa fora da tela, console e 404. Em movimento reduzido, compara-se a matriz numérica de transform, evitando falso negativo entre none e matriz identidade equivalente. Build e sintaxe JS passaram.
 
 final result: passed
+
+
+## 2026-11-14 — Envelope físico com abas e cera em relevo
+
+Referência: sequência de quatro prints enviada pelo usuário: envelope fechado, selo/aba levantando e abas se afastando para entrar no conteúdo. Pedido explícito de um objeto bonito e real, sem usar uma imagem pronta de carta. Implementado envelope em geometria Three.js, preservando a paleta marrom/marfim e o encerramento branco “Em breve, relatos” solicitado anteriormente.
+
+Revisão visual: papel com espessura, fibras/relevo de material e sombras de dobra; selo de cera irregular com aros e H extrudados, preso à dobradiça superior; laterais e aba inferior independentes. Primeira inspeção mostrou pouco destaque no H e padrão de auto-sombra em superfícies próximas. Ajustados altura/luz do relevo e bias/normalBias/lado de sombra para eliminar o padrão, mantendo as sombras das abas. Evidências finais mostram selo legível e abertura com volume, inclusive no celular.
+
+Evidências browser: docs/stories-envelope-closed.webp, stories-envelope-opening.webp e stories-envelope-open-mobile.webp; estados em 1440×1000 e 390×844, DPR de captura 1. Revisados fechado, começo da abertura, abas afastadas e encerramento branco. Vídeo stories-envelope-physical.mp4 gravado por rolagem real, com abertura e retorno. Prévia completa revisada por frames; captura via renderer de software não representa FPS de hardware.
+
+Verificações: cinco cenários desktop/mobile/movimento reduzido na suíte stories-letter; modelo presente e pronto; 4550 triângulos e 16 chamadas no estado fechado; DPR limitado; frames estáveis sem rolagem e fora da tela; ângulos das abas/câmera mudam com o progresso; contexto perdido/restaurado mostra alternativa e recupera; preferência reduzida libera o canvas; fallback WebGL indisponível preserva rolagem e leitura. Sem erros JS ou recursos locais ausentes. Dez imagens/créditos, Aquiline e SquidBoy preservados. Nenhum código de interação da casa/ilhas foi alterado.
+
+final result: passed
