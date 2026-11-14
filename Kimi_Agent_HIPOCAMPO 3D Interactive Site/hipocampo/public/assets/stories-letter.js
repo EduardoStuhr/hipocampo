@@ -17,12 +17,13 @@ export function prepareStoriesLetter(section) {
         <div class="stories-envelope-scene">
           <div class="stories-envelope-back" aria-hidden="true"></div>
           <div class="stories-paper-pocket">
-            <article class="stories-letter-paper" id="relatos-carta" aria-label="Espaço reservado para os relatos" aria-hidden="true"></article>
+            <article class="stories-letter-paper" id="relatos-carta" aria-hidden="true"></article>
           </div>
           <div class="stories-envelope-front" aria-hidden="true"><span class="stories-envelope-name">Hipocampo</span></div>
           <div class="stories-envelope-flap" aria-hidden="true"></div>
           <div class="stories-envelope-seal" aria-hidden="true">H</div>
         </div>
+        <article class="stories-reading-room" id="relatos-conteudo" aria-label="Relatos" aria-hidden="true"><p>Em breve, relatos</p></article>
       </div>
     </div>`
 
@@ -34,45 +35,57 @@ export function prepareStoriesLetter(section) {
   const seal = section.querySelector('.stories-envelope-seal')
   const pocket = section.querySelector('.stories-paper-pocket')
   const paper = section.querySelector('.stories-letter-paper')
+  const room = section.querySelector('.stories-reading-room')
   const shell = [flap, section.querySelector('.stories-envelope-back'), section.querySelector('.stories-envelope-front')]
   let lastPhase = ''
   const setPhase = phase => {
     if (phase === lastPhase) return
     lastPhase = phase
     section.dataset.letterPhase = phase
-    paper.setAttribute('aria-hidden', String(phase !== 'open'))
+    room.setAttribute('aria-hidden', String(phase !== 'open'))
+    section.dispatchEvent(new CustomEvent('hipocampo:letter-phase', { bubbles: true }))
   }
-  // Geometry is read only when the timeline is created/refreshed, never in
-  // wheel/touch handlers. Normal page scrolling drives the reversible scene.
-  const paperY = () => {
-    const height = window.innerHeight
-    const naturalTop = stage.clientHeight * .58 + scene.offsetHeight / 2 - 16 - paper.offsetHeight
-    return Math.max(120, height * .2) - naturalTop
+  // Cache the camera framing on refresh, including mobile browser-bar changes.
+  // No geometry reads or document-wide custom properties on scroll frames.
+  let geometry = {}
+  const measure = () => {
+    const height = stage.clientHeight
+    const paperHeight = paper.offsetHeight
+    const anchor = height * .58 + scene.offsetHeight / 2 - 16
+    const zoom = Math.max(stage.clientWidth / paper.offsetWidth, height / paperHeight) * 1.06
+    geometry = {
+      paperY: Math.max(120, height * .2) - (anchor - paperHeight),
+      zoom, zoomY: (height + paperHeight * zoom) / 2 - anchor,
+      shellY: Math.min(height * .22, 180),
+    }
   }
   const media = gsap.matchMedia()
   media.add('(prefers-reduced-motion: no-preference)', () => {
     setPhase('closed')
+    measure()
     const timeline = gsap.timeline({
       defaults: { ease: 'none' },
       scrollTrigger: {
         id: 'hipocampo-stories-letter', trigger: track,
         start: 'top top', end: 'bottom bottom', scrub: true,
-        invalidateOnRefresh: true,
-        onUpdate: self => setPhase(self.progress < .06 ? 'closed' : self.progress < .82 ? 'opening' : 'open'),
+        invalidateOnRefresh: true, onRefreshInit: measure,
+        onUpdate: self => setPhase(self.progress < .06 ? 'closed' : self.progress < .8 ? 'opening' : 'open'),
       },
     })
     timeline
       .set(flap, { rotationX: 0, zIndex: 4, transformOrigin: '50% 0%' }, 0)
-      .set(paper, { scaleX: .94, scaleY: .42, y: 0, transformOrigin: '50% 100%' }, 0)
+      .set(paper, { scaleX: .94, scaleY: .42, y: 0, rotationX: 0, rotationY: 0, transformOrigin: '50% 100%' }, 0)
       .set(pocket, { overflow: 'hidden' }, 0)
-      .to(seal, { opacity: 0, scale: .65, duration: .12 }, .02)
-      .to(flap, { rotationX: -180, duration: .28 }, .07)
-      .to(intro, { opacity: 0, y: -24, duration: .22 }, .12)
-      .set(flap, { zIndex: 0 }, .24)
-      .set(pocket, { overflow: 'visible' }, .28)
-      .to(paper, { scaleX: 1, scaleY: 1, y: paperY, duration: .36 }, .29)
-      .to(shell, { y: () => Math.min(window.innerHeight * .22, 180), opacity: 0, duration: .24 }, .58)
-      .to({}, { duration: .18 }, .82)
+      .to(seal, { opacity: 0, scale: .65, duration: .1 }, .02)
+      .to(flap, { rotationX: -180, duration: .2 }, .05)
+      .to(intro, { opacity: 0, y: -24, duration: .17 }, .08)
+      .set(flap, { zIndex: 0 }, .18)
+      .set(pocket, { overflow: 'visible' }, .2)
+      .to(paper, { scaleX: 1, scaleY: 1, y: () => geometry.paperY, rotationX: -7, rotationY: 3, duration: .24 }, .21)
+      .to(shell, { y: () => geometry.shellY, opacity: 0, duration: .22 }, .4)
+      .to(paper, { scaleX: () => geometry.zoom, scaleY: () => geometry.zoom, y: () => geometry.zoomY, rotationX: 0, rotationY: 0, duration: .32 }, .48)
+      .to(room, { autoAlpha: 1, duration: .06 }, .8)
+      .to({}, { duration: .14 }, .86)
   })
   media.add('(prefers-reduced-motion: reduce)', () => setPhase('open'))
 

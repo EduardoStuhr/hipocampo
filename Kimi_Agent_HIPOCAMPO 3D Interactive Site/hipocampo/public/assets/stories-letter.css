@@ -1,13 +1,13 @@
 #relatos.stories-letter-section { position: relative; padding: 0; background: #6b311c; color: #f4f0e7; scroll-margin-top: 0; overflow: clip; }
-.stories-scroll-track { position: relative; height: 260svh; }
-.stories-correspondence { position: sticky; top: 0; height: 100svh; perspective: 1200px; }
+.stories-scroll-track { position: relative; height: 320svh; }
+.stories-correspondence { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; perspective: 1200px; }
 .stories-introduction { position: absolute; top: max(6rem, 10svh); left: 1.25rem; right: 1.25rem; text-align: center; }
 #relatos .stories-eyebrow { margin: 0; color: #f0d756; font: 400 .8rem/1.5 "Courier New", Courier, monospace; letter-spacing: .14em; text-transform: uppercase; }
 #relatos .stories-introduction h2 { margin: .6rem 0 1.2rem; padding-bottom: .35em; color: #f4f0e7; font: 400 clamp(3.8rem, 6vw, 5.5rem)/1.35 "AquilineTwo", Georgia, serif; }
-#relatos .stories-invitation { margin: 0; font: 400 .875rem/1.5 "Courier New", Courier, monospace; }
+#relatos .stories-invitation { margin: 0; font: 400 1rem/1.5 "SquidBoy", sans-serif; }
 .stories-envelope-scene { position: absolute; left: 50%; top: 58%; width: min(88vw, 34rem); aspect-ratio: 1.58; transform: translate(-50%, -50%); perspective: 1200px; isolation: isolate; }
 .stories-envelope-back { position: absolute; inset: 0; z-index: 0; background: #d9cbae; border: 1px solid #c7b58f; border-radius: .25rem; box-shadow: 0 1.5rem 3rem #210c0740; }
-.stories-paper-pocket { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+.stories-paper-pocket { position: absolute; inset: 0; z-index: 1; overflow: hidden; perspective: 1200px; }
 .stories-letter-paper { position: absolute; left: 8%; bottom: 1rem; width: 84%; height: 56svh; max-height: 40rem; margin: 0; padding: 0; background: #fff; border: 1px solid #ebe8e2; border-radius: 2px; box-shadow: 0 .8rem 2rem #210c0726; transform: scale(.94, .42); transform-origin: 50% 100%; }
 /* The folds are separate moving surfaces: the top opens around its hinge,
    then the pocket moves away from the blank sheet. */
@@ -17,8 +17,10 @@
 .stories-envelope-name { position: absolute; z-index: 1; left: 0; right: 0; bottom: 22%; text-align: center; color: #6b311c; font: 400 clamp(2rem, 4vw, 3rem)/1.3 "AquilineTwo", Georgia, serif; }
 .stories-envelope-flap { position: absolute; z-index: 4; top: 0; left: 0; width: 100%; height: 60%; background: #e3d5b9; clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: 50% 0%; backface-visibility: visible; }
 .stories-envelope-seal { position: absolute; z-index: 5; left: 50%; top: 52%; display: grid; place-items: center; width: 3rem; height: 3rem; margin-left: -1.5rem; color: #6b311c; background: #f0d756; border: 1px solid #c6a83e; border-radius: 50%; box-shadow: 0 2px 5px #54271330; font: 700 1.25rem/1 Georgia, "Times New Roman", serif; }
+.stories-reading-room { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 6rem 1.5rem 3rem; background: #fff; color: #6b311c; opacity: 0; visibility: hidden; }
+.stories-reading-room p { margin: 0; text-align: center; font: 400 clamp(1.5rem, 3vw, 2.5rem)/1.5 "SquidBoy", sans-serif; }
 @media (max-width: 600px) {
-  .stories-scroll-track { height: 250svh; }
+  .stories-scroll-track { height: 310svh; }
   .stories-introduction { top: 6.5rem; }
   #relatos .stories-introduction h2 { font-size: 3.8rem; }
   .stories-envelope-scene { width: 88vw; }
@@ -26,12 +28,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .stories-scroll-track { height: auto; }
-  .stories-correspondence { position: relative; height: auto; min-height: 100svh; padding: 14rem 0 3rem; }
-  .stories-introduction { top: 6rem; }
-  #relatos .stories-introduction h2 { margin: .3rem 0; padding: 0; font-size: 2.8rem; }
-  .stories-invitation { display: none; }
-  .stories-envelope-scene { position: relative; left: auto; top: auto; margin: 0 auto; height: 56svh; transform: none; }
-  .stories-envelope-back, .stories-envelope-front, .stories-envelope-flap, .stories-envelope-seal { display: none; }
-  .stories-paper-pocket { overflow: visible; }
-  .stories-letter-paper { left: 0; bottom: 0; width: 100%; height: 100%; max-height: none; transform: none; }
+  .stories-correspondence { position: relative; height: auto; min-height: 100dvh; background: #fff; }
+  .stories-introduction, .stories-envelope-scene { display: none; }
+  .stories-reading-room { position: relative; min-height: 100vh; min-height: 100dvh; opacity: 1; visibility: visible; }
 }

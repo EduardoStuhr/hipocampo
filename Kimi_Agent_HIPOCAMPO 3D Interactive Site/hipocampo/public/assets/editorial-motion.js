@@ -1,4 +1,4 @@
-import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=stories-scroll-1'
+import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=letter-immersive-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -510,6 +510,12 @@ function initializeEditorialRedesign() {
       activeCursorTheme = activeTheme === 'dark' ? 'on-dark' : 'on-paper'
     }
 
+    if (activeId === 'relatos') {
+      const insideLetter = document.querySelector('#relatos')?.dataset.letterPhase === 'open'
+      activeTheme = insideLetter ? 'light' : 'dark'
+      activeCursorTheme = insideLetter ? 'on-paper' : 'on-brown'
+    }
+
     if (activeTheme !== currentHeaderTheme) {
       currentHeaderTheme = activeTheme
       header.dataset.navTheme = activeTheme
@@ -755,6 +761,7 @@ function initializeEditorialRedesign() {
     footer,
   ].filter(Boolean).forEach((section) => cursorVisibilityObserver.observe(section))
   window.addEventListener('scroll', requestScrollNavSync, { passive: true })
+  window.addEventListener('hipocampo:letter-phase', requestScrollNavSync)
   window.addEventListener('resize', onViewportResize, { passive: true })
   ScrollTrigger.addEventListener('refresh', onViewportResize)
   document.addEventListener('mouseleave', onPointerLeaveWindow)
@@ -771,6 +778,7 @@ function initializeEditorialRedesign() {
     splitRecords.splice(0).forEach((record) => record.revert())
     magneticCleanups.splice(0).forEach((fn) => fn())
     window.removeEventListener('scroll', requestScrollNavSync)
+    window.removeEventListener('hipocampo:letter-phase', requestScrollNavSync)
     window.removeEventListener('resize', onViewportResize)
     ScrollTrigger.removeEventListener('refresh', onViewportResize)
     document.removeEventListener('mouseleave', onPointerLeaveWindow)

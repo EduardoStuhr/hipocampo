@@ -1,4 +1,4 @@
-"""Verify the reversible scroll envelope and deliberately blank story sheet."""
+"""Verify the immersive scroll envelope, full-screen white room and requested fonts."""
 import asyncio,json,os
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -14,8 +14,13 @@ async def check(browser,w,h,reduced=False):
  await p.wait_for_function("!document.querySelector('.hipocampo-intro')")
  await p.evaluate('document.fonts.ready');await p.wait_for_timeout(600)
  await p.evaluate("async()=>{const {t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');ST.refresh()}")
- root=p.locator('#relatos');paper=root.locator('.stories-letter-paper');track=root.locator('.stories-scroll-track')
+ root=p.locator('#relatos');paper=root.locator('.stories-letter-paper');track=root.locator('.stories-scroll-track');room=root.locator('.stories-reading-room')
  assert await p.locator('#team-finale-title').inner_text()=='SOBRE NÓS'
+ assert await p.locator('#team-finale-title').evaluate('(e)=>getComputedStyle(e).fontFamily.includes("AquilineTwo")')
+ assert await p.locator('.team-credit h3').first.evaluate('(e)=>getComputedStyle(e).fontFamily.includes("SquidBoy")')
+ assert await p.locator('.team-credit-roles').first.evaluate('(e)=>getComputedStyle(e).fontFamily.includes("SquidBoy")')
+ assert await p.evaluate('document.fonts.check(\'400 48px "AquilineTwo"\') && document.fonts.check(\'400 18px "SquidBoy"\')')
+ assert (await room.text_content()).strip()=='Em breve, relatos'
  assert await root.locator('button,blockquote,.stories-voices,.stories-empty,.stories-letter-signoff').count()==0
  assert (await paper.inner_text()).strip()==''
  assert await paper.locator('*').count()==0
@@ -27,7 +32,8 @@ async def check(browser,w,h,reduced=False):
  if reduced:
   await go(0)
   assert await root.get_attribute('data-letter-phase')=='open'
-  assert await root.locator('.stories-envelope-flap').evaluate('(e)=>getComputedStyle(e).display')=='none'
+  assert await root.locator('.stories-envelope-scene').evaluate('(e)=>getComputedStyle(e).display')=='none'
+  assert await room.get_attribute('aria-hidden')=='false'
   assert await track.evaluate('(e)=>e.offsetHeight')<h*1.6
   await p.screenshot(path=str(OUT/f'reduced-{w}.png'),style=style)
  else:
@@ -40,15 +46,19 @@ async def check(browser,w,h,reduced=False):
   assert states[0]['phase']=='closed',states
   assert states[0]['scaleY']<.5,states
   assert states[-1]['phase']=='open',states
-  assert abs(states[-1]['scaleY']-1)<.01 and states[-1]['frontOpacity']<.01,states
+  assert states[-1]['scaleY']>1.5 and states[-1]['frontOpacity']<.01,states
   assert states[1]['flap']!=states[0]['flap'],states
-  assert await paper.get_attribute('aria-hidden')=='false'
+  assert await room.get_attribute('aria-hidden')=='false'
   rect=await paper.bounding_box()
-  assert rect['x']>=0 and rect['x']+rect['width']<=w+1,rect
-  assert rect['y']>=100 and rect['y']+rect['height']<=h+1,rect
+  assert rect['x']<=0 and rect['x']+rect['width']>=w-1,rect
+  assert rect['y']<=0 and rect['y']+rect['height']>=h-1,rect
+  roomRect=await room.bounding_box()
+  assert abs(roomRect['x'])<1 and abs(roomRect['y'])<1 and abs(roomRect['width']-w)<1 and abs(roomRect['height']-h)<1,roomRect
+  assert await p.locator('#root > header').get_attribute('data-nav-theme')=='light'
   await go(0)
   assert await root.get_attribute('data-letter-phase')=='closed'
-  assert await paper.get_attribute('aria-hidden')=='true'
+  assert await room.get_attribute('aria-hidden')=='true'
+  assert await p.locator('#root > header').get_attribute('data-nav-theme')=='dark'
   if w>=768:
    before=await p.evaluate('scrollY');await p.mouse.move(w/2,h*.7);await p.mouse.wheel(0,400);await p.wait_for_timeout(800)
    assert await p.evaluate('scrollY')>before+50
@@ -76,12 +86,12 @@ async def check(browser,w,h,reduced=False):
   await p.evaluate("async()=>{const {t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');ST.refresh()}")
   await go(1)
   resized=await paper.bounding_box()
-  assert resized['x']>=0 and resized['x']+resized['width']<=391 and resized['y']>=100 and resized['y']+resized['height']<=845,resized
+  assert resized['x']<=0 and resized['x']+resized['width']>=389 and resized['y']<=0 and resized['y']+resized['height']>=843,resized
   assert await p.evaluate("async()=>{const {t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');return ST.getAll().filter(t=>t.vars.id==='hipocampo-stories-letter').length}")==1
   await go(0);assert await root.get_attribute('data-letter-phase')=='closed'
  assert not errors,errors
  assert not missing,missing
- print(json.dumps({'viewport':[w,h],'reducedMotion':reduced,'blankPaper':True,'scrollReversible':not reduced,'nativeWheelOrTouch':not reduced,'aboutTitle':True,'noOverflow':True,'errors':errors,'missingFiles':missing}),flush=True)
+ print(json.dumps({'viewport':[w,h],'reducedMotion':reduced,'fullScreenWhite':True,'fontsLoaded':True,'scrollReversible':not reduced,'nativeWheelOrTouch':not reduced,'aboutTitle':True,'noOverflow':True,'errors':errors,'missingFiles':missing}),flush=True)
  await p.close()
 async def main():
  async with async_playwright() as pw:

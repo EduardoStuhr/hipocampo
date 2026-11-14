@@ -22,7 +22,7 @@ Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retr
 ## Layout e movimento
 
 - Quatro colunas no desktop, três no tablet e duas no celular.
-- Fonte monoespaçada em nomes e funções, como no print; nomes em amarelo #f0d756, maiores e com mais separação das funções em branco; textos sem truncamento.
+- Título SOBRE NÓS em AquilineTwo e nomes, funções e demais textos da seção em SquidBoy local; nomes em amarelo #f0d756, maiores e com mais separação das funções em branco; textos sem truncamento.
 - Entrada suave por fotografia, flutuação local enquanto visível, revelação da foto inteira ao passar o mouse, focar ou tocar, sem zoom nem recorte da proporção original.
 - Toque alterna a posição; Escape retorna. Botões possuem nome acessível e estado aria-pressed.
 - Movimento reduzido desativa flutuação e deslocamentos. Animações pausam fora da tela e na aba oculta.
@@ -40,3 +40,7 @@ Produção: Cloudflare Pages conectado ao repositório `EduardoStuhr/hipocampo`,
 ## Ajuste de enquadramento — 14/11/2026
 
 Retirado o zoom e o object-fit cover dos retratos. As fotos preservam a proporção original com contain; no estado ativo ficam inteiramente dentro da área disponível. O movimento de flutuação para ao interagir, para não cortar o topo. Em movimento reduzido, os retratos já aparecem inteiros. Regressão verifica limites geométricos, contain e escala 1 nas nove imagens em PC, celular e movimento reduzido, incluindo Lara.
+
+## Fotos solicitadas via Drive
+
+O usuário forneceu a pasta 1UosI2R0KwSSMKrPRgvi35r82kKQ6fm5F para trocar as fotos e incluir pessoas. A tentativa de acesso retornou bloqueio do proxy de rede (CONNECT 403), sem listar o conteúdo. Nenhuma associação de foto/nome foi adivinhada ou alterada. Solicitado ZIP anexado com os arquivos nomeados para concluir essa parte.

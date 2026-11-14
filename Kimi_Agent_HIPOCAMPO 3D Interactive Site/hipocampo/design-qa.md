@@ -654,3 +654,18 @@ Evidências atuais: docs/stories-scroll-closed-1440.webp, stories-scroll-opening
 Testes Playwright: cinco cenários 1440/1366/390/320 e movimento reduzido. Progresso 0/20/45/70/100%, reversão, roda, PageDown, gesto real de toque via CDP, saída para a equipe sem travar, geometria da folha, conteúdo vazio, ausência de overflow/erros/404. Verificação adicional de alteração de movimento reduzido e resize desktop→390×844 confirma uma timeline e folha enquadrada. Build e sintaxe JS passaram.
 
 final result: passed
+
+
+## 2026-11-14 — Entrar na carta e fontes locais
+
+Pedido: SOBRE NÓS em Aquiline e restante da seção em Squid Boy; abertura com aproximação até o branco preencher a tela, seguida de “Em breve, relatos”. Implementado com a fonte AquilineTwo existente no título e SquidBoy local nos nomes, funções e textos. Tamanhos ajustados opticamente após a mudança de família para legibilidade no celular; nomes amarelos mantidos.
+
+A animação agora retira a folha com pequena inclinação 3D, aproxima a superfície branca dimensionada pelos quatro cantos da viewport e revela uma camada de leitura com o aviso, sem ampliar o texto. Cabeçalho muda para marrom sobre branco por evento de fase, mantendo transparência. Rolagem reversível e nativa; movimento reduzido exibe a tela final diretamente.
+
+Evidências renderizadas: docs/stories-entering-1440.webp, docs/stories-fullscreen-390.webp e previews de equipe 1440/390 atualizados. Inspeção adicional em 320×640 confirma título em duas linhas sem cortar e nomes/funções completos. DPR 1. Fontes carregadas e famílias efetivas verificadas no navegador. Sem erros JS ou 404.
+
+Playwright: 1440×1000, 1366×768, 390×844, 320×640 e movimento reduzido; estados de scroll, reversão, roda/PageDown/toque, saída para a equipe sem travar, superfície/área de leitura cobrindo a viewport inteira, aviso e tema do cabeçalho. Resize e troca de preferência de movimento verificam somente uma timeline. Build/sintaxe passaram.
+
+A atualização de fotos pelo Drive permanece bloqueada: CONNECT 403 do proxy antes de listar a pasta. Nove retratos e dez créditos anteriores foram preservados; solicitado ZIP ao usuário. Esta limitação não altera o resultado visual dos ajustes concluídos e não é tratada como substituição de fotos realizada.
+
+final result: passed
