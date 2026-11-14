@@ -596,3 +596,17 @@ Validação: build, sintaxe JavaScript e suíte Playwright em desktop 1440×900 
 Após relato de versão anterior em hipocampo.pages.dev, o build passou a emitir CSS, módulo e manifesto da equipe com hash de conteúdo no nome. Referências do HTML e importação do manifesto acompanham o hash; os caminhos antigos são preservados. Não há confirmação de causa no Cloudflare, cujo acesso está bloqueado neste ambiente.
 
 Validação do diretório dist em servidor estático local na porta 4174 com a suíte de equipe: desktop 1440×900, celulares 390×844, 375×667 e 320×640, desktop e celular com movimento reduzido. Build e sintaxe do script verificados. Novo envio à main solicitado pelo usuário para tentar novamente a publicação.
+
+## 2026-11-14 — Grade alfabética de participantes e funções
+
+Referência visual: print de equipe Atelier fornecido pelo usuário nesta mensagem (1600×888). A composição foi adaptada ao conteúdo Hipocampo: quatro colunas, retratos inclinados que emergem de uma linha, nomes e funções abaixo; mantém o azul de marca existente. Os dez nomes e papéis vieram da lista explícita do usuário. Marcos Bonavita entra sem fotografia até recebimento do retrato; os nove assets existentes mantêm sua associação anterior.
+
+Evidências renderizadas: `artifacts/team-credits/clean-1440.png` (1440 px de largura), `clean-390.png` (390 px), `hover-1440-False.png`; cópias duráveis em `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`. Viewports CSS 1440×1000 e 390×844; DPR 1. A comparação da composição considera a referência como modelo e não reprodução do conteúdo Atelier; grade mais longa por dez créditos completos. Capturas da seção ocultam somente o cabeçalho global fixo para mostrar a grade inteira. Capturas de viewport também preservadas em artifacts.
+
+Histórico: primeira inspeção mostrou títulos inferiores ocultados por máscaras editoriais antigas (P1). A seção da equipe foi excluída desse processamento e a versão do módulo editorial incrementada; novas capturas e inspeção DOM confirmam dez nomes com opacidade 1 e sem spans de máscara. Não há achados P0/P1/P2 restantes no escopo fornecido.
+
+Superfícies revisadas: tipografia monoespaçada com nomes em caixa alta e acentos corretos; ritmo com quatro colunas no desktop e duas no celular; azul original #2626fc e texto #f4f0e7 (contraste 6,68:1); fotografias originais locais, recorte e inclinações; nomes/funções completos em ordem alfabética. Foco, toque, retorno via Escape, movimento reduzido e pausa fora de tela verificados. Ausência do retrato de Marcos registrada como limitação do material recebido, sem imagem substituta.
+
+Validação: build, node --check e suíte Playwright de cinco cenários no build de produção. Dez créditos, nove retratos, roles exatos, grade 1440/390/320, hover/toque, Escape, ausência de overflow, erros JS e 404 verificados. Inspeção pós-correção de todos os nomes em desktop e celular. Sem necessidade de recorte focado adicional: nomes, retratos e funções estão legíveis nas capturas integrais.
+
+final result: passed

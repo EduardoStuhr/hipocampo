@@ -191,7 +191,7 @@ function initializeEditorialRedesign() {
         fragmentos,
         fotofilmes,
         informacoes,
-      ].filter(Boolean)
+      ].filter(section => section && !section.classList.contains('team-finale'))
 
       narrativeSections.forEach((section) => {
         const headings = section.querySelectorAll('h2, h3')

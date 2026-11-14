@@ -1,50 +1,38 @@
-# Última página — Hipocampo
+# Equipe — Hipocampo
 
-Implementação concluída a partir da composição de referência fornecida pelo usuário: nove retratos em leque, atrás de HIPOCAMPO formado por letras brancas grandes e arredondadas. Os antigos blocos com letras pequenas foram retirados.
+A seção `#informacoes` usa uma grade inspirada no print de equipe fornecido em 14/11/2026: título centralizado, introdução em duas colunas, fotografias inclinadas recortadas por uma linha horizontal e nome/funções abaixo. Substitui o leque com a palavra gigante. Mantém o azul original #2626fc e o contato existente.
 
-## Retratos originais
+## Créditos em ordem alfabética
 
-As oito fotografias vieram de `fotos_compactadas.zip`. A ordem do ZIP foi preservada exatamente como o usuário determinou:
-
-| Ordem | Nome | Arquivo local |
+| Pessoa | Funções | Retrato |
 | --- | --- | --- |
-| 1 | Mariana | `/images/team/mariana.webp` |
-| 2 | Heitor | `/images/team/heitor.webp` |
-| 3 | Guilherme | `/images/team/guilherme.webp` |
-| 4 | Heloiza | `/images/team/heloiza.webp` |
-| 5 | Gabriel | `/images/team/gabriel.webp` |
-| 6 | Lara | `/images/team/lara.webp` |
-| 7 | Tiago | `/images/team/tiago.webp` |
-| 8 | Raphael | `/images/team/raphael.webp` |
-| 9 | Beatriz | `/images/team/beatriz.webp` |
+| Beatriz Rangel | Direção de Som; Assistência de Produção | beatriz.webp |
+| Gabriel Orlando | Direção de Arte; Cenografia | gabriel.webp |
+| Guilherme Brandão | Direção de Experiência; Mediação; Assistência de Produção | guilherme.webp |
+| Heitor Lopes | Direção de Fotografia; Documentação | heitor.webp |
+| Heloísa Miranda | Direção de Fotografia; Documentação; Assistência de Produção | heloiza.webp |
+| Lara Sanchez | Direção de Arte; Cenografia | lara.webp |
+| Marcos Bonavita | Assistência de Som; Trilha Sonora | Não recebido; crédito em texto |
+| Mariana Teixeira | Direção Criativa; Direção de Produção | mariana.webp |
+| Raphael Cardoso | Direção de Experiência; Mediação | raphael.webp |
+| Tiago Chaves | Assistência de Som; Trilha Sonora | tiago.webp |
 
-Beatriz foi acrescentada ao final a partir do ZIP enviado em 13/11/2026.
+Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retrato foi inventado para Marcos. Papéis repetidos da lista foram reunidos por pessoa; grafia dos nomes conforme a lista atual do usuário.
 
-Os arquivos mantêm a orientação e a proporção originais, sem ampliação. As imagens maiores foram reduzidas para até 960 px e todas foram salvas localmente em WebP. O recorte 3:4 dos cartões é feito por CSS. O manifesto está em `public/assets/team-members.js`.
+## Layout e movimento
 
-## Letras e movimento
+- Quatro colunas no desktop, três no tablet e duas no celular.
+- Fonte monoespaçada em nomes e funções, como no print; textos sem truncamento.
+- Entrada suave por fotografia, flutuação local enquanto visível, elevação e alinhamento ao passar o mouse, focar ou tocar.
+- Toque alterna a posição; Escape retorna. Botões possuem nome acessível e estado aria-pressed.
+- Movimento reduzido desativa flutuação e deslocamentos. Animações pausam fora da tela e na aba oculta.
+- Créditos ficam fora do processamento de títulos editoriais, impedindo máscaras antigas de esconder os nomes.
+- Nenhum loop JavaScript por frame nem alterações nos módulos 3D.
 
-- HIPOCAMPO usa glifos brancos reais, sem fundos retangulares nem pequenos rótulos entre colchetes. O título permanece acessível como texto.
-- Fonte Fredoka condensada, peso 700, instalada localmente e limitada aos glifos usados. Licença em `public/fonts/Fredoka-OFL.txt`.
-- Entrada escalonada, flutuação suave e aproximação por mouse, teclado ou toque.
-- As letras reagem ao mouse com uma onda de elevação, inclinação e alongamento sutis; voltam ao lugar ao sair. A geometria é armazenada e os frames são solicitados apenas durante os movimentos do ponteiro.
-- No celular, tocar em um nome centraliza e amplia o retrato correspondente.
-- Animações pausam fora da tela e respeitam a preferência por movimento reduzido.
-- A seção conserva `#informacoes`, os links de navegação e o contato existente. As outras páginas e os módulos 3D foram preservados.
+## Validação e publicação
 
-## Evidências e validação
+Build, sintaxe JS e suíte Playwright no diretório `dist`, servido pela porta 4180: desktop 1440×1000, celulares 390×844 e 320×640, além de desktop e celular com movimento reduzido. Verificados os dez nomes/funções, nove imagens, ausência de retrato inventado para Marcos, mouse, clique/toque, Escape, colunas, overflow, pausa fora de tela, console e arquivos ausentes. Todos passaram.
 
-Capturas: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`.
-Vídeo: `docs/team-finale-motion.mp4`.
+Previews atuais: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`. O vídeo `team-finale-motion.mp4` é um registro histórico do leque anterior.
 
-Executados `npm run build`, verificações de sintaxe e `python scripts/test-team-finale.py`. A suíte usa os nove retratos originais, sem mocks, em 1440×900, 390×844, 375×667 e 320×640, mais 390×844 e 1440×900 com movimento reduzido. Foram verificados carregamento, ordem, letras brancas, seleção dos nove nomes, onda nas letras, retorno ao sair, hover/toque, Escape, animação fora da tela, overflow, erros JavaScript e arquivos locais ausentes. Todos passaram.
-
-## Novo envio para publicação — 13/11/2026
-
-O build agora gera nomes com hash de conteúdo para o CSS, JavaScript e manifesto da equipe. O HTML produzido referencia esses nomes e o módulo referencia o manifesto correspondente. Os caminhos anteriores continuam disponíveis. Isso evita reutilização dos assets antigos quando o HTML novo é publicado, mesmo em caches que ignoram parâmetros de URL. A entrada de desenvolvimento também recebeu uma nova versão.
-
-Destino do novo envio: `main` de `EduardoStuhr/hipocampo`. A publicação em `hipocampo.pages.dev` depende da integração Cloudflare; não foi possível consultá-la neste ambiente.
-
-## Diagnóstico da publicação de produção
-
-As capturas do painel Cloudflare confirmam produção configurada na branch `main`. A produção permaneceu em `5b72450`, enquanto `0140e42` só apareceu como pré-visualização em `feat/equipe-hipocampo`. O build remoto terminou em 11 segundos; a pré-visualização ficou na etapa implantar. Novo envio somente à `main`, com marcador HTML `hipocampo-release=beatriz-hover-production-20261113-1`, para distinguir a versão publicada. Não assumir conclusão do deploy apenas com o push.
+Produção: Cloudflare Pages conectado ao repositório `EduardoStuhr/hipocampo`, branch `main`. Enviar somente à `main` e acompanhar o check do Cloudflare; pré-visualizações de outras branches não comprovam publicação em hipocampo.pages.dev. Os assets da equipe usam nomes com hash de conteúdo no build.

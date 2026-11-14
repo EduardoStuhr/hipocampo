@@ -1,39 +1,85 @@
-// Original portraits supplied by the client, preserving the ZIP order.
+// Project credits supplied by the client, in Portuguese alphabetical order.
 export const TEAM = [
   {
-    "name": "Mariana",
-    "portrait": "/images/team/mariana.webp"
+    "name": "Beatriz Rangel",
+    "portrait": "/images/team/beatriz.webp",
+    "roles": [
+      "Direção de Som",
+      "Assistência de Produção"
+    ]
   },
   {
-    "name": "Heitor",
-    "portrait": "/images/team/heitor.webp"
+    "name": "Gabriel Orlando",
+    "portrait": "/images/team/gabriel.webp",
+    "roles": [
+      "Direção de Arte",
+      "Cenografia"
+    ]
   },
   {
-    "name": "Guilherme",
-    "portrait": "/images/team/guilherme.webp"
+    "name": "Guilherme Brandão",
+    "portrait": "/images/team/guilherme.webp",
+    "roles": [
+      "Direção de Experiência",
+      "Mediação",
+      "Assistência de Produção"
+    ]
   },
   {
-    "name": "Heloiza",
-    "portrait": "/images/team/heloiza.webp"
+    "name": "Heitor Lopes",
+    "portrait": "/images/team/heitor.webp",
+    "roles": [
+      "Direção de Fotografia",
+      "Documentação"
+    ]
   },
   {
-    "name": "Gabriel",
-    "portrait": "/images/team/gabriel.webp"
+    "name": "Heloísa Miranda",
+    "portrait": "/images/team/heloiza.webp",
+    "roles": [
+      "Direção de Fotografia",
+      "Documentação",
+      "Assistência de Produção"
+    ]
   },
   {
-    "name": "Lara",
-    "portrait": "/images/team/lara.webp"
+    "name": "Lara Sanchez",
+    "portrait": "/images/team/lara.webp",
+    "roles": [
+      "Direção de Arte",
+      "Cenografia"
+    ]
   },
   {
-    "name": "Tiago",
-    "portrait": "/images/team/tiago.webp"
+    "name": "Marcos Bonavita",
+    "portrait": null,
+    "roles": [
+      "Assistência de Som",
+      "Trilha Sonora"
+    ]
   },
   {
-    "name": "Raphael",
-    "portrait": "/images/team/raphael.webp"
+    "name": "Mariana Teixeira",
+    "portrait": "/images/team/mariana.webp",
+    "roles": [
+      "Direção Criativa",
+      "Direção de Produção"
+    ]
   },
   {
-    "name": "Beatriz",
-    "portrait": "/images/team/beatriz.webp"
+    "name": "Raphael Cardoso",
+    "portrait": "/images/team/raphael.webp",
+    "roles": [
+      "Direção de Experiência",
+      "Mediação"
+    ]
+  },
+  {
+    "name": "Tiago Chaves",
+    "portrait": "/images/team/tiago.webp",
+    "roles": [
+      "Assistência de Som",
+      "Trilha Sonora"
+    ]
   }
 ]
