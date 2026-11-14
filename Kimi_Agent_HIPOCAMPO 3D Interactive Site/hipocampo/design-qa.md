@@ -626,3 +626,16 @@ final result: passed
 A pedido do usuário, nomes em amarelo de marca #f0d756 e tamanho maior (16–18 px no desktop, 15,2 px no celular); funções permanecem brancas (14–16 px / 12,8 px). Mais espaçamento entre nome e funções. Build executado e capturas renderizadas de desktop 1440×1000 e mobile 390×844 inspecionadas. Dez nomes legíveis, acentos preservados e nenhum truncamento. Evidências atualizadas em `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`.
 
 final result: passed
+
+
+## 2026-11-14 — Carta antes dos relatos
+
+Referência: print de carta/envelope fornecido pelo usuário, com instrução explícita de inspiração e não reprodução exata. A carta de apresentação foi autorizada em resposta à pergunta sobre conteúdo; relatos mantidos em breve. Campo marrom do Hipocampo, envelope original do arquivo, abertura para papel claro com saudação, texto e assinatura, seguido da área de relatos.
+
+Primeira revisão (P2): título manuscrito encostava no subtítulo; assinatura muito próxima do final do papel; proporção não quadrada do contêiner criava uma borda branca na máscara do envelope. Ajustados padding para floreios, espaço da assinatura e contêiner quadrado da imagem. Reinspeção das capturas finais confirma separação de textos e envelope legível.
+
+Evidências: docs/stories-letter-closed-1440.webp, docs/stories-letter-open-390.webp e docs/stories-letter-text-390.webp. Capturas browser em CSS 1440×1000 e 390×844, DPR 1; seção inteira e recorte focado da carta. Texto em Georgia, título/assinatura em AquilineTwo local; acentos corretos e sem cortes em 320/390. Marrom/papel/amarelo preservam a marca e contraste; foto de envelope local sem geração ou substituição. Sem relatos fictícios. Navegação adapta cor ao fundo.
+
+Playwright: quatro cenários incluindo movimento reduzido; mouse/Enter, toque, Escape, retorno do foco, aria-expanded/hidden, carta antes dos relatos, ausência de overflow, console e 404. Build e sintaxe JS passaram. Dez membros da equipe preservados.
+
+final result: passed

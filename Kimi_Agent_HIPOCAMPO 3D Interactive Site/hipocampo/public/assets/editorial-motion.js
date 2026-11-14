@@ -1,4 +1,4 @@
-import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=client-audio-1'
+import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=stories-letter-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -433,7 +433,8 @@ function initializeEditorialRedesign() {
     { id: 'fotofilmes', selector: '#fotofilmes > div:first-child', theme: 'dark', cursorTheme: 'on-blue' },
     { id: 'fotofilmes', selector: '#fotofilmes .client-film--1', theme: 'yellow', cursorTheme: 'on-yellow' },
     { id: 'fotofilmes', selector: '#fotofilmes .client-film--2', theme: 'dark', cursorTheme: 'on-brown' },
-    { id: 'relatos', theme: 'light', cursorTheme: 'on-paper' },
+    { id: 'relatos', selector: '#relatos .stories-correspondence', theme: 'dark', cursorTheme: 'on-brown' },
+    { id: 'relatos', selector: '#relatos .stories-voices', theme: 'light', cursorTheme: 'on-paper' },
     { id: 'informacoes', theme: 'dark', cursorTheme: 'on-blue' },
   ]
 

@@ -1,3 +1,5 @@
+import { prepareStoriesLetter } from './stories-letter.js?v=letter-1'
+
 // Adapt the recovered editorial entry without editing its bundled React code.
 export function prepareClientNavigation(header) {
   const nav = header.querySelector('nav')
@@ -65,9 +67,9 @@ export function prepareClientEditorial() {
     stories.id = 'relatos'
     stories.className = 'client-stories'
     stories.setAttribute('aria-labelledby', 'relatos-title')
-    stories.innerHTML = '<p class="eyebrow">06 —</p><h2 id="relatos-title">Relatos</h2><p>Relatos em breve.</p>'
     films.after(stories)
   }
+  prepareStoriesLetter(document.querySelector('#relatos'))
   const info = document.querySelector('#informacoes')
   const teamHeading = info?.querySelector('h2')
   if (teamHeading) teamHeading.textContent = 'Sobre nós'

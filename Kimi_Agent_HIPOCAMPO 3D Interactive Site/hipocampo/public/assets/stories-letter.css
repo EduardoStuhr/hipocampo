@@ -1,0 +1,51 @@
+#relatos.stories-letter-section { padding: 0; background: #f4f0e7; color: #6b311c; scroll-margin-top: 0; overflow: clip; }
+.stories-correspondence { padding: 7rem 1.5rem 3.5rem; background: #6b311c; color: #f4f0e7; }
+.stories-introduction { max-width: 50rem; margin: 0 auto; text-align: center; }
+#relatos .stories-eyebrow { margin: 0; color: inherit; font: 400 .8rem/1.5 "Courier New", Courier, monospace; letter-spacing: .14em; text-transform: uppercase; }
+.stories-correspondence .stories-eyebrow { color: #f0d756 !important; }
+#relatos .stories-introduction h2 { margin: 1.3rem 0 1.6rem; padding-bottom: .85em; font: 400 clamp(3.6rem, 6.5vw, 6rem)/1.35 "AquilineTwo", Georgia, serif; color: #f4f0e7; }
+#relatos .stories-invitation { margin: 0; font: 400 1rem/1.7 "Courier New", Courier, monospace; }
+.stories-envelope { max-width: 42rem; margin: 1.5rem auto 0; }
+.stories-letter-paper { position: relative; z-index: 2; max-width: 35rem; margin: 3.5rem auto -3rem; padding: 2.25rem 2.75rem 3.25rem; background: #f4eedc; color: #542713; border: 1px solid #d5c7aa; box-shadow: 0 1.25rem 3rem #210c0740; font: 400 1.125rem/1.8 Georgia, "Times New Roman", serif; animation: stories-letter-appear .65s cubic-bezier(.16,1,.3,1) both; }
+.stories-letter-paper[hidden] { display: none; }
+.stories-letter-paper:focus { outline: none; }
+.stories-letter-address { display: flex; justify-content: space-between; gap: 1.5rem; margin: 0 0 2.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid #6b311c38; font: 400 .72rem/1.6 "Courier New", Courier, monospace; }
+.stories-letter-address div { display: grid; gap: .1rem; }
+.stories-letter-address dt { text-transform: uppercase; letter-spacing: .12em; opacity: .7; }
+.stories-letter-address dd { margin: 0; }
+#relatos .stories-letter-paper h3 { margin: 0 0 1.4rem; font: 400 clamp(1.4rem, 2.2vw, 1.8rem)/1.4 Georgia, "Times New Roman", serif; }
+.stories-letter-paper p { margin: 0 0 1.1rem; }
+.stories-letter-paper .stories-letter-signoff { margin: 1.7rem 0 0; font-size: 1rem; }
+.stories-letter-signoff span { display: block; margin: .3rem 0 0; font: 400 3.3rem/1.25 "AquilineTwo", Georgia, serif; padding-bottom: .4em; }
+.stories-envelope-toggle { display: flex; align-items: center; flex-direction: column; width: 100%; padding: 0 1rem 1rem; border: 0; background: transparent; color: #f0d756; font: 400 1rem/1.5 "Courier New", Courier, monospace; cursor: pointer; touch-action: manipulation; }
+.stories-envelope-art { display: block; width: min(100%, 25rem); aspect-ratio: 1; }
+.stories-envelope-art img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; clip-path: polygon(16% 5.5%, 78% 6%, 81% 17%, 84% 21%, 82% 86%, 78% 94.5%, 16% 94.5%); transform: rotate(-90deg); transition: transform .5s cubic-bezier(.16,1,.3,1); user-select: none; }
+.stories-envelope-action { display: inline-block; padding: .5rem 0; border-bottom: 1px solid #f0d75680; }
+.stories-envelope-toggle:focus-visible { outline: 2px solid #f0d756; outline-offset: 5px; border-radius: .2rem; }
+.stories-is-open .stories-envelope-art { width: 12rem; }
+.stories-voices { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; max-width: 80rem; padding: clamp(4rem, 8vw, 7rem) 6vw; margin: 0 auto; }
+#relatos .stories-voices-heading h3 { margin: 1rem 0 0; padding-bottom: .3em; font: 400 clamp(3rem, 5vw, 5rem)/1.3 "AquilineTwo", Georgia, serif; }
+.stories-voices-content { padding-top: 1rem; }
+.stories-voices-intro { margin: 0 0 2rem; font: 400 clamp(1.2rem, 2vw, 1.65rem)/1.6 Georgia, "Times New Roman", serif; }
+.stories-empty { padding-top: 1.25rem; margin: 0; border-top: 1px solid #6b311c40; font: 400 .85rem/1.6 "Courier New", Courier, monospace; }
+@keyframes stories-letter-appear { from { opacity: 0; transform: translateY(2rem) rotate(-1deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+@media (hover: hover) and (pointer: fine) {
+  .stories-envelope-toggle:hover img { transform: rotate(-87deg) translateX(.3rem); }
+  .stories-envelope-toggle:hover .stories-envelope-action { border-color: currentColor; }
+}
+@media (max-width: 600px) {
+  .stories-correspondence { padding: 6.5rem 1.25rem 2.5rem; }
+  #relatos .stories-introduction h2 { font-size: 3.5rem; padding-bottom: .35em; }
+  #relatos .stories-invitation { max-width: 22ch; margin: 0 auto; font-size: .875rem; }
+  .stories-envelope { margin-top: 1rem; }
+  .stories-letter-paper { margin-top: 2rem; padding: 1.5rem 1.5rem 2.5rem; font-size: 1.03rem; line-height: 1.8; }
+  .stories-letter-address { gap: 1rem; font-size: .65rem; }
+  .stories-is-open .stories-envelope-art { width: 10rem; }
+  .stories-voices { grid-template-columns: 1fr; padding: 3.5rem 1.5rem; gap: 1.5rem; }
+  .stories-voices-content { padding-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stories-letter-paper { animation: none; }
+  .stories-envelope-art, .stories-envelope-art img { transition: none; }
+  .stories-envelope-toggle:hover img { transform: rotate(-90deg); }
+}
