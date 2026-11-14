@@ -18,7 +18,7 @@ function mount() {
   header.className = 'team-finale-top'
   const title = document.createElement('h2')
   title.id = 'team-finale-title'
-  title.textContent = 'Pessoas do Hipocampo'
+  title.textContent = 'Sobre nós'
   header.append(title)
   const intro = document.createElement('div')
   intro.className = 'team-intro'

@@ -1,6 +1,6 @@
-# Equipe — Hipocampo
+# Sobre nós — Hipocampo
 
-A seção `#informacoes` usa uma grade inspirada no print de equipe fornecido em 14/11/2026: título centralizado, introdução em duas colunas, fotografias inclinadas recortadas por uma linha horizontal e nome/funções abaixo. Substitui o leque com a palavra gigante. Mantém o azul original #2626fc e o contato existente.
+Com o título “SOBRE NÓS”, a seção `#informacoes` usa uma grade inspirada no print de equipe fornecido em 14/11/2026: título centralizado, introdução em duas colunas, fotografias inclinadas recortadas por uma linha horizontal e nome/funções abaixo. Substitui o leque com a palavra gigante. Mantém o azul original #2626fc e o contato existente.
 
 ## Créditos em ordem alfabética
 

@@ -1,63 +1,87 @@
-import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
+import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
-// Presentation copy, not a participant testimonial. Keep future stories separate.
+gsap.registerPlugin(ScrollTrigger)
+
 export function prepareStoriesLetter(section) {
   if (section.dataset.letterReady) return
   section.dataset.letterReady = 'true'
   section.classList.add('stories-letter-section')
   section.innerHTML = `
-    <div class="stories-correspondence">
-      <div class="stories-introduction">
-        <p class="stories-eyebrow">06 — Relatos</p>
-        <h2 id="relatos-title">Uma carta para você</h2>
-        <p class="stories-invitation">Antes dos relatos, algumas palavras.</p>
+    <div class="stories-scroll-track">
+      <div class="stories-correspondence">
+        <div class="stories-introduction">
+          <p class="stories-eyebrow">06 — Relatos</p>
+          <h2 id="relatos-title">Relatos</h2>
+          <p class="stories-invitation">Role para abrir a carta</p>
+        </div>
+        <div class="stories-envelope-scene">
+          <div class="stories-envelope-back" aria-hidden="true"></div>
+          <div class="stories-paper-pocket">
+            <article class="stories-letter-paper" id="relatos-carta" aria-label="Espaço reservado para os relatos" aria-hidden="true"></article>
+          </div>
+          <div class="stories-envelope-front" aria-hidden="true"><span class="stories-envelope-name">Hipocampo</span></div>
+          <div class="stories-envelope-flap" aria-hidden="true"></div>
+          <div class="stories-envelope-seal" aria-hidden="true">H</div>
+        </div>
       </div>
-      <div class="stories-envelope">
-        <article class="stories-letter-paper" id="relatos-carta" aria-labelledby="stories-letter-greeting" tabindex="-1" hidden>
-          <dl class="stories-letter-address"><div><dt>De</dt><dd>Hipocampo</dd></div><div><dt>Para</dt><dd>Quem chegou até aqui</dd></div></dl>
-          <h3 id="stories-letter-greeting">A quem chegou até aqui,</h3>
-          <p>No Hipocampo, uma memória se constrói a partir de fragmentos: uma fotografia, um objeto guardado, uma história que volta a ser contada.</p>
-          <p>Cada encontro aproxima essas peças de um jeito diferente. Entre o que lembramos e o que imaginamos, surgem novas formas de olhar para uma vida.</p>
-          <p>Esta carta abre espaço para as palavras de quem atravessou o projeto. Os relatos que vierem depois guardarão um pouco desses encontros — e das memórias que continuam se formando.</p>
-          <p class="stories-letter-signoff">Com afeto,<span>Hipocampo</span></p>
-        </article>
-        <button class="stories-envelope-toggle" type="button" aria-expanded="false" aria-controls="relatos-carta">
-          <span class="stories-envelope-art" aria-hidden="true"><img src="/images/sobre/envelope.webp" alt="" width="736" height="736" loading="lazy" decoding="async" draggable="false" /></span>
-          <span class="stories-envelope-action">Abrir carta<span aria-hidden="true"> ↗</span></span>
-        </button>
-      </div>
-    </div>
-    <div class="stories-voices" aria-labelledby="stories-voices-title">
-      <div class="stories-voices-heading"><p class="stories-eyebrow">Palavras que ficam</p><h3 id="stories-voices-title">Relatos</h3></div>
-      <div class="stories-voices-content"><p class="stories-voices-intro">Cada pessoa leva uma memória.<br>Cada relato abre outra possibilidade.</p><p class="stories-empty">Relatos em breve.</p></div>
     </div>`
 
-  const button = section.querySelector('.stories-envelope-toggle')
+  const track = section.querySelector('.stories-scroll-track')
+  const scene = section.querySelector('.stories-envelope-scene')
+  const stage = section.querySelector('.stories-correspondence')
+  const intro = section.querySelector('.stories-introduction')
+  const flap = section.querySelector('.stories-envelope-flap')
+  const seal = section.querySelector('.stories-envelope-seal')
+  const pocket = section.querySelector('.stories-paper-pocket')
   const paper = section.querySelector('.stories-letter-paper')
-  const action = button.querySelector('.stories-envelope-action')
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-  let frame = 0
-  const setOpen = open => {
-    section.classList.toggle('stories-is-open', open)
-    button.setAttribute('aria-expanded', String(open))
-    paper.hidden = !open
-    action.replaceChildren(open ? 'Fechar carta' : 'Abrir carta')
-    if (open) paper.focus({ preventScroll: true })
-    else button.focus({ preventScroll: true })
-    cancelAnimationFrame(frame)
-    frame = requestAnimationFrame(() => {
-      frame = 0
-      window.__hipocampoLenis?.resize()
-      ScrollTrigger.refresh()
-      const target = open ? paper : button
-      if (window.__hipocampoLenis) {
-        window.__hipocampoLenis.scrollTo(target, { offset: -120, immediate: reduced.matches, duration: .7 })
-      } else target.scrollIntoView({ behavior: reduced.matches ? 'instant' : 'smooth', block: 'start' })
-    })
+  const shell = [flap, section.querySelector('.stories-envelope-back'), section.querySelector('.stories-envelope-front')]
+  let lastPhase = ''
+  const setPhase = phase => {
+    if (phase === lastPhase) return
+    lastPhase = phase
+    section.dataset.letterPhase = phase
+    paper.setAttribute('aria-hidden', String(phase !== 'open'))
   }
-  button.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'))
-  section.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && button.getAttribute('aria-expanded') === 'true') setOpen(false)
+  // Geometry is read only when the timeline is created/refreshed, never in
+  // wheel/touch handlers. Normal page scrolling drives the reversible scene.
+  const paperY = () => {
+    const height = window.innerHeight
+    const naturalTop = stage.clientHeight * .58 + scene.offsetHeight / 2 - 16 - paper.offsetHeight
+    return Math.max(120, height * .2) - naturalTop
+  }
+  const media = gsap.matchMedia()
+  media.add('(prefers-reduced-motion: no-preference)', () => {
+    setPhase('closed')
+    const timeline = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        id: 'hipocampo-stories-letter', trigger: track,
+        start: 'top top', end: 'bottom bottom', scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate: self => setPhase(self.progress < .06 ? 'closed' : self.progress < .82 ? 'opening' : 'open'),
+      },
+    })
+    timeline
+      .set(flap, { rotationX: 0, zIndex: 4, transformOrigin: '50% 0%' }, 0)
+      .set(paper, { scaleX: .94, scaleY: .42, y: 0, transformOrigin: '50% 100%' }, 0)
+      .set(pocket, { overflow: 'hidden' }, 0)
+      .to(seal, { opacity: 0, scale: .65, duration: .12 }, .02)
+      .to(flap, { rotationX: -180, duration: .28 }, .07)
+      .to(intro, { opacity: 0, y: -24, duration: .22 }, .12)
+      .set(flap, { zIndex: 0 }, .24)
+      .set(pocket, { overflow: 'visible' }, .28)
+      .to(paper, { scaleX: 1, scaleY: 1, y: paperY, duration: .36 }, .29)
+      .to(shell, { y: () => Math.min(window.innerHeight * .22, 180), opacity: 0, duration: .24 }, .58)
+      .to({}, { duration: .18 }, .82)
   })
-  window.addEventListener('pagehide', () => cancelAnimationFrame(frame), { once: true })
+  media.add('(prefers-reduced-motion: reduce)', () => setPhase('open'))
+
+  const frame = requestAnimationFrame(() => {
+    window.__hipocampoLenis?.resize()
+    ScrollTrigger.refresh()
+  })
+  window.addEventListener('pagehide', event => {
+    cancelAnimationFrame(frame)
+    if (!event.persisted) media.revert()
+  }, { once: true })
 }

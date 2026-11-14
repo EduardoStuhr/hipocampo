@@ -639,3 +639,18 @@ Evidências: docs/stories-letter-closed-1440.webp, docs/stories-letter-open-390.
 Playwright: quatro cenários incluindo movimento reduzido; mouse/Enter, toque, Escape, retorno do foco, aria-expanded/hidden, carta antes dos relatos, ausência de overflow, console e 404. Build e sintaxe JS passaram. Dez membros da equipe preservados.
 
 final result: passed
+
+
+## 2026-11-14 — Envelope pela rolagem e folha branca
+
+Escopo atualizado pelo usuário: a referência é a animação de abrir, não copiar o desenho; controlar pela rolagem e terminar com papel branco para futuros relatos. Imagem do envelope fornecida na conversa; os links Pinterest estão bloqueados pela política de rede, portanto não foi possível assistir ao vídeo. Nenhuma reprodução exata do vídeo é alegada.
+
+Implementação renderizada: envelope em superfícies articuladas, selo sai, aba vira e folha é revelada. Papel branco vazio ao final; removidos carta anterior, botão e aviso. Reversão acompanha a rolagem. Título da equipe “SOBRE NÓS”. Identidade marrom/papel/amarelo mantida.
+
+Revisão inicial: estado inicial da timeline em 0% retornava à escala CSS 1; adicionada escala inicial 0,94/0,42 no CSS para consistência da reversão. Monograma manuscrito do selo ultrapassava seu círculo e nome do envelope tocava a borda; selo passou a Georgia e nome ganhou margem inferior. Capturas finais revisadas após os ajustes.
+
+Evidências atuais: docs/stories-scroll-closed-1440.webp, stories-scroll-opening-1440.webp e stories-scroll-open-390.webp. Capturas de viewport CSS 1440×1000 e 390×844, DPR 1. Revisadas composição fechada, meia abertura e folha inteiramente branca; sem corte do papel, floreios dentro do envelope e sem texto/assinatura na folha. Demais fases em artifacts/stories-scroll.
+
+Testes Playwright: cinco cenários 1440/1366/390/320 e movimento reduzido. Progresso 0/20/45/70/100%, reversão, roda, PageDown, gesto real de toque via CDP, saída para a equipe sem travar, geometria da folha, conteúdo vazio, ausência de overflow/erros/404. Verificação adicional de alteração de movimento reduzido e resize desktop→390×844 confirma uma timeline e folha enquadrada. Build e sintaxe JS passaram.
+
+final result: passed
