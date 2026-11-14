@@ -6,18 +6,18 @@ Com o título “SOBRE NÓS”, a seção `#informacoes` usa uma grade inspirada
 
 | Pessoa | Funções | Retrato |
 | --- | --- | --- |
-| Beatriz Rangel | Direção de Som; Assistência de Produção | beatriz.webp |
-| Gabriel Orlando | Direção de Arte; Cenografia | gabriel.webp |
-| Guilherme Brandão | Direção de Experiência; Mediação; Assistência de Produção | guilherme.webp |
-| Heitor Lopes | Direção de Fotografia; Documentação | heitor.webp |
-| Heloísa Miranda | Direção de Fotografia; Documentação; Assistência de Produção | heloiza.webp |
-| Lara Sanchez | Direção de Arte; Cenografia | lara.webp |
-| Marcos Bonavita | Assistência de Som; Trilha Sonora | Não recebido; crédito em texto |
-| Mariana Teixeira | Direção Criativa; Direção de Produção | mariana.webp |
-| Raphael Cardoso | Direção de Experiência; Mediação | raphael.webp |
-| Tiago Chaves | Assistência de Som; Trilha Sonora | tiago.webp |
+| Beatriz Rangel | Direção de Som; Assistência de Produção | beatriz-66b7eb26e08c.webp |
+| Gabriel Orlando | Direção de Arte; Cenografia | gabriel-a9179d8a2137.webp |
+| Guilherme Brandão | Direção de Experiência; Mediação; Assistência de Produção | guilherme-cbae9f8d76ee.webp |
+| Heitor Lopes | Direção de Fotografia; Documentação | heitor-8a253cab9b3c.webp |
+| Heloísa Miranda | Direção de Fotografia; Documentação; Assistência de Produção | heloisa-e8a49fc5db72.webp |
+| Lara Sanchez | Direção de Arte; Cenografia | lara-cdd50bedccc0.webp |
+| Marcos Bonavita | Assistência de Som; Trilha Sonora | marcos-a006a67ceead.webp |
+| Mariana Teixeira | Direção Criativa; Direção de Produção | mariana-130c88ae8ddc.webp |
+| Raphael Cardoso | Direção de Experiência; Mediação | raphael-fffa415da17b.webp |
+| Tiago Chaves | Assistência de Som; Trilha Sonora | tiago-a57068011063.webp |
 
-Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retrato foi inventado para Marcos. Papéis repetidos da lista foram reunidos por pessoa; grafia dos nomes conforme a lista atual do usuário.
+Os dez retratos vêm do ZIP fotos.zip recebido em 14/11/2026 e foram associados pelos nomes dos arquivos. Todos foram substituídos, incluindo o retrato de Marcos Bonavita que faltava. Papéis repetidos da lista foram reunidos por pessoa; grafia dos nomes conforme a lista atual do usuário.
 
 ## Layout e movimento
 
@@ -31,7 +31,7 @@ Os nove retratos recebidos permanecem associados às mesmas pessoas. Nenhum retr
 
 ## Validação e publicação
 
-Build, sintaxe JS e suíte Playwright no diretório `dist`, servido pela porta 4180: desktop 1440×1000, celulares 390×844 e 320×640, além de desktop e celular com movimento reduzido. Verificados os dez nomes/funções, nove imagens, ausência de retrato inventado para Marcos, mouse, clique/toque, Escape, colunas, overflow, pausa fora de tela, console e arquivos ausentes. Todos passaram.
+Build, sintaxe JS e suíte Playwright no diretório `dist`, servido pela porta 4182: desktop 1440×1000, celulares 390×844 e 320×640, além de desktop e celular com movimento reduzido. Verificados os dez nomes/funções, dez retratos nomeados, incluindo Marcos, mouse, clique/toque, Escape, colunas, overflow, pausa fora de tela, console e arquivos ausentes. Todos passaram.
 
 Previews atuais: `docs/team-finale-preview-1440.webp` e `docs/team-finale-preview-390.webp`. O vídeo `team-finale-motion.mp4` é um registro histórico do leque anterior.
 
@@ -39,8 +39,8 @@ Produção: Cloudflare Pages conectado ao repositório `EduardoStuhr/hipocampo`,
 
 ## Ajuste de enquadramento — 14/11/2026
 
-Retirado o zoom e o object-fit cover dos retratos. As fotos preservam a proporção original com contain; no estado ativo ficam inteiramente dentro da área disponível. O movimento de flutuação para ao interagir, para não cortar o topo. Em movimento reduzido, os retratos já aparecem inteiros. Regressão verifica limites geométricos, contain e escala 1 nas nove imagens em PC, celular e movimento reduzido, incluindo Lara.
+Retirado o zoom e o object-fit cover dos retratos. As fotos preservam a proporção original com contain; no estado ativo ficam inteiramente dentro da área disponível. O movimento de flutuação para ao interagir, para não cortar o topo. Em movimento reduzido, os retratos já aparecem inteiros. Regressão verifica limites geométricos, contain e escala 1 nas dez imagens em PC, celular e movimento reduzido, incluindo Lara.
 
-## Fotos solicitadas via Drive
+## Fotos fornecidas pelo usuário
 
-O usuário forneceu a pasta 1UosI2R0KwSSMKrPRgvi35r82kKQ6fm5F para trocar as fotos e incluir pessoas. A tentativa de acesso retornou bloqueio do proxy de rede (CONNECT 403), sem listar o conteúdo. Nenhuma associação de foto/nome foi adivinhada ou alterada. Solicitado ZIP anexado com os arquivos nomeados para concluir essa parte.
+O acesso à pasta Drive foi bloqueado pela rede. O usuário enviou fotos.zip, com dez JPEGs nomeados; a atualização foi concluída a partir desse arquivo. As imagens foram convertidas para WebP 720×960, preservando orientação e proporção. Novos caminhos com hash de conteúdo impedem reutilização das fotos antigas em cache. Os caminhos antigos permanecem disponíveis para versões anteriores da página. Mapeamento auditável em docs/team-photo-import.json.

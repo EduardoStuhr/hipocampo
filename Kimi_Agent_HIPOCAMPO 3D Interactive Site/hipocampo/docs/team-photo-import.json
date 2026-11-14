@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Beatriz Rangel",
+    "source": "beatriz rangel.jpg",
+    "image": "/images/team/beatriz-66b7eb26e08c.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 107864
+  },
+  {
+    "name": "Gabriel Orlando",
+    "source": "gabriel orlando.jpg",
+    "image": "/images/team/gabriel-a9179d8a2137.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 91652
+  },
+  {
+    "name": "Guilherme Brandão",
+    "source": "guilherme.jpg",
+    "image": "/images/team/guilherme-cbae9f8d76ee.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 104460
+  },
+  {
+    "name": "Heitor Lopes",
+    "source": "heitor.jpg",
+    "image": "/images/team/heitor-8a253cab9b3c.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 109352
+  },
+  {
+    "name": "Heloísa Miranda",
+    "source": "heloiza miranda.jpg",
+    "image": "/images/team/heloisa-e8a49fc5db72.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 96600
+  },
+  {
+    "name": "Lara Sanchez",
+    "source": "lara sanchez.jpg",
+    "image": "/images/team/lara-cdd50bedccc0.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 116970
+  },
+  {
+    "name": "Marcos Bonavita",
+    "source": "marcos bonavita.jpg",
+    "image": "/images/team/marcos-a006a67ceead.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 116004
+  },
+  {
+    "name": "Mariana Teixeira",
+    "source": "mariana.jpg",
+    "image": "/images/team/mariana-130c88ae8ddc.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 98470
+  },
+  {
+    "name": "Raphael Cardoso",
+    "source": "raphael.jpg",
+    "image": "/images/team/raphael-fffa415da17b.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 103064
+  },
+  {
+    "name": "Tiago Chaves",
+    "source": "tiago chaves.jpg",
+    "image": "/images/team/tiago-a57068011063.webp",
+    "size": [
+      720,
+      960
+    ],
+    "bytes": 92088
+  }
+]

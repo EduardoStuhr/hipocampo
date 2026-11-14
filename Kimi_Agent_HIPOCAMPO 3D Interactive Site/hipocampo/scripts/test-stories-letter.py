@@ -77,7 +77,7 @@ async def check(browser,w,h,reduced=False):
   assert await p.evaluate("document.querySelector('#informacoes').getBoundingClientRect().top<innerHeight")
  assert await p.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
  assert await p.locator('#informacoes .team-credit').count()==10
- assert await p.locator('#informacoes .team-credit img').count()==9
+ assert await p.locator('#informacoes .team-credit img').count()==10
  if w==1440 and not reduced:
   await p.emulate_media(reduced_motion='reduce');await p.wait_for_timeout(400)
   assert await root.get_attribute('data-letter-phase')=='open'

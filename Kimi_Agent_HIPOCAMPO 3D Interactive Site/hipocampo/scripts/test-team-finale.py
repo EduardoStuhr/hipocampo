@@ -1,5 +1,5 @@
 """Browser checks for the alphabetical project credits and portrait interactions."""
-import asyncio,json,os
+import asyncio,json,os,re
 from pathlib import Path
 from playwright.async_api import async_playwright
 OUT=Path(__file__).resolve().parents[1]/'artifacts'/'team-credits'
@@ -9,9 +9,9 @@ EXPECTED=[
  ('Gabriel Orlando','Direção de Arte + Cenografia','gabriel'),
  ('Guilherme Brandão','Direção de Experiência + Mediação + Assistência de Produção','guilherme'),
  ('Heitor Lopes','Direção de Fotografia + Documentação','heitor'),
- ('Heloísa Miranda','Direção de Fotografia + Documentação + Assistência de Produção','heloiza'),
+ ('Heloísa Miranda','Direção de Fotografia + Documentação + Assistência de Produção','heloisa'),
  ('Lara Sanchez','Direção de Arte + Cenografia','lara'),
- ('Marcos Bonavita','Assistência de Som + Trilha Sonora',None),
+ ('Marcos Bonavita','Assistência de Som + Trilha Sonora','marcos'),
  ('Mariana Teixeira','Direção Criativa + Direção de Produção','mariana'),
  ('Raphael Cardoso','Direção de Experiência + Mediação','raphael'),
  ('Tiago Chaves','Assistência de Som + Trilha Sonora','tiago')]
@@ -32,25 +32,27 @@ async def check(browser,w,h,reduced=False):
  assert await items.locator('h3').all_text_contents()==[e[0] for e in EXPECTED]
  assert await items.locator('.team-credit-roles').all_text_contents()==[e[1] for e in EXPECTED]
  assert await root.locator('.team-letter,.team-portrait-fan').count()==0
- assert await items.locator('img').count()==9
+ assert await items.locator('img').count()==10
+ assert await root.locator('.team-photo-unavailable').count()==0
  for i,(_,_,image) in enumerate(EXPECTED):
   await go(f'.team-credit:nth-child({i+1})')
   card=items.nth(i)
   if image:
    img=card.locator('img')
-   assert await img.get_attribute('src')==f'/images/team/{image}.webp'
+   assert re.fullmatch(rf'/images/team/{image}-[a-f0-9]{{12}}\.webp',await img.get_attribute('src'))
    await img.evaluate('(e)=>e.decode()')
+   assert await img.evaluate('(e)=>e.naturalWidth===720&&e.naturalHeight===960')
   else:assert await card.locator('img,button').count()==0
  await go('.team-credit:first-child');await p.wait_for_timeout(800)
  portrait=items.first.locator('button');img=portrait.locator('img')
- baseline=await img.evaluate('(e)=>getComputedStyle(e).transform')
+ baseline=await img.evaluate('(e)=>Array.from(new DOMMatrix(getComputedStyle(e).transform).toFloat64Array())')
  if w>=768:
   await portrait.hover();await p.wait_for_timeout(750)
-  hover=await img.evaluate('(e)=>getComputedStyle(e).transform')
+  hover=await img.evaluate('(e)=>Array.from(new DOMMatrix(getComputedStyle(e).transform).toFloat64Array())')
   assert (baseline==hover)if reduced else(baseline!=hover)
   await p.screenshot(path=str(OUT/f'hover-{w}-{reduced}.png'))
   await p.mouse.move(2,2)
- # All nine original images must fit without clipping when opened, including Lara.
+ # All ten named images must fit without clipping when opened, including Lara.
  for i,(_,_,image) in enumerate(EXPECTED):
   if not image:continue
   await go(f'.team-credit:nth-child({i+1})')
@@ -70,12 +72,12 @@ async def check(browser,w,h,reduced=False):
  if reduced:
   assert await root.locator('.team-photo-float').first.evaluate('(e)=>getComputedStyle(e).animationName')=='none'
  assert await items.locator('h3 .hip-line-mask').count()==0
- await root.screenshot(path=str(OUT/f'grid-{w}-{reduced}.png'),animations='disabled',style='#root > header, #root > header *, a[href="#conteudo"] { visibility:hidden !important; }')
+ await root.screenshot(path=str(OUT/f'grid-{w}-{reduced}.png'),animations='disabled',style='#root > header, #root > header *, #root > a, .hipocampo-scroll-progress-bar { visibility:hidden !important; }')
  await go('#projeto');await p.wait_for_timeout(400)
  assert await root.locator('.team-in-view').count()==0
  assert not errors,errors
  assert not missing,missing
- print(json.dumps({'viewport':[w,h],'reducedMotion':reduced,'credits':10,'portraits':9,'alphabetical':True,'roles':True,'columns':cols,'interaction':True,'offscreenPaused':True,'errors':errors,'missingFiles':missing}),flush=True)
+ print(json.dumps({'viewport':[w,h],'reducedMotion':reduced,'credits':10,'portraits':10,'alphabetical':True,'roles':True,'columns':cols,'interaction':True,'offscreenPaused':True,'errors':errors,'missingFiles':missing}),flush=True)
  await p.close()
 async def main():
  async with async_playwright() as pw:

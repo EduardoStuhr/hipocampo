@@ -1,8 +1,9 @@
-// Project credits supplied by the client, in Portuguese alphabetical order.
+// Named portraits from fotos.zip supplied by the client on 2026-11-14.
+// Alphabetical credits and roles preserve the client-approved project list.
 export const TEAM = [
   {
     "name": "Beatriz Rangel",
-    "portrait": "/images/team/beatriz.webp",
+    "portrait": "/images/team/beatriz-66b7eb26e08c.webp",
     "roles": [
       "Direção de Som",
       "Assistência de Produção"
@@ -10,7 +11,7 @@ export const TEAM = [
   },
   {
     "name": "Gabriel Orlando",
-    "portrait": "/images/team/gabriel.webp",
+    "portrait": "/images/team/gabriel-a9179d8a2137.webp",
     "roles": [
       "Direção de Arte",
       "Cenografia"
@@ -18,7 +19,7 @@ export const TEAM = [
   },
   {
     "name": "Guilherme Brandão",
-    "portrait": "/images/team/guilherme.webp",
+    "portrait": "/images/team/guilherme-cbae9f8d76ee.webp",
     "roles": [
       "Direção de Experiência",
       "Mediação",
@@ -27,7 +28,7 @@ export const TEAM = [
   },
   {
     "name": "Heitor Lopes",
-    "portrait": "/images/team/heitor.webp",
+    "portrait": "/images/team/heitor-8a253cab9b3c.webp",
     "roles": [
       "Direção de Fotografia",
       "Documentação"
@@ -35,7 +36,7 @@ export const TEAM = [
   },
   {
     "name": "Heloísa Miranda",
-    "portrait": "/images/team/heloiza.webp",
+    "portrait": "/images/team/heloisa-e8a49fc5db72.webp",
     "roles": [
       "Direção de Fotografia",
       "Documentação",
@@ -44,7 +45,7 @@ export const TEAM = [
   },
   {
     "name": "Lara Sanchez",
-    "portrait": "/images/team/lara.webp",
+    "portrait": "/images/team/lara-cdd50bedccc0.webp",
     "roles": [
       "Direção de Arte",
       "Cenografia"
@@ -52,7 +53,7 @@ export const TEAM = [
   },
   {
     "name": "Marcos Bonavita",
-    "portrait": null,
+    "portrait": "/images/team/marcos-a006a67ceead.webp",
     "roles": [
       "Assistência de Som",
       "Trilha Sonora"
@@ -60,7 +61,7 @@ export const TEAM = [
   },
   {
     "name": "Mariana Teixeira",
-    "portrait": "/images/team/mariana.webp",
+    "portrait": "/images/team/mariana-130c88ae8ddc.webp",
     "roles": [
       "Direção Criativa",
       "Direção de Produção"
@@ -68,7 +69,7 @@ export const TEAM = [
   },
   {
     "name": "Raphael Cardoso",
-    "portrait": "/images/team/raphael.webp",
+    "portrait": "/images/team/raphael-fffa415da17b.webp",
     "roles": [
       "Direção de Experiência",
       "Mediação"
@@ -76,7 +77,7 @@ export const TEAM = [
   },
   {
     "name": "Tiago Chaves",
-    "portrait": "/images/team/tiago.webp",
+    "portrait": "/images/team/tiago-a57068011063.webp",
     "roles": [
       "Assistência de Som",
       "Trilha Sonora"

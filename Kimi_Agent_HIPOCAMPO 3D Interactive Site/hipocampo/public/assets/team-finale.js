@@ -1,4 +1,4 @@
-import { TEAM } from './team-members.js?v=credits-grid-1'
+import { TEAM } from './team-members.js?v=named-photos-20261114-1'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 function mount() {
@@ -61,7 +61,7 @@ function mount() {
         }
       })
     } else {
-      // Credit is complete; no unrelated or invented portrait for Marcos.
+      // Keep the text credit if a future portrait is unavailable.
       portrait.classList.add('team-photo-unavailable')
       portrait.setAttribute('aria-hidden', 'true')
     }

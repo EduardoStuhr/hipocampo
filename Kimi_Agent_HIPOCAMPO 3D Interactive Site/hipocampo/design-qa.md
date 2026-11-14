@@ -669,3 +669,14 @@ Playwright: 1440×1000, 1366×768, 390×844, 320×640 e movimento reduzido; esta
 A atualização de fotos pelo Drive permanece bloqueada: CONNECT 403 do proxy antes de listar a pasta. Nove retratos e dez créditos anteriores foram preservados; solicitado ZIP ao usuário. Esta limitação não altera o resultado visual dos ajustes concluídos e não é tratada como substituição de fotos realizada.
 
 final result: passed
+
+
+## 2026-11-14 — Dez retratos do arquivo fotos.zip
+
+A limitação do Drive foi resolvida pelo usuário com o envio de fotos.zip. O arquivo contém dez JPEGs nomeados, um por pessoa da lista já aprovada. Correspondência feita pelos nomes dos arquivos, incluindo o retrato de Marcos Bonavita. Créditos, ordem alfabética e funções mantidos. Os nove retratos anteriores foram substituídos e o retrato que faltava foi adicionado, sem inferir identidades pela aparência.
+
+Preparação técnica: orientação EXIF respeitada e conversão de 768×1024 para 720×960 WebP, sem cortar ou retocar. URLs com hash de conteúdo evitam reutilizar imagens antigas em cache. Manifesto atualizado e mapeamento em docs/team-photo-import.json. Previews 1440/390 atualizados; inspeção do conjunto nomeado e da grade em 1440, 390 e 320 confirma dez retratos e créditos legíveis em Aquiline/SquidBoy.
+
+Verificação de browser: carregamento das dez imagens, dimensões naturais e URLs versionadas, nomes/funções exatos, ordem, mouse/toque, Escape, enquadramento contain com todos os cantos da foto dentro da janela durante interação, ausência de overflow, pausa fora da tela, console e 404. Em movimento reduzido, compara-se a matriz numérica de transform, evitando falso negativo entre none e matriz identidade equivalente. Build e sintaxe JS passaram.
+
+final result: passed
