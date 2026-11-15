@@ -25,7 +25,8 @@
   font-family: "SquidBoy", sans-serif;
   font-size: clamp(1rem, 1.55vw, 1.6rem);
   line-height: 1.05;
-  text-align: center;
+  text-align: justify;
+  text-align-last: left;
   letter-spacing: .01em;
 }
 .page4-text p { margin: 0 0 1.3em; }

@@ -699,3 +699,7 @@ final result: passed
 - Preservados conteúdo integral, fontes, imagens e interações; texto azul usa quebra fluida dentro da coluna para não sobrepor o mapa.
 - Beatriz Rangel mantém os créditos anteriores e recebe Social Media.
 - Validação: build estático, `git diff --check` e Chromium/Playwright em 1440×900, 768×1024 e 390×844; texto comparado integralmente, limites dos blocos dentro das seções e viewport, crédito presente e nenhum erro JavaScript. Capturas locais em `/tmp/copy-*.png`.
+
+### 2026-11-15 — alinhamento justificado
+- Os três textos fornecidos pelo cliente ficam justificados no desktop, tablet e celular; a última linha de cada parágrafo permanece alinhada à esquerda.
+- Mantidos fontes, conteúdo, imagens e dimensões. Build e Chromium/Playwright em 1440×900, 768×1024 e 390×844 aprovados: alinhamento computado, integridade do texto, limites sem corte e nenhum erro JavaScript.

@@ -64,7 +64,7 @@
   transform-origin: 0 50%;
 }
 
-.page2-copy-paragraph { margin: 0 0 .95em; }
+.page2-copy-paragraph { margin: 0 0 .95em; text-align: justify; text-align-last: left; }
 .page2-copy-paragraph:last-child { margin-bottom: 0; }
 
 .page2-copy-line {
