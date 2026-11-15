@@ -74,7 +74,7 @@
   .page5-right { min-height: 0; transform: none; width: 100%; aspect-ratio: 572 / 664; container-type: inline-size; }
   .page5-colagem { right: 8%; top: 0; width: 35%; }
   .page5-filme { left: 1%; top: 27%; width: 70%; }
-  .page5-brand { left: 0; top: 43%; font-size: 21.5vw; font-size: 24cqw; line-height: 1; white-space: nowrap; }
+  .page5-brand { left: 2%; top: 40%; font-size: 20vw; font-size: 22.5cqw; line-height: 1.35; padding-bottom: .25em; overflow: visible; white-space: nowrap; }
   .page5-generated-photo { width: 38vw; }
 
   #instalacao.installation { padding: 5.5rem 1.25rem 3rem; }

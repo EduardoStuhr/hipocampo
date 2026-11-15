@@ -718,3 +718,7 @@ final result: passed
 ### 2026-11-15 — corrigir distância visual da assinatura mobile
 - O print do cliente mostrou que a assinatura ainda parecia separada: ajustados somente o topo e a altura de linha no breakpoint mobile, fazendo os traços do H cruzarem a borda do filme e a foto circular.
 - Build/diff e navegador em 320, 390, 430 e 1440px aprovados. Captura de 390px inspecionada visualmente; geometria desktop idêntica à verificação anterior.
+
+### 2026-11-15 — folga nos traços inferiores do Hipocampo mobile
+- Assinatura reduzida em 6,25% no celular, com folga vertical na linha e abaixo dos traços; leve reposicionamento preserva sobreposição e mantém o conjunto dentro da área.
+- Build, diff e Chromium em 320/390/430/1440px aprovados; captura mobile inspecionada com os traços inferiores completos. Desktop preservado.
