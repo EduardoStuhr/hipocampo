@@ -714,3 +714,7 @@ final result: passed
 - Somente o breakpoint mobile: foto, filme e assinatura posicionados em um quadro proporcional 572:664, com deslocamentos relativos ao quadro e fonte proporcional à largura do próprio conjunto.
 - Mantidos arquivos separados e as sobreposições da referência, sem alterar o layout desktop.
 - Build e diff aprovados; Chromium em 320, 390, 430 e 1440px: sobreposição entre foto/filme e filme/assinatura, assinatura dentro do quadro e regras mobile ausentes no desktop. Capturas locais `/tmp/collage-*.png`.
+
+### 2026-11-15 — corrigir distância visual da assinatura mobile
+- O print do cliente mostrou que a assinatura ainda parecia separada: ajustados somente o topo e a altura de linha no breakpoint mobile, fazendo os traços do H cruzarem a borda do filme e a foto circular.
+- Build/diff e navegador em 320, 390, 430 e 1440px aprovados. Captura de 390px inspecionada visualmente; geometria desktop idêntica à verificação anterior.
