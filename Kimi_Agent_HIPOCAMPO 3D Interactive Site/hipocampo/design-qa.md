@@ -709,3 +709,8 @@ final result: passed
 - Hifens opcionais em pontos de divisão silábica preservam as palavras e permitem quebra natural em navegadores sem dicionário de português; sem quebras de linha fixas.
 - No celular, coluna centralizada limitada a 18rem. Outras seções permanecem como aprovadas.
 - Build, sintaxe JS, diff e Chromium em desktop 1440×900, tablet 768×1024 e celular 390×844 aprovados; conteúdo conferido desconsiderando hifens opcionais, sem corte ou erro JS. Capturas locais `/tmp/reference-section-*.png`.
+
+### 2026-11-15 — colagem unificada no celular
+- Somente o breakpoint mobile: foto, filme e assinatura posicionados em um quadro proporcional 572:664, com deslocamentos relativos ao quadro e fonte proporcional à largura do próprio conjunto.
+- Mantidos arquivos separados e as sobreposições da referência, sem alterar o layout desktop.
+- Build e diff aprovados; Chromium em 320, 390, 430 e 1440px: sobreposição entre foto/filme e filme/assinatura, assinatura dentro do quadro e regras mobile ausentes no desktop. Capturas locais `/tmp/collage-*.png`.

@@ -69,10 +69,12 @@
   .page5-text { width: min(100%, 18rem); font-size: 1.125rem; line-height: 1.65; letter-spacing: 0; text-align: justify; text-align-last: center; }
   .page5-camera-control { width: min(100%, 25rem); margin-top: 1.5rem; }
   .page5-shutter { min-width: 44px; min-height: 44px; }
-  .page5-right { min-height: 100vw; transform: none; width: 100%; }
-  .page5-colagem { right: 0; top: 0; width: 38%; }
-  .page5-filme { left: 1%; top: 26vw; width: 76%; }
-  .page5-brand { left: 4%; top: 59vw; font-size: 19vw; line-height: 1.35; }
+  /* One proportional composition: all offsets follow the same canvas,
+     so the paper, film and signature keep their overlaps on every phone. */
+  .page5-right { min-height: 0; transform: none; width: 100%; aspect-ratio: 572 / 664; container-type: inline-size; }
+  .page5-colagem { right: 8%; top: 0; width: 35%; }
+  .page5-filme { left: 1%; top: 27%; width: 70%; }
+  .page5-brand { left: 0; top: 49%; font-size: 21.5vw; font-size: 24cqw; line-height: 1.35; white-space: nowrap; }
   .page5-generated-photo { width: 38vw; }
 
   #instalacao.installation { padding: 5.5rem 1.25rem 3rem; }
