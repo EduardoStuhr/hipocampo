@@ -726,3 +726,7 @@ final result: passed
 ### 2026-11-15 — texto centralizado sem hifens no celular
 - Apenas no mobile, parágrafo acima da câmera centralizado e com hifenização desativada, inclusive nos pontos opcionais usados pelo desktop.
 - Build/diff e Chromium 320/390/430/1440px aprovados: eixo do texto coincide com o da câmera, alinhamento central e hyphens:none no mobile; desktop mantém justify/manual. Captura de 390px inspecionada sem divisão de palavras.
+
+### 2026-11-15 — bloco reto sem centralização por linha
+- Correção conforme esclarecimento do cliente: texto mobile justificado, última linha à esquerda, largura alinhada à câmera e sem hifenização. `text-wrap:pretty` melhora finais curtos quando suportado.
+- Build/diff e Chromium em 320/390/430/1440px aprovados; captura mobile inspecionada e eixo do bloco alinhado à câmera. Desktop preservado.
