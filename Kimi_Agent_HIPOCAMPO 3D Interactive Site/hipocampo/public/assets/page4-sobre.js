@@ -4,7 +4,7 @@ const FRAMES = [1, 2, 3, 4].map((i) => `/images/sobre/gif-${i}.webp`)
 const PHOTOS = [
   ['retrato', 'Fotografia original de uma mulher em moldura de madeira', '/images/sobre/retrato-original-e3b834f08bc4.jpg'],
   ['envelope', 'Envelope antigo com fotografias'],
-  ['montanha', 'Fotografia antiga de montanhas', '/images/sobre/montanha-restaurada-v1.webp'],
+  ['geladeira', 'Geladeira antiga verde', '/images/sobre/geladeira-9fa54f4430b6.png'],
 ]
 
 function buildSection() {

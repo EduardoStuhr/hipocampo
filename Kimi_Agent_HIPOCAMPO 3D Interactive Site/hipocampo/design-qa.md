@@ -765,3 +765,8 @@ final result: passed
 - Texto em oito linhas compactas no desktop, primeira frase maior em negrito e divisões opcionais de passado/observar como no modelo. Mantido conteúdo completo. Mobile preserva fonte legível, fluxo natural e sem hifenização.
 - Comparação visual de 952×537 e 1440×900; captura mobile 390×844 preservada. Build/diff aprovados e navegador confirmou a divisão do retrato entre as seções. Evidência atualizada `docs/simulation-layout-desktop.png`.
 - final result: passed
+
+### 2026-11-15 — geladeira ao lado da carta
+- PNG original de imagem2.zip inserido sem edição em `public/images/sobre/geladeira-9fa54f4430b6.png`; substitui apenas a montanha da apresentação Simulação 3D.
+- Geladeira à direita da carta, deslocada para baixo, com tamanho proporcional próprio no desktop e no mobile. Preservados foto da mulher, texto, interações da carta e a geladeira da cena 3D.
+- Build/diff e Chromium em 952×537, 1440×900 e 390×844 aprovados: montanha ausente, imagem decodificada, posições distintas nos dois eixos, sem ultrapassar a seção e retrato ainda dividido na fronteira. Capturas locais `/tmp/fridge-collage-*.png` inspecionadas.
