@@ -3,22 +3,9 @@ import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 gsap.registerPlugin(ScrollTrigger)
 
 const titleText = 'como uma memória é construída?'
-const copyLines = [
-  'Uma memória não existe como um registro completo.',
-  'Ela se forma a partir de fragmentos: imagens, objetos, sons,',
-  'lugares, sensações e histórias que continuam sendo reorganizadas ao longo do tempo.',
-  'No Hipocampo, partimos da ausência de uma memória desaparecida.',
-  'O que resta são vestígios. Fotografias sem contexto, objetos guardados por anos, anotações, negativos,',
-  'relatos incompletos e pequenos artefatos de uma vida que já não pode ser acessada diretamente.',
-  'Ao aproximar esses elementos, novas relações surgem.',
-  'Uma fotografia pode despertar uma lembrança.',
-  'Um objeto pode alterar completamente a interpretação de uma imagem.',
-  'Uma história pode preencher uma lacuna ou',
-  'criar outra. As conexões construídas entre esses fragmentos revelam',
-  'menos uma verdade definitiva e mais as maneiras pelas',
-  'quais atribuímos significado às nossas próprias experiências.',
-  'Cada participante encontra uma narrativa diferente.',
-  'Cada combinação gera uma memória possível.',
+const copyParagraphs = [
+  'Hipocampo é um projeto de instalação audiovisual desenvolvido por estudantes de Cinema e Audiovisual do Centro Universitário SENAC. A oficina aborda a relação essencial entre memória e identidade, colocando em foco o efeito do esquecimento na preservação da história de um indivíduo. Com base nisso, Hipocampo explora a possibilidade de reconstruir narrativas a partir de recordações fragmentadas e desordenadas, ofuscadas pela amnésia.',
+  'A experiência acontece em um espaço onírico, representativo de um limbo entre a lembrança e a deslembrança, no qual participantes recebem diversas fotografias, objetos, e diferentes materiais que podem constituir a vida de uma pessoa. Ao analisar os fragmentos, cabe ao grupo participante ordenar e conectar os materiais escolhidos da forma que achar melhor, construindo uma história com os lapsos apresentados. No fim, o grupo nomeia a personagem que protagoniza o enredo criado, narra a história através de um áudio que será gravado no momento e o resultado é exposto neste site como um fotofilme, dialogando com uma segunda interpretação desenvolvida pelos organizadores. Não há uma narrativa pré definida ou uma resposta correta, a experiência é justamente o diálogo entre as diferentes formas de deduzir as lembranças colocadas.',
 ]
 
 function titleMarkup(text) {
@@ -36,7 +23,7 @@ function createPage2Markup() {
       ${titleMarkup(titleText)}
     </h2>
     <div class="hipocampo-page2-copy">
-      ${[copyLines.slice(0, 3), copyLines.slice(3, 6), copyLines.slice(6, 13), copyLines.slice(13)].map(lines => `<p class="page2-copy-paragraph">${lines.map(line => `<span class="page2-copy-line">${line}</span>`).join(' ')}</p>`).join('')}
+      ${copyParagraphs.map(text => `<p class="page2-copy-paragraph"><span class="page2-copy-line">${text}</span></p>`).join('')}
       <div data-house-preparation-slot></div>
     </div>
     <div class="page2-map-stage"><div class="hipocampo-memory-map" data-memory-map role="img" aria-label="Mapa de memória formado por fragmentos conectados a uma casa central"></div></div>

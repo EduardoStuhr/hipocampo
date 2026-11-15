@@ -1,4 +1,4 @@
-import { TEAM } from './team-members.js?v=heloiza-name-1'
+import { TEAM } from './team-members.js?v=editorial-copy-1'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 function mount() {

@@ -693,3 +693,9 @@ Evidências browser: docs/stories-envelope-closed.webp, stories-envelope-opening
 Verificações: cinco cenários desktop/mobile/movimento reduzido na suíte stories-letter; modelo presente e pronto; 4550 triângulos e 16 chamadas no estado fechado; DPR limitado; frames estáveis sem rolagem e fora da tela; ângulos das abas/câmera mudam com o progresso; contexto perdido/restaurado mostra alternativa e recupera; preferência reduzida libera o canvas; fallback WebGL indisponível preserva rolagem e leitura. Sem erros JS ou recursos locais ausentes. Dez imagens/créditos, Aquiline e SquidBoy preservados. Nenhum código de interação da casa/ilhas foi alterado.
 
 final result: passed
+
+### 2026-11-15 — textos fornecidos e crédito Social Media
+- Substituídos os três blocos na ordem dos prints do cliente: apresentação `#sobre`, colagem `#vestigios` e memória `#projeto`.
+- Preservados conteúdo integral, fontes, imagens e interações; texto azul usa quebra fluida dentro da coluna para não sobrepor o mapa.
+- Beatriz Rangel mantém os créditos anteriores e recebe Social Media.
+- Validação: build estático, `git diff --check` e Chromium/Playwright em 1440×900, 768×1024 e 390×844; texto comparado integralmente, limites dos blocos dentro das seções e viewport, crédito presente e nenhum erro JavaScript. Capturas locais em `/tmp/copy-*.png`.

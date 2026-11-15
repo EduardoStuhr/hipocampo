@@ -15,9 +15,8 @@ function buildSection() {
   s.innerHTML = `
     <h2 class="page4-title"><small>o</small>Hipocampo</h2>
     <div class="page4-text">
-      <p>Hipocampo é uma instalação e oficina experimental que investiga as relações entre memória, imagem e narrativa.</p>
-      <p>A partir de fotografias, objetos, negativos e outros vestígios de uma história desconhecida, os participantes exploram a instalação e constroem suas próprias interpretações.</p>
-      <p>Sem respostas definitivas, cada narrativa criada revela uma nova forma de compreender o passado, transformando a memória em uma experiência coletiva de imaginação e descoberta.</p>
+      <p>A simulação mostra as quatro ilhas componentes da oficina: A ilha do passado, da temporalidade, do presente e dos futuros, respectivamente representadas por um cabideiro, uma geladeira, uma escrivaninha e uma mesa branca centralizada.</p>
+      <p>O usuário pode selecionar qualquer objeto e arrastá-lo para a ilha dos futuros, e a história é criada a partir da ordem em que os objetos são posicionados. Também é possível aproximar ou afastar a visão, direcioná-la com o mouse e observar a ilha de cima. Ao finalizar, há a opção de tirar uma foto mostrando os fragmentos escolhidos, que é salva automaticamente no computador do usuário.</p>
     </div>
     <div class="page4-photos">
       ${PHOTOS.map(([n, alt, src]) => `

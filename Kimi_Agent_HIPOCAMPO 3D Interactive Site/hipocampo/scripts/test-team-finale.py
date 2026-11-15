@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 OUT=Path(__file__).resolve().parents[1]/'artifacts'/'team-credits'
 OUT.mkdir(parents=True,exist_ok=True)
 EXPECTED=[
- ('Beatriz Rangel','Direção de Som + Assistência de Produção','beatriz'),
+ ('Beatriz Rangel','Direção de Som + Assistência de Produção + Social Media','beatriz'),
  ('Gabriel Orlando','Direção de Arte + Cenografia','gabriel'),
  ('Guilherme Brandão','Direção de Experiência + Mediação + Assistência de Produção','guilherme'),
  ('Heitor Lopes','Direção de Fotografia + Documentação','heitor'),

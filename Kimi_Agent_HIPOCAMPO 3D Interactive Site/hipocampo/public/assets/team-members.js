@@ -6,7 +6,8 @@ export const TEAM = [
     "portrait": "/images/team/beatriz-66b7eb26e08c.webp",
     "roles": [
       "Direção de Som",
-      "Assistência de Produção"
+      "Assistência de Produção",
+      "Social Media"
     ]
   },
   {

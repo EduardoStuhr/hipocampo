@@ -6,7 +6,7 @@ Com o título “Sobre nós”, a seção `#informacoes` usa uma grade inspirada
 
 | Pessoa | Funções | Retrato |
 | --- | --- | --- |
-| Beatriz Rangel | Direção de Som; Assistência de Produção | beatriz-66b7eb26e08c.webp |
+| Beatriz Rangel | Direção de Som; Assistência de Produção; Social Media | beatriz-66b7eb26e08c.webp |
 | Gabriel Orlando | Direção de Arte; Cenografia | gabriel-a9179d8a2137.webp |
 | Guilherme Brandão | Direção de Experiência; Mediação; Assistência de Produção | guilherme-cbae9f8d76ee.webp |
 | Heitor Lopes | Direção de Fotografia; Documentação | heitor-8a253cab9b3c.webp |
