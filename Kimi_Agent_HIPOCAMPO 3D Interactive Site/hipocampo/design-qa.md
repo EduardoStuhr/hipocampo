@@ -759,3 +759,9 @@ final result: passed
 - Validação: build estático, diff, sintaxe JS e Chromium em 952×537, 1440×900 e 390×844 aprovados; centro do retrato coincide com a divisa, original correto sem corte, número removido e título preservado. Interação do envelope testada por teclado e console sem erros.
 - Limite: navegador móvel validado por viewport no Chromium; Safari em aparelho físico não disponível.
 - final result: passed
+
+### 2026-11-15 — formatação compacta do texto da referência
+- Removido o limite fixo de tamanho do texto desktop que alterava a proporção em monitores maiores. Largura e fonte passam a acompanhar o viewport; escala horizontal aproxima o desenho tipográfico da referência.
+- Texto em oito linhas compactas no desktop, primeira frase maior em negrito e divisões opcionais de passado/observar como no modelo. Mantido conteúdo completo. Mobile preserva fonte legível, fluxo natural e sem hifenização.
+- Comparação visual de 952×537 e 1440×900; captura mobile 390×844 preservada. Build/diff aprovados e navegador confirmou a divisão do retrato entre as seções. Evidência atualizada `docs/simulation-layout-desktop.png`.
+- final result: passed

@@ -22,20 +22,22 @@
 }
 .page4-title small { font-size: .5em; margin-right: .35em; }
 .page4-text {
-  width: 65vw;
-  max-width: 65vw;
-  transform: scaleX(1.2);
+  width: 46vw;
+  max-width: 46vw;
+  transform: scaleX(1.7);
   transform-origin: center;
   margin: 5.8vw auto 0;
   font-family: "SquidBoy", sans-serif;
-  font-size: clamp(1rem, 1.8vw, 1.6rem);
-  line-height: 1.05;
+  font-size: 1.6vw;
+  line-height: 1;
+  -webkit-hyphens: manual;
+  hyphens: manual;
   text-align: center;
   text-align-last: center;
   letter-spacing: .01em;
 }
 .page4-text p { margin: 0; }
-.page4-text strong { font-weight: 700; }
+.page4-text strong { font-size: 1.125em; line-height: .9; font-weight: 700; }
 .page4-photos { position: relative; height: clamp(15rem, 24vw, 27rem); margin-top: 3vw; }
 .page4-photo {
   position: absolute;
