@@ -66,7 +66,7 @@
 
   #vestigios.hipocampo-page5 { min-height: 0; grid-template-columns: minmax(0, 1fr); padding: 6rem 1.25rem 2.5rem; gap: 2.25rem; }
   .page5-left { min-width: 0; }
-  .page5-text { width: min(100%, 25rem); margin-inline: auto; font-size: 1.125rem; line-height: 1.65; letter-spacing: 0; text-align: justify; text-align-last: left; text-wrap: pretty; -webkit-hyphens: none; hyphens: none; word-break: normal; overflow-wrap: normal; }
+  .page5-text { width: min(calc(100% - 2rem), 20rem); margin-inline: auto; font-size: 1.125rem; line-height: 1.65; letter-spacing: 0; text-align: justify; text-align-last: left; text-wrap: pretty; -webkit-hyphens: none; hyphens: none; word-break: normal; overflow-wrap: normal; }
   .page5-camera-control { width: min(100%, 25rem); margin-top: 1.5rem; }
   .page5-shutter { min-width: 44px; min-height: 44px; }
   /* One proportional composition: all offsets follow the same canvas,

@@ -730,3 +730,7 @@ final result: passed
 ### 2026-11-15 — bloco reto sem centralização por linha
 - Correção conforme esclarecimento do cliente: texto mobile justificado, última linha à esquerda, largura alinhada à câmera e sem hifenização. `text-wrap:pretty` melhora finais curtos quando suportado.
 - Build/diff e Chromium em 320/390/430/1440px aprovados; captura mobile inspecionada e eixo do bloco alinhado à câmera. Desktop preservado.
+
+### 2026-11-15 — margens na coluna do texto mobile
+- Coluna justificada acima da câmera recebe margens próprias de 1rem por lado e limite de 20rem, mantendo o eixo central e as palavras sem hifenização. Texto continua editável; desktop inalterado.
+- Build/diff e Chromium em 320/390/430/1440px aprovados, com captura mobile inspecionada.
