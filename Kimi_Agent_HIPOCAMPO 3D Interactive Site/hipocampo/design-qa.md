@@ -722,3 +722,7 @@ final result: passed
 ### 2026-11-15 — folga nos traços inferiores do Hipocampo mobile
 - Assinatura reduzida em 6,25% no celular, com folga vertical na linha e abaixo dos traços; leve reposicionamento preserva sobreposição e mantém o conjunto dentro da área.
 - Build, diff e Chromium em 320/390/430/1440px aprovados; captura mobile inspecionada com os traços inferiores completos. Desktop preservado.
+
+### 2026-11-15 — texto centralizado sem hifens no celular
+- Apenas no mobile, parágrafo acima da câmera centralizado e com hifenização desativada, inclusive nos pontos opcionais usados pelo desktop.
+- Build/diff e Chromium 320/390/430/1440px aprovados: eixo do texto coincide com o da câmera, alinhamento central e hyphens:none no mobile; desktop mantém justify/manual. Captura de 390px inspecionada sem divisão de palavras.
