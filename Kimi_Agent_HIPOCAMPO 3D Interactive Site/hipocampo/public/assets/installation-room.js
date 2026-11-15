@@ -118,7 +118,6 @@ export default function Installation() {
   return h('section', { id: 'instalacao', ref: root, className: 'installation', 'aria-labelledby': 'installation-title' },
     h('div', { className: 'installation-heading' },
       h('div', null,
-        h('p', { className: 'installation-kicker' }, '03 —'),
         h('h2', { id: 'installation-title' }, 'Instalação virtual'),
       ),
     ),

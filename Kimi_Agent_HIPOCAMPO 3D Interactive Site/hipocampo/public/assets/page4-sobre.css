@@ -4,7 +4,7 @@
   min-height: 100svh;
   background: #fff;
   color: #7a2a17;
-  padding: 4vw 9vw 3vw;
+  padding: 0 9vw 3vw;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -13,24 +13,30 @@
   text-align: center;
   font-family: "AquilineTwo", Georgia, serif;
   font-weight: 400;
-  font-size: clamp(3.5rem, 8vw, 9rem);
+  font-size: clamp(3.5rem, 7.3vw, 8rem);
   line-height: 1.1;
-  padding-bottom: .45em;
+  padding-bottom: .2em;
+  position: relative;
+  top: -1vw;
   transform: none !important;
 }
 .page4-title small { font-size: .5em; margin-right: .35em; }
 .page4-text {
-  max-width: 72rem;
-  margin: 3vw auto 0;
+  width: 65vw;
+  max-width: 65vw;
+  transform: scaleX(1.2);
+  transform-origin: center;
+  margin: 5.8vw auto 0;
   font-family: "SquidBoy", sans-serif;
-  font-size: clamp(1rem, 1.55vw, 1.6rem);
+  font-size: clamp(1rem, 1.8vw, 1.6rem);
   line-height: 1.05;
-  text-align: justify;
-  text-align-last: left;
+  text-align: center;
+  text-align-last: center;
   letter-spacing: .01em;
 }
-.page4-text p { margin: 0 0 1.3em; }
-.page4-photos { position: relative; height: clamp(18rem, 30vw, 30rem); margin-top: 1vw; }
+.page4-text p { margin: 0; }
+.page4-text strong { font-weight: 700; }
+.page4-photos { position: relative; height: clamp(15rem, 24vw, 27rem); margin-top: 3vw; }
 .page4-photo {
   position: absolute;
   margin: 0;
@@ -44,10 +50,11 @@
   position: absolute; inset: 0; opacity: 0; transition: opacity .15s;
 }
 .page4-photo.is-playing .page4-frame { opacity: 1; }
-.page4-photo--retrato { left: 0; bottom: 0; width: 9vw; min-width: 90px; aspect-ratio: 458/760; }
-.page4-photo--retrato, .page4-photo--retrato .page4-frame { clip-path: ellipse(47% 48.5% at 50% 50%); }
-.page4-photo--envelope { right: 30vw; top: 0; width: 24vw; aspect-ratio: 1; }
-.page4-photo--montanha { right: 6vw; top: 4vw; width: 22vw; aspect-ratio: 576/548; }
+.page4-photo--retrato { left: 9vw; bottom: 0; width: 10vw; min-width: 80px; aspect-ratio: 3/4; }
+.page4-photo--retrato { box-sizing: border-box; padding: .3rem; border: .45rem ridge #79513a; background: #e8ddc7; box-shadow: 0 .2rem .4rem #33231526; }
+.page4-photo--retrato img { object-fit: contain; }
+.page4-photo--envelope { right: 20vw; top: 0; width: 20vw; aspect-ratio: 1; }
+.page4-photo--montanha { right: 0; top: 5vw; width: 23vw; aspect-ratio: 576/548; }
 /* Rotate only the paper: its side opening becomes the upper opening.
    The clipped window follows the photographed lip, keeping every photo inside. */
 .page4-photo--envelope > img {

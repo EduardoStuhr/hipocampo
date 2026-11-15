@@ -734,3 +734,28 @@ final result: passed
 ### 2026-11-15 — margens na coluna do texto mobile
 - Coluna justificada acima da câmera recebe margens próprias de 1rem por lado e limite de 20rem, mantendo o eixo central e as palavras sem hifenização. Texto continua editável; desktop inalterado.
 - Build/diff e Chromium em 320/390/430/1440px aprovados, com captura mobile inspecionada.
+
+### 2026-11-15 — Simulação 3D, retrato original pendente
+- Seção preparada localmente com título Simulação 3D, introdução destacada, envelope e montanha reposicionados e retrato ancorado exatamente pela metade na divisa.
+- Moldura aplicada como borda externa do elemento no site. A imagem gerada foi rejeitada pelo cliente por alterar a pessoa e NÃO foi incorporada ao projeto ou publicada.
+- Build/diff e navegador em 952×537, 1440×900 e 390×844: título correto e centro vertical do retrato coincidente com a divisa entre seções. Capturas `/tmp/simulation-*.png`.
+- Fonte visual: print e retrato anexados à conversa; arquivo original da nova foto indisponível nos anexos locais. A captura local ainda usa o retrato antigo enquanto aguarda o arquivo correto.
+- Falta substituir pelo arquivo original exato e verificar a comparação final. Sem publicação desta alteração incompleta.
+- final result: blocked
+
+### 2026-11-15 — continuação e remoção apenas do 03
+- Cliente confirmou remover somente o número 03. Removido o nó installation-kicker no componente editável; título Instalação virtual preservado e import map atualizado.
+- Refinados largura, escala tipográfica e espaçamento da apresentação Simulação 3D conforme a referência.
+- Build, sintaxe do componente e diff aprovados. Chromium em 952×537/1440×900/390×844 confirma título e retrato dividido exatamente pela metade na fronteira das seções. Evidências `/tmp/simulation-*.png`.
+- Nova foto continua indisponível como arquivo nos diretórios de anexos. Não usado o retrato gerado; substituição exata permanece pendente, sem publicar este conjunto incompleto.
+- final result: blocked
+
+### 2026-11-15 — conclusão com foto original de imagem.zip
+- Bloqueio anterior resolvido pelo ZIP: `public/images/sobre/retrato-original-e3b834f08bc4.jpg` é idêntico byte por byte a `imagem.jpg` no arquivo recebido, inclusive no build. SHA256 `e3b834f08bc4c5eb33724d051aa34de8a5e9a33583b9b367ee75048bcc7eccfb`. Nenhum recorte, retoque, geração ou recompressão da fotografia.
+- Moldura externa no elemento, foto inteira com object-fit:contain, retrato dividido pela metade na divisa real entre #sobre e #vestigios.
+- Layout da referência aplicado: título Simulação 3D em AquilineTwo, texto SquidBoy com introdução destacada, envelope e montanha reposicionados. Navegação global preservada. Somente o número 03 removido; Instalação virtual mantido.
+- Fonte visual: print fornecido na conversa e fotografia original no caminho acima. Capturas: `docs/simulation-layout-desktop.png` (952×537, densidade 1), `docs/simulation-layout-mobile.png` (390×844, densidade 1) e detalhe `docs/simulation-original-portrait.png`. Conferidas tipografia, espaçamento, paleta, conteúdo, fotografia e limites do retrato; o mobile adapta o fluxo para leitura.
+- Histórico: versão gerada rejeitada e nunca incorporada; arquivo original indisponível até recebimento do ZIP. Resolvido pela inserção do original intacto e nova captura do retrato completo.
+- Validação: build estático, diff, sintaxe JS e Chromium em 952×537, 1440×900 e 390×844 aprovados; centro do retrato coincide com a divisa, original correto sem corte, número removido e título preservado. Interação do envelope testada por teclado e console sem erros.
+- Limite: navegador móvel validado por viewport no Chromium; Safari em aparelho físico não disponível.
+- final result: passed

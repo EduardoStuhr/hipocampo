@@ -1,8 +1,8 @@
-// Página 4 — "o Hipocampo": texto de apresentação + fotos que, ao passar o mouse,
+// Página 4 — "Simulação 3D": texto de apresentação + fotos que, ao passar o mouse,
 // alternam entre quadros como um gif.
 const FRAMES = [1, 2, 3, 4].map((i) => `/images/sobre/gif-${i}.webp`)
 const PHOTOS = [
-  ['retrato', 'Retrato antigo de uma mulher em moldura oval'],
+  ['retrato', 'Fotografia original de uma mulher em moldura de madeira', '/images/sobre/retrato-original-e3b834f08bc4.jpg'],
   ['envelope', 'Envelope antigo com fotografias'],
   ['montanha', 'Fotografia antiga de montanhas', '/images/sobre/montanha-restaurada-v1.webp'],
 ]
@@ -11,12 +11,11 @@ function buildSection() {
   const s = document.createElement('section')
   s.id = 'sobre'
   s.className = 'hipocampo-page4'
-  s.setAttribute('aria-label', 'Sobre o Hipocampo')
+  s.setAttribute('aria-label', 'Simulação 3D')
   s.innerHTML = `
-    <h2 class="page4-title"><small>o</small>Hipocampo</h2>
+    <h2 class="page4-title">Simulação 3D</h2>
     <div class="page4-text">
-      <p>A simulação mostra as quatro ilhas componentes da oficina: A ilha do passado, da temporalidade, do presente e dos futuros, respectivamente representadas por um cabideiro, uma geladeira, uma escrivaninha e uma mesa branca centralizada.</p>
-      <p>O usuário pode selecionar qualquer objeto e arrastá-lo para a ilha dos futuros, e a história é criada a partir da ordem em que os objetos são posicionados. Também é possível aproximar ou afastar a visão, direcioná-la com o mouse e observar a ilha de cima. Ao finalizar, há a opção de tirar uma foto mostrando os fragmentos escolhidos, que é salva automaticamente no computador do usuário.</p>
+      <p><strong>A simulação mostra as quatro ilhas componentes da oficina:</strong> A ilha do passado, da temporalidade, do presente e dos futuros, respectivamente representadas por um cabideiro, uma geladeira, uma escrivaninha e uma mesa branca centralizada. O usuário pode selecionar qualquer objeto e arrastá-lo para a ilha dos futuros, e a história é criada a partir da ordem em que os objetos são posicionados.<br />Também é possível aproximar ou afastar a visão, direcioná-la com o mouse e observar a ilha de cima. Ao finalizar, há a opção de tirar uma foto mostrando os fragmentos escolhidos, que é salva automaticamente no computador do usuário.</p>
     </div>
     <div class="page4-photos">
       ${PHOTOS.map(([n, alt, src]) => `
@@ -25,6 +24,8 @@ function buildSection() {
           ${n === 'envelope' ? `<span class="page4-envelope-window" aria-hidden="true"><img class="page4-envelope-photo" src="${FRAMES[0]}" alt="" /></span>` : ''}
         </figure>`).join('')}
     </div>`
+  // Anchor the portrait to the actual section boundary, half on each page.
+  s.append(s.querySelector('.page4-photo--retrato'))
   FRAMES.forEach((f) => { const i = new Image(); i.src = f })
   s.querySelectorAll('.page4-photo').forEach((fig) => {
     // o efeito de gif com o mouse fica apenas na carta (envelope)

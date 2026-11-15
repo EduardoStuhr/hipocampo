@@ -1,7 +1,7 @@
 /* Página 5 — vestígios: texto + câmera à esquerda, colagem + filme + marca à direita.
    O retrato oval da página 4 atravessa a divisa entre as duas páginas. */
 #sobre.hipocampo-page4 { overflow: visible; }
-#sobre .page4-photo--retrato { z-index: 5; transform: translateY(calc(3vw + 50%)); }
+#sobre .page4-photo--retrato { z-index: 5; transform: translateY(50%); }
 
 #vestigios.hipocampo-page5 {
   position: relative;
