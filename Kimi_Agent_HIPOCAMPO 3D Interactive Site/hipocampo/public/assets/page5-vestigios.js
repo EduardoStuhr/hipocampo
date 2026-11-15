@@ -187,7 +187,7 @@ function buildSection() {
   s.setAttribute('aria-label', 'A memória desaparecida')
   s.innerHTML = `
     <div class="page5-left">
-      <p class="page5-text">Hipocampo estreou como uma instalação física que contou com a presença dos participantes no Centro Universitário SENAC. No entanto, neste site proporcionamos uma simulação 3D de como a oficina funciona essencialmente, para que qualquer um possa vivenciar a experiência de reorganizar os fragmentos e contar sua história.</p>
+      <p class="page5-text">Hipocampo estreou como uma <strong>insta&shy;lação física</strong> que contou com a presença dos partici&shy;pantes no Centro Univer&shy;sitário SENAC. No entanto, neste site proporcio&shy;namos uma simulação 3D de como a oficina funciona essencial&shy;mente, para que qual&shy;quer um possa viven&shy;ciar a experi&shy;ência de reorga&shy;nizar os frag&shy;mentos e contar sua história.</p>
       <div class="page5-camera-control">
         <img class="page5-camera" draggable="false" src="/images/vestigios/camera-topo.webp" width="1259" height="717" alt="Câmera fotográfica antiga prateada" loading="lazy" />
         <button class="page5-shutter" type="button" aria-label="Gerar fotografia pelo disparador" aria-describedby="page5-camera-status" aria-controls="page5-revealed-photos" title="Gerar fotografia"></button>

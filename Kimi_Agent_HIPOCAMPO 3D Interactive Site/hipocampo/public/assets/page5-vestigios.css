@@ -18,18 +18,19 @@
 .page5-left { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; }
 .page5-text {
   margin: 0;
-  width: min(19.5vw, 100%);
+  width: min(16.5vw, 100%);
   font-family: "SquidBoy", sans-serif;
   font-size: clamp(1rem, 1.6vw, 1.7rem);
   line-height: 1.55;
   letter-spacing: .03em;
   text-align: justify;
-  text-align-last: left;
-  -webkit-hyphens: none;
-  hyphens: none;
+  text-align-last: center;
+  -webkit-hyphens: manual;
+  hyphens: manual;
   word-break: normal;
   overflow-wrap: normal;
 }
+.page5-text strong { font-weight: 700; }
 .page5-camera-control { position: relative; width: 21vw; aspect-ratio: 1259 / 717; max-width: none; margin-top: .4vw; line-height: 0; user-select: none; }
 .page5-camera { width: 100%; height: auto; max-width: none; margin: 0; display: block; pointer-events: none; }
 .page5-shutter {

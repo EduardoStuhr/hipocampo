@@ -703,3 +703,9 @@ final result: passed
 ### 2026-11-15 — alinhamento justificado
 - Os três textos fornecidos pelo cliente ficam justificados no desktop, tablet e celular; a última linha de cada parágrafo permanece alinhada à esquerda.
 - Mantidos fontes, conteúdo, imagens e dimensões. Build e Chromium/Playwright em 1440×900, 768×1024 e 390×844 aprovados: alinhamento computado, integridade do texto, limites sem corte e nenhum erro JavaScript.
+
+### 2026-11-15 — referência da coluna sobre a câmera
+- `#vestigios`: coluna de texto estreitada, última linha centralizada e instalação física em negrito conforme o print enviado.
+- Hifens opcionais em pontos de divisão silábica preservam as palavras e permitem quebra natural em navegadores sem dicionário de português; sem quebras de linha fixas.
+- No celular, coluna centralizada limitada a 18rem. Outras seções permanecem como aprovadas.
+- Build, sintaxe JS, diff e Chromium em desktop 1440×900, tablet 768×1024 e celular 390×844 aprovados; conteúdo conferido desconsiderando hifens opcionais, sem corte ou erro JS. Capturas locais `/tmp/reference-section-*.png`.
