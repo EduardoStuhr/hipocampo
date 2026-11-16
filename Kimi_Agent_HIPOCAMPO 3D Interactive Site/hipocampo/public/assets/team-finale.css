@@ -59,3 +59,5 @@
 
 .team-finale-bottom p { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; }
 .team-bottom-brand { display: inline-block; font: 400 clamp(2.5rem, 4vw, 4rem)/1.5 "AquilineTwo", Georgia, serif; padding-block: .25em; }
+
+@media (max-width: 767px) { #informacoes.team-finale .team-finale-bottom > a { margin-top: 1.5rem; } }

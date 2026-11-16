@@ -11,13 +11,15 @@
   }
   body > #root > header > button::before { content: "☰"; font: 1rem sans-serif; }
   body > #root > header nav { display: none; }
-  body > #root > header:has(> button[aria-expanded="true"]) nav { display: block; visibility: visible !important; opacity: 1 !important; }
+  body > #root > header:has(> button[aria-expanded="true"]) nav { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: .25rem; visibility: visible !important; opacity: 1 !important; }
   body > #root > header nav {
     top: calc(4.5rem + env(safe-area-inset-top)); left: 1.25rem; right: 1.25rem;
     min-width: 0; max-height: calc(100svh - 6rem - env(safe-area-inset-top));
-    overflow-y: auto; overscroll-behavior: contain; padding: .65rem 1rem;
+    overflow-y: auto; overscroll-behavior: contain; padding: .65rem 1rem; box-sizing: border-box;
   }
-  body > #root > header nav a { min-height: 44px; font-size: .9rem; padding-block: .65rem; }
+  body > #root > header nav a { display: flex; width: 100%; min-height: 48px; box-sizing: border-box; align-items: center; font-size: 1rem; line-height: 1.4; padding: .7rem .5rem; white-space: normal; }
+  body > #root > header nav a::after { left: .5rem; right: .5rem; bottom: .2rem; }
+  .client-project-footer .project-footer-brand + a { margin-top: 1.5rem; }
 
   html, body { overscroll-behavior-y: none; }
   /* Native sticky avoids fixed-pin gaps during asynchronous touch scrolling.

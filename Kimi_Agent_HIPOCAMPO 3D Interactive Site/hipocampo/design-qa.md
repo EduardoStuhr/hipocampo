@@ -833,3 +833,10 @@ final result: passed
 ### 2026-11-16 — destacar link da Kise Studio
 - Sublinhado permanente de 2px no link Kise Studio, com distância de .3em do texto, no desktop e no celular.
 - Build/diff e estilo computado em Chromium 1440/390px aprovados; endereço e rótulo preservados.
+
+### 2026-11-16 — menu mobile e distância do Instagram
+- Corrigido display inline-flex herdado nos links do menu: painel aberto passa a grid de uma coluna e cada link ocupa uma linha completa, com área de toque mínima de 48px e espaçamento próprio.
+- Painel mantém altura limitada e rolagem interna em telas baixas; seleção de link e Escape continuam fechando o menu. Estilo desktop preservado.
+- Acrescentada margem acima do Instagram nos dois rodapés mobile para separar o link dos traços da marca Hipocampo.
+- Build/diff e Chromium em 390×844, 320×568, 740×390 e 1440×900 aprovados: links sem sobreposição, alvos dentro da viewport, fechamento após navegação/Escape e pelo menos 24px adicionais de distância entre o link e o bloco da marca no rodapé.
+- Capturas inspecionadas: `docs/mobile-menu-separated.png` e `docs/mobile-footer-instagram-spacing.png`.
