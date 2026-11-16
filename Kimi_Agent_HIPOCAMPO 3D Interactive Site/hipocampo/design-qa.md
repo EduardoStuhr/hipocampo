@@ -829,3 +829,7 @@ final result: passed
 ### 2026-11-16 — ampliar moldura da mulher
 - Moldura de 10vw para 13vw no desktop e de 23vw para 28vw no celular. Arquivo original preservado; centro continua na divisa entre seções.
 - Build/diff e Chromium em 1440/952/390/320px aprovados: largura aumentada, quadro inteiro dentro da viewport, metade em cada seção e sem sobrepor o texto seguinte. Captura mobile inspecionada.
+
+### 2026-11-16 — destacar link da Kise Studio
+- Sublinhado permanente de 2px no link Kise Studio, com distância de .3em do texto, no desktop e no celular.
+- Build/diff e estilo computado em Chromium 1440/390px aprovados; endereço e rótulo preservados.

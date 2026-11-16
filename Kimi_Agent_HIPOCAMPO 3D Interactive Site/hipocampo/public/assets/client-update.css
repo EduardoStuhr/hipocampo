@@ -76,3 +76,5 @@ body > #root > header nav { gap: clamp(.7rem, 1.4vw, 1.6rem); }
   #fotofilmes.client-films h2 { font-size: clamp(3.75rem, 19vw, 7rem); }
   .client-project-footer { flex-direction: column; align-items: flex-start; gap: .75rem; }
 }
+
+.client-project-footer a[href="https://www.kisestudio.com.br/"] { text-decoration-line: underline; text-decoration-thickness: 2px; text-underline-offset: .3em; }
