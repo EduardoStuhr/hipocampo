@@ -779,3 +779,12 @@ final result: passed
 - Build, sintaxe JS, diff e Chromium em 952×537, 1440×900 e 390×844 aprovados: título correto, ausência de prefixos numéricos, moldura correta, divisão pela metade, fonte 4px menor e sem colisão entre coluna de texto e mapa; nenhum erro JavaScript.
 - Tipografia, espaçamento, cor azul/bordô, imagem original e conteúdo conferidos visualmente. Limite: não disponível teste em Safari físico.
 - final result: passed
+
+### 2026-11-16 — pedidos do áudio e redução do projeto
+- Reduzidos título O Hipocampo (10vw → 8,8vw) e texto azul (1,65vw → 1,48vw) no desktop; no celular, redução discreta mantendo leitura e margem. Título ganha folga superior.
+- Menu reorganizado: Projeto, Simulação 3D, Instalação, Fotofilmes, Relatos, Sobre nós. Fragmentos permanece como seção no documento; removido apenas seu link do menu porque o áudio não definiu excluir o conteúdo. Links existentes preservam handlers; menu mobile segue fechando após navegação.
+- Títulos desktop de Instalação, Fotofilmes, Sobre nós e especialmente Relatos ampliados. Iteração visual corrigiu a sobreposição do título/convite com o envelope; viewport baixo usa tamanho adaptado.
+- Texto literal mesa de luz vazia removido, mantendo contador de objetos quando houver seleção/posicionamento. Funções dos alunos compactadas no mobile sem abreviar ou excluir créditos.
+- Build, sintaxe JS, diff e Chromium em 1440×900, 952×537 e 390×844 aprovados: ordem dos seis links, Fragmentos preservado, aviso vazio ausente, menu mobile fecha, tamanho menor do título azul, papéis mais compactos e nenhum erro JavaScript. Conferência visual do título Relatos após correção de encaixe.
+- Evidências: `docs/audio-updates-project-desktop.png`, `docs/audio-updates-stories-desktop.png`, `docs/audio-updates-team-mobile.png`.
+- final result: passed

@@ -214,13 +214,18 @@ html.hipocampo-transition-white .hipocampo-editorial-cursor {
 @media (min-width: 768px) {
   #projeto.hipocampo-page2, .hipocampo-page2-inner { overflow: clip; }
   .hipocampo-page2-inner { display: block; padding: 20.5vw 0 100svh; }
-  .hipocampo-page2-title { position: absolute; top: -1vw; left: 5.8%; width: 50vw; max-width: 50vw; font-size: 10vw; line-height: 1; white-space: nowrap; overflow: visible; transform: none; }
+  .hipocampo-page2-title { position: absolute; top: 1vw; left: 5.8%; width: 50vw; max-width: 50vw; font-size: 8.8vw; line-height: 1; white-space: nowrap; overflow: visible; transform: none; }
   .hipocampo-page2-title .page2-title-word:first-child { font-size: .75em; }
-  .hipocampo-page2-copy { position: relative; top: auto; left: 5.8%; width: 30.35vw; max-width: none; margin: 0; font-size: max(12px, 1.65vw); line-height: .78; letter-spacing: 0; word-spacing: 0; transform: scaleX(1.45); transform-origin: left top; }
+  .hipocampo-page2-copy { position: relative; top: auto; left: 5.8%; width: 30.35vw; max-width: none; margin: 0; font-size: max(12px, 1.48vw); line-height: .9; letter-spacing: 0; word-spacing: 0; transform: scaleX(1.45); transform-origin: left top; }
   .page2-copy-paragraph { margin: 0 0 .8em; text-align: justify; text-align-last: justify; }
   .page2-map-stage { position: absolute; inset: 0; display: block; min-height: 0; margin: 0; padding-top: 3vw; }
   .hipocampo-memory-map { position: sticky; top: 3vw; right: auto; width: 35vw; margin: 0 3% 0 auto; }
 }
 @media (max-width: 767px) {
   .hipocampo-page2-title { font-size: clamp(3rem, 14vw, 4.5rem); line-height: 1.4; overflow: visible; padding-block: .35em; }
+}
+
+@media (max-width: 767px) {
+  .hipocampo-page2-copy { font-size: 1.0625rem; }
+  .hipocampo-page2-title { font-size: clamp(2.75rem, 12.5vw, 4rem); }
 }

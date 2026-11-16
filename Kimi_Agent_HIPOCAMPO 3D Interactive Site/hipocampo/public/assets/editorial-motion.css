@@ -521,3 +521,10 @@ body > #root > div.fixed.z-\[999\].w-6.h-6 {
     will-change: auto !important;
   }
 }
+
+/* Larger chapter titles on desktop, following the Simulação 3D hierarchy. */
+@media (min-width: 768px) {
+  #fotofilmes h2, #instalacao .installation-heading h2, #informacoes.team-finale h2 {
+    font-size: clamp(4rem, 7.3vw, 9rem); line-height: 1.35;
+  }
+}

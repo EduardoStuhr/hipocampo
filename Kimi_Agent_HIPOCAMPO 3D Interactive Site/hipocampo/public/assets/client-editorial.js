@@ -8,16 +8,22 @@ export function prepareClientNavigation(header) {
   const about = nav.querySelector('a[href="#oficina"]')
   if (about) {
     about.href = '#sobre'
-    about.lastChild.textContent = 'sobre o projeto'
+    about.textContent = 'Simulação 3D'
   }
   const team = nav.querySelector('a[href="#informacoes"]')
-  if (team) team.lastChild.textContent = 'sobre nós'
+  if (team) team.textContent = 'Sobre nós'
   const stories = document.createElement('a')
   stories.href = '#relatos'
   stories.className = team?.className || ''
-  stories.innerHTML = '<span class="text-brown-soft md:hidden">06</span>relatos'
+  stories.textContent = 'Relatos'
   nav.insertBefore(stories, team)
-  team?.querySelector('span')?.replaceChildren('07')
+  // Keep Fragmentos in the document while following the requested menu order.
+  nav.querySelector('a[href="#fragmentos"]')?.remove()
+  const orderedLinks = [['#projeto', 'Projeto'], ['#sobre', 'Simulação 3D'], ['#instalacao', 'Instalação'], ['#fotofilmes', 'Fotofilmes'], ['#relatos', 'Relatos'], ['#informacoes', 'Sobre nós']]
+  orderedLinks.forEach(([href, label]) => {
+    const link = nav.querySelector(`a[href="${href}"]`)
+    if (link) { link.textContent = label; nav.append(link) }
+  })
   // The added link participates in the existing mobile disclosure too.
   stories.addEventListener('click', () => {
     const toggle = header.querySelector('button[aria-controls="site-nav"]')

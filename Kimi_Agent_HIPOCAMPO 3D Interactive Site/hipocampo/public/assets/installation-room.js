@@ -158,7 +158,7 @@ export default function Installation() {
       photo && h('a', { href: photo.url, download: photo.name }, 'baixar foto da mesa'),
     ),
     h('div', { className: 'installation-memory' },
-      h('p', { className: 'installation-memory-label' }, placed.length ? `${placed.length} ${placed.length === 1 ? 'objeto na mesa de luz' : 'objetos na mesa de luz'}` : 'mesa de luz vazia'),
+      placed.length > 0 && h('p', { className: 'installation-memory-label' }, `${placed.length} ${placed.length === 1 ? 'objeto na mesa de luz' : 'objetos na mesa de luz'}`),
       message && h('p', { role: 'status', 'aria-live': 'polite', 'aria-atomic': true, className: 'installation-memory-text' }, message),
       selected && h('div', { className: 'installation-memory-actions' },
         h('button', { type: 'button', onClick: () => move(selected) }, 'levar à mesa de luz'),

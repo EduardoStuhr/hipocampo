@@ -45,7 +45,7 @@
   .team-credit.is-active .team-photo-window img, .team-photo-window:focus-visible img { transform: none; }
   .team-photo-window img { border-radius: .75rem; }
   #informacoes.team-finale .team-credit h3 { margin-top: 1.1rem; font-size: 1.1rem; }
-  .team-credit-roles { font-size: .95rem; line-height: 1.5; }
+  .team-credit-roles { max-width: none; font-size: .85rem; line-height: 1.35; }
   .team-finale-bottom { display: block; }
   .team-finale-bottom a { margin-top: .75rem; }
 }
@@ -54,3 +54,5 @@
   .team-photo-window img, .team-revealed .team-photo-window img { opacity: 1; transform: none; transition: none; }
   .team-credit.is-active .team-photo-window img, .team-photo-window:focus-visible img, .team-photo-window:hover img { transform: none; }
 }
+
+@media (min-width: 768px) { #informacoes.team-finale h2 { font-size: clamp(4rem, 7.3vw, 9rem); line-height: 1.35; } }
