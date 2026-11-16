@@ -44,7 +44,7 @@
   .hipocampo-memory-line .memory-char:nth-child(n+24) { display: none !important; }
 
   .hipocampo-page2-inner { padding: 6rem 1.25rem 0; overflow: visible; }
-  .hipocampo-page2-title { width: 100%; max-width: 100%; font-size: clamp(3rem, 15vw, 7rem); line-height: 1.8; white-space: nowrap; overflow: visible; box-sizing: border-box; padding: .45em .12em; }
+  .hipocampo-page2-title { width: 100%; max-width: 100%; font-size: clamp(3rem, 16vw, 7.5rem); line-height: 1.8; white-space: nowrap; overflow: visible; box-sizing: border-box; padding: .45em .12em; }
   .hipocampo-page2-title .page2-title-word { display: inline; will-change: auto; transform: none !important; }
   .hipocampo-page2-title .page2-title-word:first-child { font-size: .75em; }
   .hipocampo-page2-copy { margin-top: 2.5rem; font-size: 1.0625rem; letter-spacing: 0; line-height: 1.65; }

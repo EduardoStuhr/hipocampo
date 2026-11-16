@@ -797,3 +797,7 @@ final result: passed
 - Título mobile mantém tamanho ampliado e ganha folga de linha e padding. Palavras passam a inline sem camada will-change/transform, e a animação do celular usa somente opacidade do título completo, preservando a animação desktop.
 - O texto Aquiline possui traços fora da caixa tipográfica; evitada a composição por palavras transformadas e liberado overflow do contêiner interno no mobile.
 - Build/sintaxe/diff e Chromium em 320/390/430/767/1440px aprovados; palavras dentro da viewport e desktop preservado. Captura `docs/project-mobile-title-flourishes.png` inspecionada com traços completos. Safari físico não disponível nesta validação.
+
+### 2026-11-16 — pequeno aumento adicional no mobile
+- Título mobile de 15vw para 16vw (~6,7%), preservando folga tipográfica e ausência de transformações por palavra.
+- Build/diff e Chromium em 320/390/430/767/1440px aprovados: título cabe na largura disponível e desktop permanece igual. Captura de 390px inspecionada com todos os traços.
