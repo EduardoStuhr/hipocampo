@@ -857,3 +857,7 @@ final result: passed
 - Build/sintaxe/diff aprovados. Teste permanente em 1440×900 e 390×844 valida cinco grupos de lembranças, ausência de legenda, abertura/fechamento, teclado, portas inteiras e pausa da renderização em repouso/fora da tela. Modelo de 26.050 triângulos dentro do orçamento de 28 mil. Preferência por movimento reduzido e perda de contexto com foto estática também aprovadas.
 - Evidências atualizadas: `docs/fridge-showcase-closed.png`, `docs/fridge-showcase-open-mobile.png`, `docs/fridge-showcase-realistic-open.png`.
 - final result: passed
+
+### 2026-11-16 — restaurar abertura somente com H
+- Restaurados o H, o enquadramento quadrado e o script de centralização usado antes da troca pelo nome completo. Mantidos o tempo da animação e a saída da tela para revelar a página.
+- Build, sintaxe e diff aprovados. Chromium em 1440×900/390×844 confirma apenas H, enquadramento centralizado e término automático da abertura; restante do site preservado.
