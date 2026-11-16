@@ -788,3 +788,7 @@ final result: passed
 - Build, sintaxe JS, diff e Chromium em 1440×900, 952×537 e 390×844 aprovados: ordem dos seis links, Fragmentos preservado, aviso vazio ausente, menu mobile fecha, tamanho menor do título azul, papéis mais compactos e nenhum erro JavaScript. Conferência visual do título Relatos após correção de encaixe.
 - Evidências: `docs/audio-updates-project-desktop.png`, `docs/audio-updates-stories-desktop.png`, `docs/audio-updates-team-mobile.png`.
 - final result: passed
+
+### 2026-11-16 — ampliar O Hipocampo somente no mobile
+- Substituída a regra mobile de 7,5vw (mínimo 32px) por 15vw (48–112px), com O proporcionalmente menor, linha única e folga para os traços da AquilineTwo.
+- Build/diff e Chromium em 320, 390, 430, 767 e 1440px aprovados: palavras dentro da largura disponível e tamanho desktop preservado. Captura `/tmp/project-title-390.png` inspecionada sem cortes.
