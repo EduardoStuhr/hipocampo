@@ -6,15 +6,13 @@ export function mountFridgeShowcase(figure) {
   const button = document.createElement('button')
   button.type = 'button'
   button.className = 'fridge-showcase-toggle'
-  button.setAttribute('aria-label', 'Abrir geladeira')
+  button.setAttribute('aria-label', 'Abrir geladeira de memórias')
+  button.setAttribute('aria-description', 'Um arquivo de lembranças: fotografias do acervo, cartas, uma chave e uma fita cassete.')
   button.setAttribute('aria-pressed', 'false')
-  const label = document.createElement('span')
-  label.className = 'fridge-showcase-label'
-  label.textContent = 'abrir geladeira'
-  button.append(label)
   figure.append(button)
   let renderer, scene, camera, model, resize, observer, texture, environment, frame = 0
   let aspect = 1, projectedBounds = null
+  const memoryItems = []
   let open = false, visible = false, angle = 0, target = 0, previous = 0, disposed = false
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const doors = [], geometries = new Set(), materials = new Set(), maps = new Set()
@@ -118,9 +116,78 @@ export function mountFridgeShowcase(figure) {
     environment = pmrem.fromScene(studio, .06)
     scene.environment = environment.texture; pmrem.dispose()
   }
+  const addMemoryArchive = async body => {
+    // Reuse the actual archive images already present on the site.
+    const archiveMaps = await Promise.all(['/images/trail/photo-1.webp', '/images/trail/photo-2.webp', '/images/sobre/gif-3.webp'].map(async url => {
+      try {
+        const map = await new THREE.TextureLoader().loadAsync(url)
+        if (disposed) { map.dispose(); return null }
+        map.colorSpace = THREE.SRGBColorSpace; maps.add(map); return map
+      } catch { return null }
+    }))
+    if (disposed) return
+    const paper = material({ color: '#e9ddc2', roughness: .88, bumpMap: grain, bumpScale: .001 })
+    const cardBack = material({ color: '#ad9370', roughness: .9 })
+    const brass = material({ color: '#b89c61', metalness: .76, roughness: .3 })
+    const tapeCase = material({ color: '#3a3027', roughness: .38, metalness: .06 })
+    const twine = material({ color: '#9a7c50', roughness: .96 })
+    const card = (parent, map, w, h, x, y, z, tilt = 0, reverse = false) => {
+      const group = new THREE.Group(); group.position.set(x, y, z); group.rotation.z = tilt
+      if (reverse) group.rotation.y = Math.PI
+      parent.add(group)
+      rounded(group, w, h, .016, .012, paper)
+      box(group, w - .025, h - .025, .005, cardBack, 0, 0, -.01)
+      if (map) {
+        const print = material({ map, roughness: .84, metalness: 0, envMapIntensity: .2 })
+        mesh(group, new THREE.PlaneGeometry(w * .86, h * .76), print, 0, h * .035, .009)
+      }
+      return group
+    }
+    // Photographs stand on the upper rack like a small album of suspended time.
+    card(body, archiveMaps[0], .66, .47, -.20, 1.145, .18, -.08)
+    card(body, archiveMaps[1], .35, .33, .36, 1.10, .10, .1)
+    card(body, archiveMaps[1], .43, .38, -.30, -.16, .17, -.12)
+    memoryItems.push('fotografias do acervo')
+    // A tied bundle of letters, on the first shelf.
+    const letters = new THREE.Group(); letters.position.set(-.22, .18, .04); letters.rotation.y = -.12; body.add(letters)
+    for (let i = 0; i < 4; i++) {
+      const sheet = rounded(letters, .62, .018, .39, .007, paper, (i % 2) * .013, i * .019, 0)
+      sheet.rotation.y = i % 2 ? .035 : -.025
+    }
+    if (archiveMaps[2]) {
+      const letter = material({ map: archiveMaps[2], roughness: .94 })
+      const top = mesh(letters, new THREE.PlaneGeometry(.56, .34), letter, 0, .078, 0); top.rotation.x = -Math.PI / 2
+    }
+    rod(letters, [[0, -.005, -.205], [0, .09, -.205], [0, .09, .205], [0, -.005, .205], [0, -.005, -.205]], .007, twine)
+    memoryItems.push('cartas guardadas')
+    // The key hints at the house and the cassette at a remembered voice.
+    const key = new THREE.Group(); key.position.set(.30, .19, .12); body.add(key)
+    const ring = mesh(key, new THREE.TorusGeometry(.05, .011, 6, 16), brass); ring.rotation.x = Math.PI / 2
+    box(key, .19, .016, .017, brass, .13)
+    for (const x of [.18, .215]) box(key, .025, .016, .04, brass, x, 0, .018)
+    memoryItems.push('chave da casa')
+    const jar = new THREE.Group(); jar.position.set(.36, -.19, -.015); body.add(jar)
+    mesh(jar, new THREE.CylinderGeometry(.125, .13, .31, 20, 1, true), glass)
+    mesh(jar, new THREE.CylinderGeometry(.14, .14, .026, 20), chrome, 0, .17)
+    for (const [x, z, a] of [[-.037, -.025, -.15], [.04, .035, .14]]) {
+      const roll = mesh(jar, new THREE.CylinderGeometry(.024, .024, .23, 10), paper, x, 0, z); roll.rotation.z = a
+    }
+    memoryItems.push('frasco de lembranças')
+    const cassette = new THREE.Group(); cassette.position.set(.06, -.69, .18); cassette.rotation.z = .05; body.add(cassette)
+    rounded(cassette, .65, .33, .07, .025, tapeCase)
+    rounded(cassette, .55, .22, .006, .012, paper, 0, .015, .039)
+    for (const x of [-.15, .15]) {
+      mesh(cassette, new THREE.TorusGeometry(.052, .012, 6, 16), dark, x, .03, .047)
+      mesh(cassette, new THREE.CircleGeometry(.022, 12), chrome, x, .03, .048)
+    }
+    box(cassette, .45, .025, .006, tapeCase, 0, -.07, .047)
+    memoryItems.push('fita cassete')
+    // The original handwriting also appears among the papers in the door rack.
+    return { card, map: archiveMaps[2] }
+  }
   const setSize = () => {
     if (!renderer) return
-    const width = button.clientWidth, height = Math.max(1, button.clientHeight - 24)
+    const width = button.clientWidth, height = Math.max(1, button.clientHeight)
     renderer.setSize(width, height, false)
     aspect = width / height
     camera.left = -2 * aspect; camera.right = 2 * aspect
@@ -132,7 +199,6 @@ export function mountFridgeShowcase(figure) {
     figure.classList.remove('is-3d-ready')
     button.disabled = true
     button.setAttribute('aria-label', 'Geladeira antiga verde')
-    label.textContent = ''
   }
   const build = async () => {
     if (renderer || disposed) return
@@ -217,6 +283,8 @@ export function mountFridgeShowcase(figure) {
       if (disposed) { texture.dispose(); return }
       texture.colorSpace = THREE.SRGBColorSpace
       maps.add(texture)
+      const memoryArchive = await addMemoryArchive(body)
+      if (disposed) return
       for (const [y, h, imageTop, imageHeight] of [[.97, 1, 20, 79], [-.51, 1.9, 99, 143]]) {
         const map = texture.clone()
         map.repeat.set(108 / 146, imageHeight / 248)
@@ -236,6 +304,7 @@ export function mountFridgeShowcase(figure) {
           for (const x of [.18, 1.26]) rounded(hinge, .035, .13, .21, .012, cream, x, shelfY + .05, -.24)
           rounded(hinge, 1.09, .018, .025, .006, chrome, .72, shelfY + .12, -.34)
         }
+        if (h > 1.5) memoryArchive.card(hinge, memoryArchive.map, .49, .30, .72, .73, -.20, .05, true)
         const handleY = h > 1.5 ? .74 : -.35
         rod(hinge, [[.16, handleY, .11], [.21, handleY + .018, .19], [.57, handleY + .018, .19], [.62, handleY, .11]], .025, chrome)
       }
@@ -249,14 +318,13 @@ export function mountFridgeShowcase(figure) {
     if (button.disabled) return
     open = !open; target = open ? -1.8 : 0
     button.setAttribute('aria-pressed', String(open))
-    button.setAttribute('aria-label', open ? 'Fechar geladeira' : 'Abrir geladeira')
-    label.textContent = open ? 'fechar geladeira' : 'abrir geladeira'
+    button.setAttribute('aria-label', open ? 'Fechar geladeira de memórias' : 'Abrir geladeira de memórias')
     figure.dataset.fridgeOpen = String(open)
     request()
   }
   const lost = event => { event.preventDefault(); cancelAnimationFrame(frame); frame = 0; fallback() }
   const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; previous = 0 } else request() }
-  figure.fridgeShowcase = { getDiagnostics: () => ({ open, angle, target, visible, frames: renderer?.info.render.frame || 0, triangles: renderer?.info.render.triangles || 0, ready: figure.classList.contains('is-3d-ready'), projectedBounds }) }
+  figure.fridgeShowcase = { getDiagnostics: () => ({ open, angle, target, visible, frames: renderer?.info.render.frame || 0, triangles: renderer?.info.render.triangles || 0, ready: figure.classList.contains('is-3d-ready'), projectedBounds, memoryItems: [...memoryItems] }) }
   const cleanup = () => {
     if (disposed) return
     disposed = true; delete figure.fridgeShowcase; cancelAnimationFrame(frame)

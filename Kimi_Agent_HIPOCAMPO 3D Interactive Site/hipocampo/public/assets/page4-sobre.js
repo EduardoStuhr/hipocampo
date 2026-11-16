@@ -77,7 +77,7 @@ function init() {
   const near = new IntersectionObserver(entries => {
     if (!entries.some(entry => entry.isIntersecting)) return
     near.disconnect()
-    import('./fridge-showcase.js?v=realistic-enamel-2').then(({ mountFridgeShowcase }) => mountFridgeShowcase(fridge)).catch(() => {})
+    import('./fridge-showcase.js?v=memory-archive-3').then(({ mountFridgeShowcase }) => mountFridgeShowcase(fridge)).catch(() => {})
   }, { rootMargin: '500px 0px' })
   near.observe(fridge)
   window.dispatchEvent(new Event('resize'))

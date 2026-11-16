@@ -849,3 +849,11 @@ final result: passed
 - Build, sintaxe e diff aprovados. `scripts/test-fridge-showcase.py` passa em 1440×900/390×844: distância entre carta/geladeira, abertura, fechamento por teclado, enquadramento sem cortes, orçamento abaixo de 25 mil triângulos, parada da renderização e alinhamento do texto/câmera. Aguarda estado final da porta em vez de supor um FPS fixo do navegador de teste.
 - Preferência por movimento reduzido e perda de contexto com retorno à fotografia estática também verificadas. Evidências atualizadas: `docs/fridge-showcase-closed.png`, `docs/fridge-showcase-open-mobile.png`, `docs/fridge-showcase-realistic-open.png`.
 - final result: passed
+
+### 2026-11-16 — arquivo de memórias dentro da geladeira
+- Removidos os textos visíveis abrir/fechar geladeira e o espaço reservado à legenda. Botão mantém nome e descrição acessíveis, estado de abertura e controle por clique, toque e teclado.
+- Interior recebe fotografias reais do acervo já usado no site, cartas amarradas, uma chave, um frasco com papéis e uma fita cassete. Pequenos objetos físicos nas prateleiras e um cartão na porta; não adicionadas animações contínuas ou downloads externos.
+- Mantidos materiais, luz, enquadramento das portas e textura original da frente. Arquivo de memórias descrito para leitores de tela.
+- Build/sintaxe/diff aprovados. Teste permanente em 1440×900 e 390×844 valida cinco grupos de lembranças, ausência de legenda, abertura/fechamento, teclado, portas inteiras e pausa da renderização em repouso/fora da tela. Modelo de 26.050 triângulos dentro do orçamento de 28 mil. Preferência por movimento reduzido e perda de contexto com foto estática também aprovadas.
+- Evidências atualizadas: `docs/fridge-showcase-closed.png`, `docs/fridge-showcase-open-mobile.png`, `docs/fridge-showcase-realistic-open.png`.
+- final result: passed

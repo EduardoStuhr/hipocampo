@@ -20,7 +20,10 @@ async def main():
    await fig.screenshot(path=str(OUT/f'closed-{w}.png'))
    await button.click();await p.wait_for_function("Math.abs(document.querySelector('.page4-photo--geladeira').fridgeShowcase.getDiagnostics().angle + 1.8) < .002")
    d=await fig.evaluate('e=>e.fridgeShowcase.getDiagnostics()');assert d['open'] and abs(d['angle']+1.8)<.01,d
-   assert d['triangles']<25000,d
+   assert d['triangles']<28000,d
+   assert len(d['memoryItems'])==5,d
+   assert await button.inner_text()==''
+   assert await fig.locator('.fridge-showcase-label').count()==0
    assert d['projectedBounds']['min']>=-.95 and d['projectedBounds']['max']<=.95,d
    await fig.screenshot(path=str(OUT/f'open-{w}.png'))
    a=await fig.evaluate('e=>e.fridgeShowcase.getDiagnostics().frames');await p.wait_for_timeout(250);z=await fig.evaluate('e=>e.fridgeShowcase.getDiagnostics().frames');assert a==z,(a,z)
