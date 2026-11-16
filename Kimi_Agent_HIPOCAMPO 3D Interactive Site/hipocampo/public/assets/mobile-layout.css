@@ -68,9 +68,9 @@
   .page4-photo--envelope { touch-action: manipulation; }
 
   #vestigios.hipocampo-page5 { min-height: 0; grid-template-columns: minmax(0, 1fr); padding: 6rem 1.25rem 2.5rem; gap: 2.25rem; }
-  .page5-left { min-width: 0; }
-  .page5-text { width: min(calc(100% - 2rem), 20rem); margin-inline: auto; font-size: 1.125rem; line-height: 1.65; letter-spacing: 0; text-align: justify; text-align-last: left; text-wrap: pretty; -webkit-hyphens: none; hyphens: none; word-break: normal; overflow-wrap: normal; }
-  .page5-camera-control { width: min(calc(100% - 2rem), 20rem); margin-inline: auto; margin-top: 1.5rem; }
+  .page5-left { min-width: 0; width: min(calc(100% - 2rem), 20rem); margin-inline: auto; }
+  .page5-text { width: 78.571%; margin-inline: auto; font-size: 1.125rem; line-height: 1.65; letter-spacing: 0; text-align: justify; text-align-last: center; text-wrap: pretty; -webkit-hyphens: none; hyphens: none; word-break: normal; overflow-wrap: normal; }
+  .page5-camera-control { width: 100%; margin-inline: auto; margin-top: 1rem; }
   .page5-shutter { min-width: 44px; min-height: 44px; }
   /* One proportional composition: all offsets follow the same canvas,
      so the paper, film and signature keep their overlaps on every phone. */

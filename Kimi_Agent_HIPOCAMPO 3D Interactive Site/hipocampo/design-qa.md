@@ -809,3 +809,9 @@ final result: passed
 - Primeira captura mostrou porta aberta cortada à esquerda: adicionado enquadramento pela projeção de todos os vértices dos meshes, preservando 10% de folga lateral. Recapturas `docs/fridge-showcase-closed.png` e `docs/fridge-showcase-open-mobile.png` aprovadas.
 - Build, sintaxe JS e diff aprovados. `scripts/test-fridge-showcase.py` passa em 1440×900/390×844: abre, fecha pelo teclado, mantém portas dentro da projeção, para de renderizar e alinha texto/câmera. Teste adicional de movimento reduzido e perda de contexto aprovado, sem erro JavaScript no fluxo normal.
 - final result: passed
+
+### 2026-11-16 — centralização visual como no computador
+- Corrigida a interpretação anterior: no PC o texto tem 16,5/21 da largura da câmera, não a mesma largura. Replicada essa relação (78,571%) no mobile dentro de um único grupo centralizado com margens próprias.
+- Última linha centralizada como no desktop; demais linhas continuam justificadas e sem hifenização no mobile. Câmera preserva o botão no disparador.
+- Build/diff e Chromium em 320/390/430/1440px aprovados: centros coincidem com tolerância inferior a 1px, proporção igual à do PC e câmera com pelo menos 36px de margem lateral no celular. Captura `docs/camera-centered-mobile.png` inspecionada.
+- Teste existente da geladeira atualizado para conferir centro e proporção, substituindo a expectativa anterior de larguras iguais.

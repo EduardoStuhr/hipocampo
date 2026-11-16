@@ -26,7 +26,8 @@ async def main():
    await go('#vestigios')
    if w<768:
     text=await p.locator('.page5-text').bounding_box();camera=await p.locator('.page5-camera-control').bounding_box()
-    assert abs(text['x']-camera['x'])<1 and abs(text['width']-camera['width'])<1,(text,camera)
+    assert abs(text['x']+text['width']/2-camera['x']-camera['width']/2)<1,(text,camera)
+    assert abs(text['width']/camera['width']-16.5/21)<.01,(text,camera)
     assert text['x']>=32
    a=await fig.evaluate('e=>e.fridgeShowcase.getDiagnostics().frames');await p.wait_for_timeout(250);z=await fig.evaluate('e=>e.fridgeShowcase.getDiagnostics().frames');assert a==z
    assert not errors,errors
