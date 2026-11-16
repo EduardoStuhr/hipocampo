@@ -825,3 +825,7 @@ final result: passed
 - Evidências `docs/films-client-copy-mobile.png`, `docs/footer-social-links-mobile.png`, `docs/intro-full-wordmark-mobile.png`.
 - Sem alteração de controle de acesso ou senha.
 - final result: passed
+
+### 2026-11-16 — ampliar moldura da mulher
+- Moldura de 10vw para 13vw no desktop e de 23vw para 28vw no celular. Arquivo original preservado; centro continua na divisa entre seções.
+- Build/diff e Chromium em 1440/952/390/320px aprovados: largura aumentada, quadro inteiro dentro da viewport, metade em cada seção e sem sobrepor o texto seguinte. Captura mobile inspecionada.

@@ -52,7 +52,7 @@
   position: absolute; inset: 0; opacity: 0; transition: opacity .15s;
 }
 .page4-photo.is-playing .page4-frame { opacity: 1; }
-.page4-photo--retrato { left: 9vw; bottom: 0; width: 10vw; min-width: 80px; aspect-ratio: 393/505; }
+.page4-photo--retrato { left: 9vw; bottom: 0; width: 13vw; min-width: 80px; aspect-ratio: 393/505; }
 .page4-photo--retrato { box-sizing: border-box; padding: 0; border: 0; background: transparent; }
 .page4-photo--retrato img { object-fit: contain; }
 .page4-photo--envelope { right: 20vw; top: 0; width: 20vw; aspect-ratio: 1; }

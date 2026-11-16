@@ -64,7 +64,7 @@
   .page4-photos { height: 85vw; max-height: 34rem; margin-top: 1rem; }
   .page4-photo--envelope { left: 0; right: auto; top: 0; width: 50vw; }
   .page4-photo--geladeira { right: 2vw; top: 24vw; width: 34vw; }
-  #sobre .page4-photo--retrato { left: .75rem; width: 23vw; min-width: 74px; transform: translateY(50%); }
+  #sobre .page4-photo--retrato { left: .75rem; width: 28vw; min-width: 74px; transform: translateY(50%); }
   .page4-photo--envelope { touch-action: manipulation; }
 
   #vestigios.hipocampo-page5 { min-height: 0; grid-template-columns: minmax(0, 1fr); padding: 6rem 1.25rem 2.5rem; gap: 2.25rem; }
