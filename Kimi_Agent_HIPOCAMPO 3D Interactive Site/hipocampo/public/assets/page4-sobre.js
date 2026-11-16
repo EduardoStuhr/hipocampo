@@ -71,7 +71,15 @@ function init() {
   const casa = document.querySelector('#casa')
   if (!casa) return false
   if (document.querySelector('#sobre')) return true
-  casa.after(buildSection())
+  const section = buildSection()
+  casa.after(section)
+  const fridge = section.querySelector('.page4-photo--geladeira')
+  const near = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return
+    near.disconnect()
+    import('./fridge-showcase.js?v=fridge-interactive-1').then(({ mountFridgeShowcase }) => mountFridgeShowcase(fridge)).catch(() => {})
+  }, { rootMargin: '500px 0px' })
+  near.observe(fridge)
   window.dispatchEvent(new Event('resize'))
   return true
 }

@@ -801,3 +801,11 @@ final result: passed
 ### 2026-11-16 — pequeno aumento adicional no mobile
 - Título mobile de 15vw para 16vw (~6,7%), preservando folga tipográfica e ausência de transformações por palavra.
 - Build/diff e Chromium em 320/390/430/767/1440px aprovados: título cabe na largura disponível e desktop permanece igual. Captura de 390px inspecionada com todos os traços.
+
+### 2026-11-16 — geladeira editorial interativa e alinhamento da câmera
+- No mobile, texto e câmera de #vestigios compartilham largura `min(calc(100% - 2rem), 20rem)` e margens automáticas, alinhando os dois lados e o centro.
+- Geladeira da colagem aumentada (14vw desktop, 34vw mobile), ao lado e abaixo da carta. Miniatura Three.js independente da instalação usa a imagem enviada como textura das fachadas, duas portas articuladas e prateleiras internas; inicia fechada e abre/fecha por clique, toque, Enter ou Espaço.
+- Carregamento por proximidade, 300 triângulos, sem sombras e DPR limitado a 1,25. Renderização somente durante abertura/fechamento, redimensionamento ou retorno à tela; nenhum quadro contínuo em repouso ou fora de vista. Recursos descartados ao sair; perda de contexto mantém a fotografia original como alternativa estática. Movimento reduzido troca a posição sem animação.
+- Primeira captura mostrou porta aberta cortada à esquerda: adicionado enquadramento pela projeção de todos os vértices dos meshes, preservando 10% de folga lateral. Recapturas `docs/fridge-showcase-closed.png` e `docs/fridge-showcase-open-mobile.png` aprovadas.
+- Build, sintaxe JS e diff aprovados. `scripts/test-fridge-showcase.py` passa em 1440×900/390×844: abre, fecha pelo teclado, mantém portas dentro da projeção, para de renderizar e alinha texto/câmera. Teste adicional de movimento reduzido e perda de contexto aprovado, sem erro JavaScript no fluxo normal.
+- final result: passed
