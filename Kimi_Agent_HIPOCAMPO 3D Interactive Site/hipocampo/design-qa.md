@@ -840,3 +840,12 @@ final result: passed
 - Acrescentada margem acima do Instagram nos dois rodapés mobile para separar o link dos traços da marca Hipocampo.
 - Build/diff e Chromium em 390×844, 320×568, 740×390 e 1440×900 aprovados: links sem sobreposição, alvos dentro da viewport, fechamento após navegação/Escape e pelo menos 24px adicionais de distância entre o link e o bloco da marca no rodapé.
 - Capturas inspecionadas: `docs/mobile-menu-separated.png` e `docs/mobile-footer-instagram-spacing.png`.
+
+### 2026-11-16 — acabamento realista da geladeira e afastamento da carta
+- Carta deslocada 5vw para a esquerda no desktop; no mobile, composição da carta reduzida de 50vw para 46vw e geladeira deslocada para a direita/um pouco abaixo. Conferido intervalo mínimo de 24px entre suas caixas em 1440/390px.
+- Substituída a construção de caixas retas por carcaça e portas arredondadas, revestimento interno contínuo, borrachas de vedação, dobradiças, puxadores curvos, porta-prateleiras, vidro, gavetas, termostato e luminária interna. Imagem original preservada como textura das frentes, sem recompressão ou nova geração da fotografia.
+- Materiais de esmalte/metal recebem microrrelevo, reflexos de estúdio e sombras internas. Fundo da cavidade recebe escurecimento de contato; sombra de apoio difusa evita recorte duro no fundo branco. Iluminação e ambiente calculados localmente, sem baixar imagens externas.
+- Modelo com 21.200 triângulos, sombra 512px e DPR máximo 1,25. Continua renderizando somente em transições/resize e parando em repouso ou fora da tela. Ambiente e mapas de sombra descartados na limpeza.
+- Build, sintaxe e diff aprovados. `scripts/test-fridge-showcase.py` passa em 1440×900/390×844: distância entre carta/geladeira, abertura, fechamento por teclado, enquadramento sem cortes, orçamento abaixo de 25 mil triângulos, parada da renderização e alinhamento do texto/câmera. Aguarda estado final da porta em vez de supor um FPS fixo do navegador de teste.
+- Preferência por movimento reduzido e perda de contexto com retorno à fotografia estática também verificadas. Evidências atualizadas: `docs/fridge-showcase-closed.png`, `docs/fridge-showcase-open-mobile.png`, `docs/fridge-showcase-realistic-open.png`.
+- final result: passed

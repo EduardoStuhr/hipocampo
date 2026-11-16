@@ -55,7 +55,7 @@
 .page4-photo--retrato { left: 9vw; bottom: 0; width: 13vw; min-width: 80px; aspect-ratio: 393/505; }
 .page4-photo--retrato { box-sizing: border-box; padding: 0; border: 0; background: transparent; }
 .page4-photo--retrato img { object-fit: contain; }
-.page4-photo--envelope { right: 20vw; top: 0; width: 20vw; aspect-ratio: 1; }
+.page4-photo--envelope { right: 25vw; top: 0; width: 20vw; aspect-ratio: 1; }
 .page4-photo--geladeira { right: 8vw; top: 8vw; width: 14vw; aspect-ratio: 146/248; }
 .page4-photo--geladeira img { object-fit: contain; }
 /* Rotate only the paper: its side opening becomes the upper opening.

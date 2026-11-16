@@ -13,14 +13,14 @@ export function mountFridgeShowcase(figure) {
   label.textContent = 'abrir geladeira'
   button.append(label)
   figure.append(button)
-  let renderer, scene, camera, model, resize, observer, texture, frame = 0
+  let renderer, scene, camera, model, resize, observer, texture, environment, frame = 0
   let aspect = 1, projectedBounds = null
   let open = false, visible = false, angle = 0, target = 0, previous = 0, disposed = false
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
   const doors = [], geometries = new Set(), materials = new Set(), maps = new Set()
   const paint = () => {
     if (disposed || !renderer || !visible || document.hidden) return
-    const now = performance.now(), dt = previous ? Math.min((now - previous) / 1000, .05) : 1 / 60
+    const now = performance.now(), dt = previous ? Math.min((now - previous) / 1000, .12) : 1 / 60
     previous = now
     angle = reduced.matches ? target : angle + (target - angle) * (1 - Math.exp(-7 * dt))
     if (Math.abs(target - angle) < .002) angle = target
@@ -51,17 +51,72 @@ export function mountFridgeShowcase(figure) {
   }
   const request = () => { if (renderer && doors.length && !frame && visible && !document.hidden && !disposed) frame = requestAnimationFrame(() => { frame = 0; paint() }) }
   const material = options => { const m = new THREE.MeshStandardMaterial(options); materials.add(m); return m }
-  const green = material({ color: '#8d9b53', roughness: .36, metalness: .22 })
-  const cream = material({ color: '#eee9d4', roughness: .8 })
-  const chrome = material({ color: '#c3c5b8', roughness: .3, metalness: .65 })
-  const dark = material({ color: '#576139', roughness: .7 })
-  const box = (parent, w, h, d, mat, x = 0, y = 0, z = 0) => {
-    const geometry = new THREE.BoxGeometry(w, h, d)
-    geometries.add(geometry)
-    const mesh = new THREE.Mesh(geometry, mat)
-    mesh.position.set(x, y, z)
-    parent.add(mesh)
-    return mesh
+  // A fine, deterministic enamel finish, not an extra photographic replacement.
+  const grainData = new Uint8Array(96 * 96 * 4)
+  let seed = 9431
+  for (let i = 0; i < grainData.length; i += 4) {
+    seed = (seed * 1664525 + 1013904223) >>> 0
+    const v = 220 + (seed % 30)
+    grainData[i] = grainData[i + 1] = grainData[i + 2] = v; grainData[i + 3] = 255
+  }
+  const grain = new THREE.DataTexture(grainData, 96, 96, THREE.RGBAFormat)
+  grain.wrapS = grain.wrapT = THREE.RepeatWrapping; grain.needsUpdate = true; maps.add(grain)
+  const green = material({ color: '#89934a', roughness: .26, metalness: .17, bumpMap: grain, bumpScale: .003, envMapIntensity: .7 })
+  const cream = material({ color: '#e5dfc8', roughness: .43, bumpMap: grain, bumpScale: .002, envMapIntensity: .35 })
+  const chrome = material({ color: '#d4d4ca', roughness: .17, metalness: .92, envMapIntensity: 1.2 })
+  const dark = material({ color: '#383b2d', roughness: .82 })
+  const glass = material({ color: '#c8d4cc', roughness: .12, metalness: .2, transparent: true, opacity: .28, depthWrite: false })
+  const track = geometry => { geometries.add(geometry); return geometry }
+  const mesh = (parent, geometry, mat, x = 0, y = 0, z = 0) => {
+    const item = new THREE.Mesh(track(geometry), mat)
+    item.position.set(x, y, z); item.castShadow = mat !== glass; item.receiveShadow = true
+    parent.add(item); return item
+  }
+  const box = (parent, w, h, d, mat, x = 0, y = 0, z = 0) => mesh(parent, new THREE.BoxGeometry(w, h, d), mat, x, y, z)
+  const outline = (w, h, radius) => {
+    const r = Math.min(radius, w / 2, h / 2), x = -w / 2, y = -h / 2
+    const shape = new THREE.Shape()
+    shape.moveTo(x + r, y); shape.lineTo(x + w - r, y)
+    shape.quadraticCurveTo(x + w, y, x + w, y + r); shape.lineTo(x + w, y + h - r)
+    shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h); shape.lineTo(x + r, y + h)
+    shape.quadraticCurveTo(x, y + h, x, y + h - r); shape.lineTo(x, y + r)
+    shape.quadraticCurveTo(x, y, x + r, y)
+    return shape
+  }
+  const rounded = (parent, w, h, d, radius, mat, x = 0, y = 0, z = 0) => {
+    const bevel = Math.min(.025, d / 3, radius / 2)
+    const g = new THREE.ExtrudeGeometry(outline(w - bevel * 2, h - bevel * 2, Math.max(.005, radius - bevel)), {
+      depth: d - bevel * 2, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 3, curveSegments: 5, steps: 1,
+    })
+    g.translate(0, 0, -d / 2 + bevel)
+    return mesh(parent, g, mat, x, y, z)
+  }
+  const rim = (parent, w, h, d, radius, wall, mat, x = 0, y = 0, z = 0) => {
+    const shape = outline(w, h, radius)
+    shape.holes.push(new THREE.Path(outline(w - wall * 2, h - wall * 2, Math.max(.025, radius - wall)).getPoints(5).reverse()))
+    const g = new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: false, curveSegments: 5, steps: 1 })
+    g.translate(0, 0, -d / 2)
+    return mesh(parent, g, mat, x, y, z)
+  }
+  const rod = (parent, points, radius, mat) => mesh(parent, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p))), 12, radius, 6, false), mat)
+  const facade = (parent, w, h, map, x, z) => {
+    const g = new THREE.ShapeGeometry(outline(w, h, .07), 8)
+    const positions = g.attributes.position, uv = g.attributes.uv
+    for (let i = 0; i < positions.count; i++) uv.setXY(i, (positions.getX(i) + w / 2) / w, (positions.getY(i) + h / 2) / h)
+    // Preserve the photographed patina and reflections on the front doors.
+    const face = new THREE.MeshBasicMaterial({ map, toneMapped: false })
+    materials.add(face); return mesh(parent, g, face, x, 0, z)
+  }
+  const makeEnvironment = () => {
+    const studio = new THREE.Scene(); studio.background = new THREE.Color('#a5ada4')
+    const white = new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 4, 3.8), side: THREE.DoubleSide })
+    materials.add(white)
+    for (const [x, y, z, w, h] of [[-4, 2, 3, 3, 6], [3, 3, 1, 2, 5], [0, 5, -2, 5, 3]]) {
+      const panel = mesh(studio, new THREE.PlaneGeometry(w, h), white, x, y, z); panel.lookAt(0, 0, 0)
+    }
+    const pmrem = new THREE.PMREMGenerator(renderer)
+    environment = pmrem.fromScene(studio, .06)
+    scene.environment = environment.texture; pmrem.dispose()
   }
   const setSize = () => {
     if (!renderer) return
@@ -85,6 +140,8 @@ export function mountFridgeShowcase(figure) {
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' })
       renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.25))
       renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05
+      renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
       renderer.setClearColor(0xffffff, 0)
       renderer.domElement.className = 'fridge-showcase-canvas'
       renderer.domElement.setAttribute('aria-hidden', 'true')
@@ -93,22 +150,69 @@ export function mountFridgeShowcase(figure) {
       camera = new THREE.OrthographicCamera(-1.5, 1.5, 2, -2, .1, 30)
       camera.position.set(2.5, 1.1, 7)
       camera.lookAt(0, 0, .35)
-      scene.add(new THREE.HemisphereLight(0xffffff, 0xb8b29d, 2.5))
-      const light = new THREE.DirectionalLight(0xffffff, 2.2)
-      light.position.set(-3, 5, 6); scene.add(light)
+      makeEnvironment()
+      scene.add(new THREE.HemisphereLight(0xe8efff, 0x716b52, .75))
+      const light = new THREE.DirectionalLight(0xfff1d9, 3)
+      light.position.set(-3, 5, 6); light.castShadow = true
+      light.shadow.mapSize.set(512, 512)
+      Object.assign(light.shadow.camera, { left: -3, right: 3, top: 4, bottom: -3, near: .5, far: 15 })
+      light.shadow.normalBias = .025; light.shadow.bias = -.00015
+      scene.add(light)
+      const fill = new THREE.DirectionalLight(0xc9dcff, .5); fill.position.set(3, 1, 1); scene.add(fill)
       const body = new THREE.Group(); model = body; scene.add(body)
-      box(body, 1.5, 3, .13, green, 0, 0, -.38)
-      box(body, .1, 3, .9, green, -.72, 0, 0)
-      box(body, .1, 3, .9, green, .72, 0, 0)
-      box(body, 1.5, .1, .9, green, 0, 1.47, 0)
-      box(body, 1.5, .1, .9, green, 0, -1.47, 0)
-      box(body, 1.3, 2.82, .03, cream, 0, 0, -.29)
-      box(body, 1.3, .055, .7, cream, 0, .43, .02)
-      for (const y of [-1.18, -.62, -.06, 1.02]) {
-        box(body, 1.3, .045, .7, cream, 0, y, .02)
-        box(body, 1.3, .035, .035, chrome, 0, y, .39)
+      // Rounded cabinet and continuous inner liner replace the flat box walls.
+      rim(body, 1.52, 3.02, .94, .15, .095, green)
+      rim(body, 1.32, 2.82, .79, .10, .035, cream, 0, 0, .015)
+      rounded(body, 1.33, 2.83, .10, .11, green, 0, 0, -.45)
+      // Baked corner shading combines with real light/shadows inside the cavity.
+      const aoData = new Uint8Array(128 * 256 * 4)
+      for (let y = 0; y < 256; y++) for (let x = 0; x < 128; x++) {
+        const edge = Math.min(x / 128, 1 - x / 128, y / 256, 1 - y / 256)
+        const v = Math.round(175 + 70 * Math.min(1, edge / .13)), i = (y * 128 + x) * 4
+        aoData[i] = v; aoData[i + 1] = v - 3; aoData[i + 2] = v - 12; aoData[i + 3] = 255
       }
-      for (const x of [-.57, .57]) box(body, .12, .15, .45, dark, x, -1.55, -.1)
+      const backMap = new THREE.DataTexture(aoData, 128, 256, THREE.RGBAFormat)
+      backMap.colorSpace = THREE.SRGBColorSpace; backMap.needsUpdate = true; maps.add(backMap)
+      const back = material({ map: backMap, roughness: .58 })
+      mesh(body, new THREE.PlaneGeometry(1.25, 2.73), back, 0, 0, -.385)
+      rounded(body, 1.30, .075, .77, .025, cream, 0, .43, .015)
+      // Frost compartment: wire rack and its mounting points.
+      for (let x = -.55; x <= .56; x += .11) rod(body, [[x, .89, -.3], [x, .89, .34]], .009, chrome)
+      for (const z of [-.29, .33]) box(body, 1.22, .018, .018, chrome, 0, .89, z)
+      // Glass shelves with polished front edges and individual supports.
+      for (const y of [-.88, -.37, .14]) {
+        rounded(body, 1.25, .022, .70, .006, glass, 0, y, .015)
+        rounded(body, 1.25, .025, .025, .008, chrome, 0, y, .365)
+        for (const x of [-.61, .61]) rounded(body, .045, .09, .25, .012, cream, x, y - .04, -.03)
+      }
+      // Separate translucent crisper drawers, with lips and pull handles.
+      for (const x of [-.315, .315]) {
+        rounded(body, .59, .34, .61, .04, glass, x, -1.23, .02)
+        rounded(body, .59, .045, .045, .013, cream, x, -1.06, .34)
+        rounded(body, .21, .025, .025, .008, chrome, x, -1.16, .35)
+      }
+      const knob = mesh(body, new THREE.CylinderGeometry(.065, .065, .04, 16), cream, .60, .28, -.03)
+      knob.rotation.z = Math.PI / 2
+      box(body, .008, .012, .06, dark, .626, .30, -.03)
+      const bulb = material({ color: '#fff1c5', emissive: '#ffe6a5', emissiveIntensity: .8, roughness: .35 })
+      rounded(body, .11, .075, .09, .025, bulb, .57, .34, .14)
+      const insideLight = new THREE.PointLight(0xffedc9, .18, 1.6, 2)
+      insideLight.position.set(.48, .28, .12); body.add(insideLight)
+      for (const x of [-.57, .57]) rounded(body, .10, .13, .38, .02, dark, x, -1.55, -.1)
+      for (const y of [-1.31, .53, 1.32]) mesh(body, new THREE.CylinderGeometry(.028, .028, .14, 12), chrome, -.76, y, .43)
+      // Soft contact shadow fades to transparency instead of a clipped floor edge.
+      const shadowData = new Uint8Array(64 * 64 * 4)
+      for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) {
+        const radius = Math.hypot((x - 31.5) / 31.5, (y - 31.5) / 31.5), i = (y * 64 + x) * 4
+        shadowData[i] = shadowData[i + 1] = shadowData[i + 2] = 255
+        shadowData[i + 3] = Math.round(255 * Math.pow(Math.max(0, 1 - radius), 1.5))
+      }
+      const shadowMap = new THREE.DataTexture(shadowData, 64, 64, THREE.RGBAFormat)
+      shadowMap.magFilter = THREE.LinearFilter; shadowMap.needsUpdate = true; maps.add(shadowMap)
+      const shadowMaterial = new THREE.MeshBasicMaterial({ map: shadowMap, color: '#48402d', transparent: true, opacity: .3, depthWrite: false })
+      materials.add(shadowMaterial)
+      const floor = mesh(scene, new THREE.PlaneGeometry(2.6, 1.8), shadowMaterial, 0, -1.62, .06)
+      floor.rotation.x = -Math.PI / 2; floor.castShadow = false
       texture = await new THREE.TextureLoader().loadAsync(photo.src)
       if (disposed) { texture.dispose(); return }
       texture.colorSpace = THREE.SRGBColorSpace
@@ -118,12 +222,22 @@ export function mountFridgeShowcase(figure) {
         map.repeat.set(108 / 146, imageHeight / 248)
         map.offset.set(13 / 146, (248 - imageTop - imageHeight) / 248)
         map.needsUpdate = true; maps.add(map)
-        const facade = material({ map, roughness: .48, metalness: .12 })
-        const hinge = new THREE.Group(); hinge.position.set(-.72, y, .48)
+        const hinge = new THREE.Group(); hinge.position.set(-.72, y, .49)
         body.add(hinge); doors.push(hinge)
-        box(hinge, 1.44, h, .105, [green, green, green, green, facade, cream], .72)
-        box(hinge, .48, .045, .075, chrome, .38, -h * .25, .095)
-        for (const shelfY of [-h * .3, h * .2]) box(hinge, 1.18, .06, .14, cream, .72, shelfY, -.1)
+        rounded(hinge, 1.44, h, .17, .10, green, .72)
+        facade(hinge, 1.405, h - .025, map, .72, .101)
+        rim(hinge, 1.37, h - .075, .024, .075, .022, dark, .72, 0, -.094)
+        rim(hinge, 1.31, h - .13, .018, .065, .014, cream, .72, 0, -.111)
+        rounded(hinge, 1.26, h - .17, .08, .075, cream, .72, 0, -.13)
+        // Rounded door pockets: inner floor, sides and a retaining rail.
+        for (const shelfY of h > 1.5 ? [-.66, -.10, .46] : [-.32]) {
+          rounded(hinge, 1.1, .035, .21, .012, cream, .72, shelfY, -.24)
+          rounded(hinge, 1.1, .12, .035, .014, cream, .72, shelfY + .055, -.34)
+          for (const x of [.18, 1.26]) rounded(hinge, .035, .13, .21, .012, cream, x, shelfY + .05, -.24)
+          rounded(hinge, 1.09, .018, .025, .006, chrome, .72, shelfY + .12, -.34)
+        }
+        const handleY = h > 1.5 ? .74 : -.35
+        rod(hinge, [[.16, handleY, .11], [.21, handleY + .018, .19], [.57, handleY + .018, .19], [.62, handleY, .11]], .025, chrome)
       }
       renderer.domElement.addEventListener('webglcontextlost', lost)
       resize = new ResizeObserver(setSize); resize.observe(button)
@@ -151,7 +265,8 @@ export function mountFridgeShowcase(figure) {
     button.removeEventListener('click', click)
     renderer?.domElement.removeEventListener('webglcontextlost', lost)
     maps.forEach(map => map.dispose()); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose())
-    renderer?.dispose()
+    scene?.traverse(item => { if (item.isLight && item.shadow) item.shadow.dispose() })
+    environment?.dispose(); renderer?.dispose()
     window.removeEventListener('pagehide', cleanup)
   }
   observer = new IntersectionObserver(entries => {

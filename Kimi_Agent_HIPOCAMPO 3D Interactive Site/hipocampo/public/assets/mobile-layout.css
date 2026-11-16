@@ -64,8 +64,8 @@
   .page4-text p { margin-bottom: 1.35em; }
   .page4-text strong { font-size: inherit; line-height: inherit; }
   .page4-photos { height: 85vw; max-height: 34rem; margin-top: 1rem; }
-  .page4-photo--envelope { left: 0; right: auto; top: 0; width: 50vw; }
-  .page4-photo--geladeira { right: 2vw; top: 24vw; width: 34vw; }
+  .page4-photo--envelope { left: -1vw; right: auto; top: 0; width: 46vw; }
+  .page4-photo--geladeira { right: 0; top: 26vw; width: 34vw; }
   #sobre .page4-photo--retrato { left: .75rem; width: 28vw; min-width: 74px; transform: translateY(50%); }
   .page4-photo--envelope { touch-action: manipulation; }
 
