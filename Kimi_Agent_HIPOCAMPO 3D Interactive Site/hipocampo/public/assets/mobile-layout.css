@@ -43,8 +43,9 @@
   /* One complete phrase per row, preserving all eight animated rows. */
   .hipocampo-memory-line .memory-char:nth-child(n+24) { display: none !important; }
 
-  .hipocampo-page2-inner { padding: 6rem 1.25rem 0; }
-  .hipocampo-page2-title { width: 100%; max-width: 100%; font-size: clamp(3rem, 15vw, 7rem); line-height: 1.4; white-space: nowrap; overflow: visible; padding-block: .35em; }
+  .hipocampo-page2-inner { padding: 6rem 1.25rem 0; overflow: visible; }
+  .hipocampo-page2-title { width: 100%; max-width: 100%; font-size: clamp(3rem, 15vw, 7rem); line-height: 1.8; white-space: nowrap; overflow: visible; box-sizing: border-box; padding: .45em .12em; }
+  .hipocampo-page2-title .page2-title-word { display: inline; will-change: auto; transform: none !important; }
   .hipocampo-page2-title .page2-title-word:first-child { font-size: .75em; }
   .hipocampo-page2-copy { margin-top: 2.5rem; font-size: 1.0625rem; letter-spacing: 0; line-height: 1.65; }
   .page2-copy-paragraph { margin-bottom: 1.5em; }

@@ -792,3 +792,8 @@ final result: passed
 ### 2026-11-16 — ampliar O Hipocampo somente no mobile
 - Substituída a regra mobile de 7,5vw (mínimo 32px) por 15vw (48–112px), com O proporcionalmente menor, linha única e folga para os traços da AquilineTwo.
 - Build/diff e Chromium em 320, 390, 430, 767 e 1440px aprovados: palavras dentro da largura disponível e tamanho desktop preservado. Captura `/tmp/project-title-390.png` inspecionada sem cortes.
+
+### 2026-11-16 — evitar corte do traço do H no mobile
+- Título mobile mantém tamanho ampliado e ganha folga de linha e padding. Palavras passam a inline sem camada will-change/transform, e a animação do celular usa somente opacidade do título completo, preservando a animação desktop.
+- O texto Aquiline possui traços fora da caixa tipográfica; evitada a composição por palavras transformadas e liberado overflow do contêiner interno no mobile.
+- Build/sintaxe/diff e Chromium em 320/390/430/767/1440px aprovados; palavras dentro da viewport e desktop preservado. Captura `docs/project-mobile-title-flourishes.png` inspecionada com traços completos. Safari físico não disponível nesta validação.

@@ -106,9 +106,11 @@ function initializePage2Motion() {
   project.addEventListener('hipocampo:memory-map-ready', animateMemoryMap)
 
   const ctx = gsap.context(() => {
-    gsap.from(titleWords, {
-      yPercent: 120,
-      rotation: 8,
+    // Safari can clip the long Aquiline flourishes on transformed inline boxes.
+    // On phones, reveal the complete heading without moving individual words.
+    const phoneTitle = window.matchMedia('(max-width: 767px)').matches
+    gsap.from(phoneTitle ? project.querySelector('.hipocampo-page2-title') : titleWords, {
+      ...(phoneTitle ? {} : { yPercent: 120, rotation: 8 }),
       opacity: 0,
       stagger: 0.08,
       duration: 1.05,
