@@ -815,3 +815,13 @@ final result: passed
 - Última linha centralizada como no desktop; demais linhas continuam justificadas e sem hifenização no mobile. Câmera preserva o botão no disparador.
 - Build/diff e Chromium em 320/390/430/1440px aprovados: centros coincidem com tolerância inferior a 1px, proporção igual à do PC e câmera com pelo menos 36px de margem lateral no celular. Captura `docs/camera-centered-mobile.png` inspecionada.
 - Teste existente da geladeira atualizado para conferir centro e proporção, substituindo a expectativa anterior de larguras iguais.
+
+### 2026-11-16 — pedidos dos prints: fotofilmes, relatos, marca e links
+- Substituído o pequeno rótulo do primeiro fotofilme pelo texto exato enviado: Aqui você pode assistir aos fotofilmes realizados pelos participantes do Hipocampo. Cada um conta uma história diferente. Fonte SquidBoy, caixa normal e título Fotofilmes ampliado no desktop e no mobile.
+- Removido apenas o pequeno RELATOS duplicado; título manuscrito, instrução e animação da carta preservados.
+- Final de Sobre nós recebe Hipocampo na AquilineTwo; rodapé inclui @hipocampo.oficina e Site por Kise Studio, com URLs fornecidas pelo cliente e links externos com noopener/noreferrer. Removidos contato fictício e rodapé antigo de arquivo vivo. Navegação Voltar ao início preservada.
+- Abertura troca H por Hipocampo completo, mantendo o tempo e a saída existentes. Enquadramento SVG usa geometria horizontal e medidas da tinta da fonte no eixo vertical, preservando floreios e margens.
+- Build/sintaxe/diff e Chromium em 1440×900, 390×844 e 320×700 aprovados: cópia integral, SquidBoy computada, título dentro da viewport, rótulo duplicado ausente, marca no fim, Instagram em ambos rodapés e Kise Studio com endereço correto; nenhum erro JS. Capturas de abertura, cartão e rodapés inspecionadas; ajuste final da abertura recapturado em desktop e mobile.
+- Evidências `docs/films-client-copy-mobile.png`, `docs/footer-social-links-mobile.png`, `docs/intro-full-wordmark-mobile.png`.
+- Sem alteração de controle de acesso ou senha.
+- final result: passed

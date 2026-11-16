@@ -75,7 +75,7 @@ function mount() {
   })
   const bottom = document.createElement('footer')
   bottom.className = 'team-finale-bottom'
-  bottom.innerHTML = '<p>Hipocampo — uma história em construção.</p><a href="mailto:contato@projetohipocampo.art">Entre em contato</a>'
+  bottom.innerHTML = '<p><span class="team-bottom-brand">Hipocampo</span><span>uma história em construção.</span></p><a href="https://www.instagram.com/hipocampo.oficina/" target="_blank" rel="noopener noreferrer">@hipocampo.oficina</a>'
   section.append(header, intro, grid, bottom)
 
   // Each row enters when reached. Only visible portraits keep floating.

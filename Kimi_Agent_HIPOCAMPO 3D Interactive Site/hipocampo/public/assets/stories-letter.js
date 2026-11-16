@@ -10,7 +10,6 @@ export function prepareStoriesLetter(section) {
     <div class="stories-scroll-track">
       <div class="stories-correspondence">
         <div class="stories-introduction">
-          <p class="stories-eyebrow">Relatos</p>
           <h2 id="relatos-title">Relatos</h2>
           <p class="stories-invitation">Role para abrir a carta</p>
         </div>

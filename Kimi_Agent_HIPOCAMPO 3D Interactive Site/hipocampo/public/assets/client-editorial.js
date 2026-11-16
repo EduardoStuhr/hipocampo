@@ -1,4 +1,4 @@
-import { prepareStoriesLetter } from './stories-letter.js?v=editorial-reference-1'
+import { prepareStoriesLetter } from './stories-letter.js?v=films-footer-1'
 
 // Adapt the recovered editorial entry without editing its bundled React code.
 export function prepareClientNavigation(header) {
@@ -43,7 +43,10 @@ export function prepareClientEditorial() {
   films.querySelectorAll('article').forEach((article, index) => {
     article.classList.add('client-film', `client-film--${index + 1}`)
     const label = article.querySelector('.film-index')
-    if (label) label.textContent = 'Fotofilme'
+    if (label) {
+      label.textContent = index === 0 ? 'Aqui você pode assistir aos fotofilmes realizados pelos participantes do Hipocampo. Cada um conta uma história diferente.' : 'Fotofilme'
+      if (index === 0) label.classList.add('client-film-description')
+    }
     const title = article.querySelector('h3')
     if (index === 0 && title) title.textContent = 'Yolanda'
     article.querySelectorAll(':scope > div:first-child > p:not(.film-index)').forEach(p => { p.hidden = true })
@@ -76,6 +79,11 @@ export function prepareClientEditorial() {
     films.after(stories)
   }
   prepareStoriesLetter(document.querySelector('#relatos'))
+  const footer = document.querySelector('body > #root > footer')
+  if (footer) {
+    footer.classList.add('client-project-footer')
+    footer.innerHTML = '<a class="project-footer-brand" href="#abertura">Hipocampo</a><a href="https://www.instagram.com/hipocampo.oficina/" target="_blank" rel="noopener noreferrer">@hipocampo.oficina</a><p>Site por <a href="https://www.kisestudio.com.br/" target="_blank" rel="noopener noreferrer">Kise Studio</a></p><a href="#abertura">Voltar ao início ↑</a>'
+  }
   const info = document.querySelector('#informacoes')
   const teamHeading = info?.querySelector('h2')
   if (teamHeading) teamHeading.textContent = 'Sobre nós'

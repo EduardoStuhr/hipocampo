@@ -56,3 +56,6 @@
 }
 
 @media (min-width: 768px) { #informacoes.team-finale h2 { font-size: clamp(4rem, 7.3vw, 9rem); line-height: 1.35; } }
+
+.team-finale-bottom p { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; }
+.team-bottom-brand { display: inline-block; font: 400 clamp(2.5rem, 4vw, 4rem)/1.5 "AquilineTwo", Georgia, serif; padding-block: .25em; }

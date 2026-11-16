@@ -19,26 +19,21 @@ if (intro) {
     timer = setTimeout(leave, 4300)
     Promise.all([
       document.fonts.load('230px "AquilineTwo"').then(() => {
-        // Aquiline's H extends beyond its advance width. Centre its actual ink
-        // rather than the text anchor, including on a narrow phone viewport.
-        const svg = intro.querySelector('svg'), text = svg.querySelector('text'), bounds = text.getBBox()
-        if (bounds.width && bounds.height) {
-          let x = bounds.x - 20, y = bounds.y - 20
-          if (matchMedia('(max-width: 767px)').matches) {
-            // SVG's text box includes font-wide ascent/descent. Centre the
-            // visible H on phones, preserving the existing scale and timing.
-            const context = document.createElement('canvas').getContext('2d')
-            const style = getComputedStyle(text)
-            context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-            const ink = context.measureText(text.textContent)
-            if (ink.actualBoundingBoxAscent + ink.actualBoundingBoxDescent > 0) {
-              const centerX = Number(text.getAttribute('x')) - ink.width / 2 + (ink.actualBoundingBoxRight - ink.actualBoundingBoxLeft) / 2
-              const centerY = Number(text.getAttribute('y')) + (ink.actualBoundingBoxDescent - ink.actualBoundingBoxAscent) / 2
-              x = centerX - (bounds.width + 40) / 2
-              y = centerY - (bounds.height + 40) / 2
-            }
-          }
-          svg.setAttribute('viewBox', `${x} ${y} ${bounds.width + 40} ${bounds.height + 40}`)
+        // Use the visible ink bounds, including the long Aquiline flourishes.
+        const svg = intro.querySelector('svg'), text = svg.querySelector('text')
+        const bounds = text.getBBox()
+        const context = document.createElement('canvas').getContext('2d')
+        const style = getComputedStyle(text)
+        context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+        const ink = context.measureText(text.textContent)
+        const width = ink.actualBoundingBoxLeft + ink.actualBoundingBoxRight
+        const height = ink.actualBoundingBoxAscent + ink.actualBoundingBoxDescent
+        if (width > 0 && height > 0) {
+          const x = bounds.x
+          const y = Number(text.getAttribute('y')) - ink.actualBoundingBoxAscent
+          svg.setAttribute('viewBox', `${x - 20} ${y - 20} ${bounds.width + 40} ${height + 40}`)
+        } else if (bounds.width && bounds.height) {
+          svg.setAttribute('viewBox', `${bounds.x - 20} ${bounds.y - 20} ${bounds.width + 40} ${bounds.height + 40}`)
         }
       }).catch(() => {}),
       new Promise(resolve => {
