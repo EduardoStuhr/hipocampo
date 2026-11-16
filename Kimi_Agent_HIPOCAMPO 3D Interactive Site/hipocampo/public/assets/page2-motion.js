@@ -2,10 +2,10 @@ import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const titleText = 'como uma memória é construída?'
+const titleText = 'O Hipocampo'
 const copyParagraphs = [
   'Hipocampo é um projeto de instalação audiovisual desenvolvido por estudantes de Cinema e Audiovisual do Centro Universitário SENAC. A oficina aborda a relação essencial entre memória e identidade, colocando em foco o efeito do esquecimento na preservação da história de um indivíduo. Com base nisso, Hipocampo explora a possibilidade de reconstruir narrativas a partir de recordações fragmentadas e desordenadas, ofuscadas pela amnésia.',
-  'A experiência acontece em um espaço onírico, representativo de um limbo entre a lembrança e a deslembrança, no qual participantes recebem diversas fotografias, objetos, e diferentes materiais que podem constituir a vida de uma pessoa. Ao analisar os fragmentos, cabe ao grupo participante ordenar e conectar os materiais escolhidos da forma que achar melhor, construindo uma história com os lapsos apresentados. No fim, o grupo nomeia a personagem que protagoniza o enredo criado, narra a história através de um áudio que será gravado no momento e o resultado é exposto neste site como um fotofilme, dialogando com uma segunda interpretação desenvolvida pelos organizadores. Não há uma narrativa pré definida ou uma resposta correta, a experiência é justamente o diálogo entre as diferentes formas de deduzir as lembranças colocadas.',
+  'A experiência acontece em um espaço onírico, representativo de um limbo entre a lembrança e a deslembrança, no qual participantes recebem diversas fotografias, objetos e diferentes materiais que podem constituir a vida de uma pessoa. Ao analisar os fragmentos, cabe ao grupo participante ordenar e conectar os materiais escolhidos da forma que achar melhor, construindo uma história com os lapsos apresentados. No fim, o grupo nomeia a personagem que protagoniza o enredo criado, narra a história através de um áudio que será gravado no momento e o resultado é exposto neste site como um fotofilme, dialogando com uma segunda interpretação desenvolvida pelos organizadores. Não há uma narrativa pré definida ou uma resposta correta, a experiência é justamente o diálogo entre as diferentes formas de deduzir as lembranças colocadas.',
 ]
 
 function titleMarkup(text) {

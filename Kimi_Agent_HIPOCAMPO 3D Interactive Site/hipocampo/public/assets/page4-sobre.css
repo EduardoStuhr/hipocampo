@@ -28,7 +28,7 @@
   transform-origin: center;
   margin: 5.8vw auto 0;
   font-family: "SquidBoy", sans-serif;
-  font-size: 1.6vw;
+  font-size: calc(1.6vw - 4px);
   line-height: 1;
   -webkit-hyphens: manual;
   hyphens: manual;
@@ -37,7 +37,7 @@
   letter-spacing: .01em;
 }
 .page4-text p { margin: 0; }
-.page4-text strong { font-size: 1.125em; line-height: .9; font-weight: 700; }
+.page4-text strong { font-size: calc(1.8vw - 4px); line-height: .9; font-weight: 700; }
 .page4-photos { position: relative; height: clamp(15rem, 24vw, 27rem); margin-top: 3vw; }
 .page4-photo {
   position: absolute;
@@ -52,8 +52,8 @@
   position: absolute; inset: 0; opacity: 0; transition: opacity .15s;
 }
 .page4-photo.is-playing .page4-frame { opacity: 1; }
-.page4-photo--retrato { left: 9vw; bottom: 0; width: 10vw; min-width: 80px; aspect-ratio: 3/4; }
-.page4-photo--retrato { box-sizing: border-box; padding: .3rem; border: .45rem ridge #79513a; background: #e8ddc7; box-shadow: 0 .2rem .4rem #33231526; }
+.page4-photo--retrato { left: 9vw; bottom: 0; width: 10vw; min-width: 80px; aspect-ratio: 393/505; }
+.page4-photo--retrato { box-sizing: border-box; padding: 0; border: 0; background: transparent; }
 .page4-photo--retrato img { object-fit: contain; }
 .page4-photo--envelope { right: 20vw; top: 0; width: 20vw; aspect-ratio: 1; }
 .page4-photo--geladeira { right: 8vw; top: 8vw; width: 10vw; aspect-ratio: 146/248; }

@@ -1,4 +1,4 @@
-import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=physical-envelope-1'
+import { prepareClientNavigation, prepareClientEditorial } from './client-editorial.js?v=editorial-reference-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 
 gsap.registerPlugin(ScrollTrigger)

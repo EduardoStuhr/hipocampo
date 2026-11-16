@@ -770,3 +770,12 @@ final result: passed
 - PNG original de imagem2.zip inserido sem edição em `public/images/sobre/geladeira-9fa54f4430b6.png`; substitui apenas a montanha da apresentação Simulação 3D.
 - Geladeira à direita da carta, deslocada para baixo, com tamanho proporcional próprio no desktop e no mobile. Preservados foto da mulher, texto, interações da carta e a geladeira da cena 3D.
 - Build/diff e Chromium em 952×537, 1440×900 e 390×844 aprovados: montanha ausente, imagem decodificada, posições distintas nos dois eixos, sem ultrapassar a seção e retrato ainda dividido na fronteira. Capturas locais `/tmp/fridge-collage-*.png` inspecionadas.
+
+### 2026-11-16 — página 2 conforme referência, moldura e números
+- Página 2 recebe título O Hipocampo em AquilineTwo, dois parágrafos SquidBoy justificados na coluna esquerda com margens de 5,8%, ritmo compacto e mapa à direita. Layout desktop aplicado a partir de 768px; no celular, texto mantém tamanho legível e título sem cortes. Preservado o viewport final para transição mapa/casa.
+- Fonte e margens medidas em 952×537 conforme o print da conversa; evidências `docs/project-editorial-desktop.png` e `docs/project-editorial-mobile.png` (390×844). Iteração inicial identificou título relativo sobrepondo texto em tablet: corrigidos posicionamento absoluto e largura, depois recapturados desktop e mobile.
+- Moldura aplicada com o próprio PNG original do ZIP, sem gerar/recompor imagem. Evidência `docs/portrait-client-frame.png`. Retirada a borda CSS anterior e mantido o centro da moldura na divisa entre seções.
+- Removidos números dos rótulos editoriais, inclusive Fotofilmes e Relatos, preservando os títulos e controles. Texto explicativo de Simulação 3D reduzido em exatamente 4px no desktop; mobile mantém sua configuração de leitura.
+- Build, sintaxe JS, diff e Chromium em 952×537, 1440×900 e 390×844 aprovados: título correto, ausência de prefixos numéricos, moldura correta, divisão pela metade, fonte 4px menor e sem colisão entre coluna de texto e mapa; nenhum erro JavaScript.
+- Tipografia, espaçamento, cor azul/bordô, imagem original e conteúdo conferidos visualmente. Limite: não disponível teste em Safari físico.
+- final result: passed

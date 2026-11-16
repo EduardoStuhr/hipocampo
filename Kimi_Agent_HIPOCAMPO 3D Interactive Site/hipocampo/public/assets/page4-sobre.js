@@ -2,7 +2,7 @@
 // alternam entre quadros como um gif.
 const FRAMES = [1, 2, 3, 4].map((i) => `/images/sobre/gif-${i}.webp`)
 const PHOTOS = [
-  ['retrato', 'Fotografia original de uma mulher em moldura de madeira', '/images/sobre/retrato-original-e3b834f08bc4.jpg'],
+  ['retrato', 'Retrato de uma mulher na moldura oval rendada enviada', '/images/sobre/moldura-b2a620ab905d.png'],
   ['envelope', 'Envelope antigo com fotografias'],
   ['geladeira', 'Geladeira antiga verde', '/images/sobre/geladeira-9fa54f4430b6.png'],
 ]

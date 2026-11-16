@@ -1,4 +1,4 @@
-import { prepareStoriesLetter } from './stories-letter.js?v=physical-envelope-1'
+import { prepareStoriesLetter } from './stories-letter.js?v=editorial-reference-1'
 
 // Adapt the recovered editorial entry without editing its bundled React code.
 export function prepareClientNavigation(header) {
@@ -33,7 +33,7 @@ export function prepareClientEditorial() {
   const heading = films.querySelector('h2')
   if (heading) heading.textContent = 'Fotofilmes'
   const eyebrow = films.querySelector('.eyebrow')
-  if (eyebrow) eyebrow.textContent = '05 —'
+  if (eyebrow) eyebrow.remove()
   films.querySelectorAll('article').forEach((article, index) => {
     article.classList.add('client-film', `client-film--${index + 1}`)
     const label = article.querySelector('.film-index')
@@ -74,5 +74,9 @@ export function prepareClientEditorial() {
   const teamHeading = info?.querySelector('h2')
   if (teamHeading) teamHeading.textContent = 'Sobre nós'
   const teamEyebrow = info?.querySelector('.eyebrow')
-  if (teamEyebrow) teamEyebrow.textContent = '07 — Sobre nós'
+  if (teamEyebrow) teamEyebrow.textContent = 'Sobre nós'
+  document.querySelectorAll('section .eyebrow, section .installation-kicker, section .stories-eyebrow').forEach(label => {
+    label.textContent = label.textContent.replace(/^\s*\d{1,2}\s*[—–-]?\s*/, '')
+    if (!label.textContent.trim()) label.remove()
+  })
 }
