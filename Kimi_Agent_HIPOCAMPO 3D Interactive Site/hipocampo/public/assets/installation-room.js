@@ -1,7 +1,7 @@
 // Editable entry for the installation. The recovered application supplies React;
 // the room uses the same local Three.js distribution as the house transition.
 import { o as requireReact } from './index-BXEErpTi.js?v=perf-1'
-import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=fridge-closed-1'
+import { createInstallationRoom, FRAGMENTS } from './installation-scene.js?v=control-row-1'
 import { yieldScenePreparation } from './scene-preparation.js?v=scroll-start-1'
 
 const React = requireReact() // Reuse the application's React singleton.
@@ -127,9 +127,6 @@ export default function Installation() {
         h('button', { type: 'button', onClick: () => room.current?.resetView(), disabled: !ready || unavailable }, 'visão inicial'),
         h('button', { type: 'button', onClick: reset, 'data-action': 'reset' }, 'recompor a sala'),
       ),
-    ),
-    h('div', { className: `installation-stage${navigating ? ' is-exploring' : ''}`, 'aria-busy': !ready && !unavailable },
-      h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. Duplo clique ou Enter ativa a navegação com roda e WASD; Escape libera a rolagem da página.', role: 'group' }),
       h('div', { className: 'installation-zoom', role: 'group', 'aria-label': 'Câmera e fotografia da mesa' },
         h('button', { type: 'button', onClick: () => room.current?.zoom(-1), disabled: !ready || unavailable }, 'aproximar'),
         h('button', { type: 'button', onClick: () => room.current?.zoom(1), disabled: !ready || unavailable }, 'afastar'),
@@ -137,6 +134,9 @@ export default function Installation() {
         h('button', { type: 'button', onClick: takePhoto, disabled: !ready || unavailable || capturing, 'data-action': 'take-photo' }, capturing ? 'fotografando…' : 'tirar foto'),
         topView && h('p', { id: 'installation-topview-hint', className: 'installation-topview-hint', role: 'status' }, 'Visão de cima ativa. Clique em “voltar ao normal” para girar a sala novamente.'),
       ),
+    ),
+    h('div', { className: `installation-stage${navigating ? ' is-exploring' : ''}`, 'aria-busy': !ready && !unavailable },
+      h('canvas', { className: 'installation-canvas', tabIndex: 0, 'aria-label': 'Sala 3D. Arraste para girar em 360 graus. Botão direito ou Shift e arrastar desloca a câmera. Duplo clique ou Enter ativa a navegação com roda e WASD; Escape libera a rolagem da página.', role: 'group' }),
       h('div', { className: 'installation-hit-targets' },
         ...FRAGMENTS.map(fragment => h('button', {
           key: fragment.id, type: 'button', className: 'installation-object',

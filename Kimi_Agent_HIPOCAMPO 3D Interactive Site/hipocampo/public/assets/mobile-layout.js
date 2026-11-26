@@ -1,4 +1,4 @@
-import { mountMobileImmersion } from './mobile-immersion.js?v=phone-gestures-1'
+import { mountMobileImmersion } from './mobile-immersion.js?v=control-row-1'
 import { t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'
 // Mobile adapters use the existing React/Three APIs; desktop keeps its DOM.
 const phone = matchMedia('(max-width: 767px)')
