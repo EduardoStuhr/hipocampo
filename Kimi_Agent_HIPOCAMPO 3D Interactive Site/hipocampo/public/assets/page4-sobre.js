@@ -1,4 +1,4 @@
-// Página 4 — "Simulação 3D": texto de apresentação + fotos que, ao passar o mouse,
+// Página 4 — "Simulação": texto de apresentação + fotos que, ao passar o mouse,
 // alternam entre quadros como um gif.
 const FRAMES = [1, 2, 3, 4].map((i) => `/images/sobre/gif-${i}.webp`)
 const PHOTOS = [
@@ -11,9 +11,9 @@ function buildSection() {
   const s = document.createElement('section')
   s.id = 'sobre'
   s.className = 'hipocampo-page4'
-  s.setAttribute('aria-label', 'Simulação 3D')
+  s.setAttribute('aria-label', 'Simulação')
   s.innerHTML = `
-    <h2 class="page4-title">Simulação 3D</h2>
+    <h2 class="page4-title">Simulação</h2>
     <div class="page4-text">
       <p><strong>A simulação mostra as quatro ilhas componentes da oficina:</strong> A ilha do <br class="page4-desktop-break">
         passado, da temporalidade, do presente e dos futuros, respectivamente representadas <br class="page4-desktop-break">
