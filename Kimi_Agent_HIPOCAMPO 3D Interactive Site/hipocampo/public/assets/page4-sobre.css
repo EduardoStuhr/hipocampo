@@ -20,6 +20,7 @@
   top: -1vw;
   transform: none !important;
 }
+.page4-title small { font-size: .5em; margin-right: .35em; }
 .page4-text {
   max-width: 68ch;
   margin: 5.8vw auto 0;
@@ -42,7 +43,6 @@
   }
   .page4-title {
     font-size: calc(var(--page4-composition-width) * .165);
-    scale: 1 .87;
   }
   .page4-text {
     max-width: none;
