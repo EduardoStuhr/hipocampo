@@ -15,7 +15,12 @@ function buildSection() {
   s.innerHTML = `
     <h2 class="page4-title">Simulação 3D</h2>
     <div class="page4-text">
-      <p><strong>A simulação mostra as quatro ilhas componentes da oficina:</strong> A ilha do pas&shy;sado, da temporalidade, do presente e dos futuros, respectivamente representadas por um cabideiro, uma geladeira, uma escrivaninha e uma mesa branca centralizada. O usuário pode selecionar qualquer objeto e arrastá-lo para a ilha dos futuros, e a história é criada a partir da ordem em que os objetos são posicionados.<br />Também é possível aproximar ou afastar a visão, direcioná-la com o mouse e obser&shy;var a ilha de cima. Ao finalizar, há a opção de tirar uma foto mostrando os fragmentos escolhidos, que é salva automaticamente no computador do usuário.</p>
+      <p><strong>A simulação mostra as quatro ilhas componentes da oficina:</strong> A ilha do <br class="page4-desktop-break">
+        passado, da temporalidade, do presente e dos futuros, respectivamente representadas <br class="page4-desktop-break">
+        por um cabideiro, uma geladeira, uma escrivaninha e uma mesa branca centralizada. <br class="page4-desktop-break">
+        O usuário pode selecionar qualquer objeto e arrastá-lo para a ilha dos futuros, e a <br class="page4-desktop-break">
+        história é criada a partir da ordem em que os objetos são posicionados.<br>
+        Também é possível aproximar ou afastar a visão, direcioná-la com o mouse e ob<span class="page4-desktop-hyphen" aria-hidden="true">-</span><br class="page4-desktop-break">servar a ilha de cima. Ao finalizar, há a opção de tirar uma foto mostrando os fragmen<span class="page4-desktop-hyphen" aria-hidden="true">-</span><br class="page4-desktop-break">tos escolhidos, que é salva automaticamente no computador do usuário.</p>
     </div>
     <div class="page4-photos">
       ${PHOTOS.map(([n, alt, src]) => `

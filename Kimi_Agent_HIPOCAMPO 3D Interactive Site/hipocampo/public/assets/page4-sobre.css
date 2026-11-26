@@ -34,12 +34,32 @@
 }
 .page4-text p { margin: 0; }
 
+.page4-desktop-break,
+.page4-desktop-hyphen { display: none; }
+
 @media (min-width: 768px) {
-  .page4-text {
-    max-width: min(78vw, 74rem);
-    margin-top: clamp(.5rem, 1vw, 1.25rem);
-    line-height: 1.1;
+  #sobre.hipocampo-page4 {
+    --page4-composition-width: min(100vw, 72rem);
   }
+  .page4-title {
+    font-size: calc(var(--page4-composition-width) * .165);
+  }
+  .page4-text {
+    max-width: none;
+    margin-top: calc(var(--page4-composition-width) * .045);
+    font-size: calc(var(--page4-composition-width) * .02655);
+    line-height: .86;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .page4-text p { transform: scaleX(1.18); }
+  .page4-text strong {
+    font-size: 1.1em;
+    line-height: 0;
+    letter-spacing: .035em;
+  }
+  .page4-desktop-break,
+  .page4-desktop-hyphen { display: revert; }
 }
 
 .page4-photos { position: relative; height: clamp(18rem, 31vw, 33rem); margin-top: 3vw; }
