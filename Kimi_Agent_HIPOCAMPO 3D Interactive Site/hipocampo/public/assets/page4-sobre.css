@@ -34,6 +34,14 @@
 }
 .page4-text p { margin: 0; }
 
+@media (min-width: 768px) {
+  .page4-text {
+    max-width: min(78vw, 74rem);
+    margin-top: clamp(.5rem, 1vw, 1.25rem);
+    line-height: 1.1;
+  }
+}
+
 .page4-photos { position: relative; height: clamp(18rem, 31vw, 33rem); margin-top: 3vw; }
 .page4-photo {
   position: absolute;
