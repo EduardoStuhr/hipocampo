@@ -60,9 +60,8 @@
 
   #sobre.hipocampo-page4 { min-height: 0; padding: 6rem 1.25rem 3rem; }
   .page4-title { font-size: clamp(3rem, 13vw, 5.7rem); line-height: 1.35; padding: .3em .12em; }
-  .page4-text { width: 100%; transform: none; max-width: none; -webkit-hyphens: none; hyphens: none; margin-top: 1.5rem; font-size: 1.125rem; line-height: 1.6; letter-spacing: 0; text-align: justify; text-align-last: left; }
+  .page4-text { -webkit-hyphens: none; hyphens: none; margin-top: 1.5rem; line-height: 1.6; letter-spacing: 0; text-align: left; }
   .page4-text p { margin-bottom: 1.35em; }
-  .page4-text strong { font-size: inherit; line-height: inherit; }
   .page4-photos { height: 85vw; max-height: 34rem; margin-top: 1rem; }
   .page4-photo--envelope { left: -1vw; right: auto; top: 0; width: 46vw; }
   .page4-photo--geladeira { right: 0; top: 26vw; width: 34vw; }
