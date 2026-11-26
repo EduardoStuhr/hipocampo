@@ -11,7 +11,6 @@ export function mountMobileImmersion(root) {
   const toolbar = root.querySelector('.installation-toolbar')
   const actions = root.querySelector('.installation-actions')
   const zoom = root.querySelector('.installation-zoom')
-  const zoomNext = zoom.nextSibling
   const canvas = stage.querySelector('canvas')
   const description = canvas.getAttribute('aria-label')
   canvas.setAttribute('aria-label', 'Sala 3D. Toque nos objetos. Ative explorar em tela inteira para girar com o dedo. A página só volta a rolar ao tocar em voltar à rolagem.')
@@ -238,8 +237,7 @@ export function mountMobileImmersion(root) {
     state.disconnect(); sceneObserver.disconnect(); sceneResize.disconnect()
     disposers.forEach(dispose => dispose())
     clearTimeout(restoreTimer); clearTimeout(holdTimer); clearTimeout(resizeTimer); restoreChars()
-    toolbar.append(actions)
-    stage.insertBefore(zoom, zoomNext)
+    toolbar.append(actions, zoom)
     controls.remove(); tools.remove()
     canvas.setAttribute('aria-label', description)
     html.classList.remove('mobile-in-scene')

@@ -18,7 +18,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   const buildStarted = performance.now()
   const stage = root.querySelector('.installation-stage')
   const canvas = root.querySelector('.installation-canvas')
-  const navigationBar = root.querySelector('.installation-zoom')
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#000000')
   scene.fog = new THREE.Fog('#000000', 25, 55)
@@ -72,10 +71,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   let visible = false
   let contextLost = false
   let raf = 0
-  let controlsFrame = 0
-  let controlsDocumentTop = 0
-  let controlsHeight = 0
-  let controlsViewportTop = 184
   let dirty = true
   let shadowsDirty = true
   let mobile = false
@@ -631,24 +626,8 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     const rect = canvas.getBoundingClientRect()
     Object.assign(cachedRect, { left: rect.left, top: rect.top, width: rect.width, height: rect.height })
   }
-  function positionControls() {
-    controlsFrame = 0
-    if (disposed) return
-    // Leave the mark and the sticky room actions their own vertical space.
-    const top = clamp(controlsViewportTop - (controlsDocumentTop - window.scrollY), 12, Math.max(12, height - controlsHeight - 12))
-    navigationBar.style.top = `${Math.round(top)}px`
-  }
   function resize() {
     if (disposed) return
-    // Cache document geometry on layout changes, not on every scroll frame.
-    controlsDocumentTop = stage.getBoundingClientRect().top + window.scrollY
-    controlsHeight = navigationBar.offsetHeight
-    // Mobile's explicit touch-mode row also needs room above camera actions.
-    const toolbar = root.querySelector('.installation-toolbar')
-    controlsViewportTop = window.innerWidth <= 767
-      ? (parseFloat(getComputedStyle(toolbar).top) || 76) + toolbar.offsetHeight + 12
-      : 184
-    positionControls()
     const nextWidth = stage.clientWidth, nextHeight = stage.clientHeight
     if (!nextWidth || !nextHeight || (nextWidth === width && nextHeight === height)) return
     const previousMobile = mobile
@@ -670,7 +649,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     camera.updateProjectionMatrix()
     renderBudget.resize(width, height)
     cacheRect()
-    positionControls()
     if (relayout) markShadowsDirty()
     if (topView) frameTableFromAbove()
     else if (relayout) resetView()
@@ -1102,9 +1080,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   listen(canvas, 'blur', () => cameraKeys.clear())
   listen(window, 'blur', () => setNavigation(false))
   listen(window, 'pagehide', () => setNavigation(false))
-  listen(window, 'scroll', () => {
-    if (!controlsFrame) controlsFrame = requestAnimationFrame(positionControls)
-  }, { passive: true })
   listen(fridgeButton, 'click', toggleFridge)
   listen(document, 'visibilitychange', () => {
     if (document.hidden) {
@@ -1119,7 +1094,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     contextLost = true
     setNavigation(false)
     if (raf) cancelAnimationFrame(raf)
-    if (controlsFrame) cancelAnimationFrame(controlsFrame)
     raf = 0
     callbacks.onUnavailable()
   })
@@ -1127,14 +1101,12 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
   observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (!visible || entry.intersectionRect.height < 100) setNavigation(false)
-    if (visible) { positionControls(); requestFrame() }
+    if (visible) requestFrame()
     else if (raf) { cancelAnimationFrame(raf); raf = 0 }
   }, { threshold: [0, .15, .3] })
   observer.observe(stage)
   resizeObserver = new ResizeObserver(resize)
   resizeObserver.observe(stage)
-  resizeObserver.observe(navigationBar)
-  resizeObserver.observe(root.querySelector('.installation-toolbar'))
   const main = root.closest('main')
   if (main) resizeObserver.observe(main)
   function toggleFridge() {
@@ -1265,7 +1237,6 @@ export async function createInstallationRoom(root, callbacks, { signal } = {}) {
     setNavigation(false)
     disposed = true
     if (raf) cancelAnimationFrame(raf)
-    if (controlsFrame) cancelAnimationFrame(controlsFrame)
     raf = 0
     observer?.disconnect()
     resizeObserver?.disconnect()
