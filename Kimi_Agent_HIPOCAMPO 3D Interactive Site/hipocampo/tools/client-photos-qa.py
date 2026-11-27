@@ -29,6 +29,10 @@ with sync_playwright() as p:
   check(f'{w}: duas fotos nas últimas molduras, perto da saída',all(abs(t['z']+11.15)<.001 for t in textures),textures)
   check(f'{w}: bordas uniformes de oito centímetros nas duas fotos',all(abs((t['paper']['w']-t['image']['w'])/2-.08)<.0001 and abs((t['paper']['h']-t['image']['h'])/2-.08)<.0001 for t in textures),textures)
   check(f'{w}: fotos sem distorção de proporção',all(abs(t['ratio']-(1600/900 if t['src']=='house-client-photo-1'else 900/1600))<.001 for t in textures))
+  backstage=page.evaluate('''()=>{const result=[];__clientQA.scene.traverse(o=>{const map=o.material?.map;if(o.isMesh&&map?.name?.startsWith('house-backstage-')){let root=o;while(root&&root.name!=='house-archive')root=root.parent;result.push({name:map.name,inside:!!root,loaded:map.image?.width>0,ratio:o.geometry.parameters.width/o.geometry.parameters.height,textureRatio:map.image?.width/map.image?.height,z:o.getWorldPosition(o.position.clone()).z})}});return result}''')
+  check(f'{w}: seis superfícies de bastidores carregadas apenas no interior',len(backstage)==6 and all(t['inside'] and t['loaded'] for t in backstage),backstage)
+  check(f'{w}: proporções originais dos bastidores',all(abs(t['ratio']-t['textureRatio'])<.001 for t in backstage))
+  check(f'{w}: bastidores em quatro quadros e dois pendentes',sorted(round(t['z'],1) for t in backstage)==[-9.3,-7.3,-7.3,-4.8,-3.4,-3.4])
   check(f'{w}: seis molduras e dois pendentes mantêm o balanço',page.locator('#casa').evaluate('e=>e.houseJourney.inspect().interior.swings.length')==8)
   for progress in [.2,.51,.6,.72,.97,.5,.2]:
    page.evaluate('''async p=>{const{t:ST}=await import('/assets/index-BXEErpTi.js?v=perf-1');const s=ST.getById('hipocampo-house');__hipocampoLenis.scrollTo(s.start+p*(s.end-s.start),{immediate:true});ST.update()}''',progress)
