@@ -130,8 +130,8 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   framedSources[3] = backstagePhoto('bastidores-3', 900, 600)
   framedSources[4] = backstagePhoto('equipe', 900, 600)
   const hangingBackstage = backstagePhoto('bastidores-4', 663, 900)
-  // Client photographs occupy the last frame on each wall; the remaining
-  // archive pieces and the frame motion keep their existing behaviour.
+  // Load the two original client photographs before applying the placement
+  // requested for the right rear frame and suspended print below.
   for (const [slot, number, w, h] of [[2, 1, 1600, 900], [5, 2, 900, 1600]]) {
     const map = loadTexture(`/images/client-2026-11/foto-${number}.webp`)
     map.name = `house-client-photo-${number}`
@@ -140,6 +140,9 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     textures.add(map)
     framedSources[slot] = { d: { w, h, tipo: 'fotografia' }, mat: { map }, fitFrame: true }
   }
+  // Swap the right rear frame and the second suspended print per client feedback.
+  const secondHangingSource = framedSources[5]
+  framedSources[5] = framedSources[0]
   function framedMemory(parent, source, x, y, z, rotation) {
     const ratio = source.d.w / source.d.h
     const imageHeight = Math.min(1.46, 1.06 / ratio)
@@ -254,7 +257,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     pivot.position.set(x, 2.56, z)
     pivot.rotation.y = i ? -.23 : .3
     root.add(pivot)
-    const source = i === 0 ? hangingBackstage : framedSources[0]
+    const source = i === 0 ? hangingBackstage : secondHangingSource
     const w = .48, h = .7
     box(pivot, [w + .04, h + .04, .012], card, [0, -h / 2, 0], false)
     const material = mat({ map: source.mat.map, transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .95 })
