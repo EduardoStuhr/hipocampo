@@ -3,7 +3,7 @@
 import * as THREE from './vendor/three.module.min.js'
 import { createHousePreparation } from './house-preparation.js?v=house-gpu-2'
 import { createRenderBudget } from './render-budget.js?v=fps-1'
-import { createHouseInterior } from './house-interior.js?v=door-open-2'
+import { createHouseInterior } from './house-interior.js?v=backstage-2'
 import { fitHouseDoorway } from './house-doorway.js?v=door-fit-1'
 import { createHouseLook } from './house-look.js?v=phone-gestures-1'
 import { n as gsap, t as ScrollTrigger } from './index-BXEErpTi.js?v=perf-1'

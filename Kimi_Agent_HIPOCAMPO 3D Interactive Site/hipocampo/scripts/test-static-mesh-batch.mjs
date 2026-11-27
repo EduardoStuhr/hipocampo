@@ -35,6 +35,22 @@ let meshes=0;room.root.traverse(o=>{if(o.isMesh)meshes++})
 assert(room.inspect().batchedMeshes>=30)
 assert(room.root.getObjectByName('house-front-wall').geometry.attributes.position.count>0)
 assert.equal(room.root.getObjectByName('house-door-left').rotation.y,.5*1.48)
+const backstage=[], client=[]
+room.root.traverse(o=>{
+ const name=o.material?.map?.name
+ if(o.isMesh&&name?.startsWith('house-client-photo-'))client.push({name,z:o.getWorldPosition(new THREE.Vector3()).z})
+ if(!o.isMesh||!name?.startsWith('house-backstage-'))return
+ const {width,height}=o.geometry.parameters
+ backstage.push({name,z:o.getWorldPosition(new THREE.Vector3()).z})
+ assert(Math.abs(width/height-(name.endsWith('-4')?663/900:900/600))<.001)
+ assert.equal(o.material.stencilWrite,true)
+ assert(fs.existsSync(new URL(`../public/images/house-backstage/${name.replace('house-backstage-','')}.webp`,import.meta.url)))
+})
+assert.deepEqual(backstage.map(t=>t.name).sort(),['house-backstage-bastidores-1','house-backstage-bastidores-1','house-backstage-bastidores-2','house-backstage-bastidores-3','house-backstage-bastidores-4','house-backstage-equipe'])
+assert.deepEqual(backstage.map(t=>Math.round(t.z*10)/10).sort((a,b)=>a-b),[-9.3,-7.3,-7.3,-4.8,-3.4,-3.4])
+assert.deepEqual(client.map(t=>t.name).sort(),['house-client-photo-1','house-client-photo-2'])
+assert(client.every(t=>Math.abs(t.z+11.15)<.02))
+assert.equal(room.inspect().swings.length,8)
 console.log(JSON.stringify({savedMeshes:room.inspect().batchedMeshes,meshes,geometryAttributesExact:true,resizeAndHingeReferences:true}))
 room.dispose()
 

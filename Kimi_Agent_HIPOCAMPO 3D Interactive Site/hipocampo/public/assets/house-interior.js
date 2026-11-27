@@ -115,8 +115,21 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
   const wallPositions = [-3.4, -7.3, -11.15]
   const chosen = [3, 14, 23, 9, 19, 25].map(i => pieces[i % pieces.length])
   const framedSources = chosen.slice()
-  framedSources[0] = chosen[2]
-  framedSources[3] = chosen[5]
+  // Reuse the existing frames and hanging prints: the backstage archive is
+  // exclusive to this room, without adding any meshes or animation loops.
+  const backstagePhoto = (name, w, h) => {
+    const map = loadTexture(`/images/house-backstage/${name}.webp`)
+    map.name = `house-backstage-${name}`
+    map.colorSpace = THREE.SRGBColorSpace
+    map.anisotropy = pieces[0]?.mat.map.anisotropy || 1
+    textures.add(map)
+    return { d: { w, h, tipo: 'fotografia' }, mat: { map }, fitFrame: true }
+  }
+  framedSources[0] = backstagePhoto('bastidores-1', 900, 600)
+  framedSources[1] = backstagePhoto('bastidores-2', 900, 600)
+  framedSources[3] = backstagePhoto('bastidores-3', 900, 600)
+  framedSources[4] = backstagePhoto('equipe', 900, 600)
+  const hangingBackstage = backstagePhoto('bastidores-4', 663, 900)
   // Client photographs occupy the last frame on each wall; the remaining
   // archive pieces and the frame motion keep their existing behaviour.
   for (const [slot, number, w, h] of [[2, 1, 1600, 900], [5, 2, 900, 1600]]) {
@@ -241,7 +254,7 @@ export function createHouseInterior({ scene, door, facade, doorway, unit, pieces
     pivot.position.set(x, 2.56, z)
     pivot.rotation.y = i ? -.23 : .3
     root.add(pivot)
-    const source = chosen[i + 2]
+    const source = i === 0 ? hangingBackstage : framedSources[0]
     const w = .48, h = .7
     box(pivot, [w + .04, h + .04, .012], card, [0, -h / 2, 0], false)
     const material = mat({ map: source.mat.map, transparent: true, alphaTest: .04, side: THREE.DoubleSide, roughness: .95 })
